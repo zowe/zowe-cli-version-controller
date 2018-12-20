@@ -9,6 +9,7 @@ Please refer to the following [documents]:
 | [ManualProcess]     | Provides detailed steps on how to maintain the versioning scheme by hand |
 
 
+
 [documents]: /docs/
 [PipelineBehaviors]: /docs/PipelineBehaviors.md
 [ManualProcess]: /docs/ManualProcess.md
