@@ -1,7 +1,7 @@
 # Zowe CLI Controller
 The purpose of this repository is to serve as the main controller and maintainer of the versioning scheme of the Zowe CLI and Imperative.
 
-Please refer to the following documents:
+Please refer to the following [documents]:
 
 | Name | Description |
 | ---- | ----------- |
@@ -9,6 +9,6 @@ Please refer to the following documents:
 | [ManualProcess]     | Provides detailed steps on how to maintain the versioning scheme by hand |
 
 
-
+[documents]: /docs/
 [PipelineBehaviors]: /docs/PipelineBehaviors.md
 [ManualProcess]: /docs/ManualProcess.md

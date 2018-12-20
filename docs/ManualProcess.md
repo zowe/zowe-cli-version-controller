@@ -10,4 +10,4 @@ Here is what you need to do at the specified time
 
 
 
-[scripts]: /scripts/README.md
+[scripts]: /scripts/
