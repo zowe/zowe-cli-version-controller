@@ -3,8 +3,8 @@ This folder contains all articles describing various aspects of this repository.
 
 | Name | Description |
 | ---- | ----------- |
-| [PipelineBehaviors] | Provides information on how all pipelines behave |
-| [ManualProcess]     | Provides detailed steps on how to maintain the versioning scheme by hand |
+| [VersioningPipeline] | Provides information on how the controller pipeline and the Zowe CLI and Imperative pipelines are structured |
+| [ManualProcess]      | Provides detailed steps on how to maintain the versioning scheme by hand |
 
-[PipelineBehaviors]: PipelineBehaviors.md
+[VersioningPipeline]: VersioningPipeline.md
 [ManualProcess]: ManualProcess.md
