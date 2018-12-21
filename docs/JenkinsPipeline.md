@@ -1,4 +1,4 @@
-# Versioning Pipeline
+# Jenkins Pipeline
 
 This article describes what the controller pipeline does as well as how it influences the Zowe CLI and Imperative respective Jenkinsfiles. The topics to be covered in this article explain various aspects that encompass our pipelines and how the versioning scheme is maintained based on tag migrations.
 
