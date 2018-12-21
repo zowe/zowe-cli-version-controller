@@ -1,8 +1,8 @@
 # Versioning Pipeline
 
-This article describes what the contoller pipeline does as well as how it influences the Zowe CLI and Imperative respective Jenkinsfiles. The topics to be covered in this article explain various aspects that encompass our pipelines and how the versioning scheme is maintained based on tag migrations.
+This article describes what the controller pipeline does as well as how it influences the Zowe CLI and Imperative respective Jenkinsfiles. The topics to be covered in this article explain various aspects that encompass our pipelines and how the versioning scheme is maintained based on tag migrations.
 
-**Table of Sontents**
+**Table of Contents**
 
 * [GitHub Setup](#github-setup)
 * [Environment Setup](#environment-setup)
@@ -19,7 +19,7 @@ This article describes what the contoller pipeline does as well as how it influe
 
 ## GitHub Setup
 
-This section is intented to explain at a high level what is required, in terms of Source Control Management (SCM), so that our versioning scheme functions properly.
+This section is intended to explain at a high level what is required, in terms of Source Control Management (SCM), so that our versioning scheme functions properly.
 
 Zowe has generic users for automation, also known as Robots. For our pipelines to work, we need to give these users administrator-level authority to the repositories we want them to control. Don't forget to give your team write-access to the repository too.
 
