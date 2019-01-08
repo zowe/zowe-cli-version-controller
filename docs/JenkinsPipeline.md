@@ -122,15 +122,21 @@ The `latest` branch is the container of the most recent Community Edition (CE) v
 
 ### LTS Branches
 
-The purpose of the Long Term Support (LTS) branches is to provide a more stable version of the product.
+The purpose of the Long Term Support (LTS) branches is to provide a more stable releases of the product. The following branches have been created to house the said releases.
 
 #### lts-incremental
 
-The `lts-incremental` branch is where **only** non-breaking enhancements and bug fixes are allowed. This provides users with the ability to receive new functionality while maintaining a version that guarantees that they won't affect what they previously had. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-incremental-v3` and should only increment the `minor` and `patch` level.
+The `lts-incremental` branch is where **only** non-breaking backward-compatible enhancements and bug fixes are allowed. This provides users with the ability to receive new functionality while maintaining a version that guarantees zero negative effects on what they previously had. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-incremental-v3` and should only increment the `minor` and `patch` level.
+
+The build is triggered any time code gets merged into the branch and since it's a protected branch, we enforce the rule that only approved PRs can add changes. When a PR is opened, the major version of the package are compared against `<major>` in the most recent `@lts-incremental-v<major>` NPM tag and fail the PR if the major version has changed. This will ensure that the major version never increases, thus ensuring no breaking changes are introduced into the branch. The PR will also fail when the version specified has already been published.
 
 #### lts-stable
 
-The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a no-changing version that guarantees that no new features will be applied but only patches. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-stable-v3.5` and should only increment the `patch` level.
+The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a no-changing version that guarantees that no new features are applied but only patches. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-stable-v3.5` and should only increment the `patch` level.
+
+Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minot versions of the package are compared against `<major>` and `<minor>` in the most recent `@lts-stable-v<major>.<minor>` NPM tag and fail the PR if the major or minor versions have changed. This will ensure that the major nor minor version never increase, thus ensuring no features are introduced into the branch.
+
+Since this branch only accepts bug fixes (or patch increments), PRs will also fail if the patch version is changed manually. The version will automatically bump after a successful build.
 
 ## Tag Migration
 
