@@ -140,7 +140,22 @@ Since this branch only accepts bug fixes (or patch increments), PRs will also fa
 
 ## Tag Migration
 
+This section covers how the tags corresponding to each protected branch gets moved into the next level of delivery. There will be an email mechanism that will notify and ask users for action on what version number to publish. The email may contain various options as described in the `beta` branch section. After the user replies or clicks a link/button, the controller receives the action and the CD process begins.
 
+First, we take the most current snapshot contained on the `beta` branch (which is tagged `@beta`) and move the code to the `latest` branch, which then triggers a build generating a new `latest` release (also known as CE). Then we move the most current snapshot of `master` and move it to `beta`, triggering the beta deployment as well.
+
+In terms of LTS branches, the tag migration works a little different given that the release cycle is at Product Management discretion and they decide when should the next incremental or stable version be available. There will be a build button in the jenkins machine to facilitate the release effort once the decision is made. The build process executes the following steps:
+  1. Rename the `lts-stable` branch to `lts-stable-v<major>.<minor>.<patch>` in case we need to go back to that specific stable release. It can be deleted later if needed.
+  2. Rename the `lts-incremental` branch to `lts-stable`. This will trigger CI/CD on the lts-stable branch. The CD build will be skipped if the version already exists.
+  3. Move the `@lts-stable` NPM tag to `@lts-incremental` tag version. This is needed because the version that `@lts-incremental` is pointing to, has already been published to the registry and cannot be republished.
+  4. Create a new `lts-incremental` branch based off of `latest`. This will trigger CI/CD on the lts-incremental branch. The CD build will be skipped if the version already exists.
+  5. Move the `@lts-incremental` NPM tag to `@latest` tag version. Similar to number 3, this is needed because the version that `@latest` is pointing to, has already been published and cannot be republished.
+
+The tag migration process for the LTS branches should require additional authorization to complete. This is to prevent any accidental trigger of such process. Jenkins will send an email out to a list of approvers and **ALL** or **x%** (a given percentage) must confirm the action before the pipeline continues. Anyone on the list can **DENY** the action which will cancel the LTS tag migration regardless of the number of approvers.
+
+## Template Steps
+
+TODO: This section will be modified as we work on [issue 139 of Zowe CLI](https://github.com/zowe/zowe-cli/issues/139)
 
 ## Important Notes
 
