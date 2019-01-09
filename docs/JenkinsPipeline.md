@@ -159,3 +159,15 @@ TODO: This section will be modified as we work on [issue 139 of Zowe CLI](https:
 
 ## Important Notes
 
+- Test storage locations should be sent in as a default from each script
+  - We should account for someone that doesn't use JEST for example.
+
+- Pipeline should not call any special scripts (e.g jest something or typedoc or gulp).
+  - All scripts should be defined in an npm run script.
+  - This allows the template steps to call well-structured scripts on the project.
+
+- Handle Zowe CLI/imperative builds
+  - Zowe requires npm tag `@<imperative-git-branch-name>` so builds of the protected branches should always install and save to the package json this version.
+  - We need to do npm install then npm install imperative@tag --save and commit that before publishing when in protected branches.
+  - This implies that the biweekly builds have knowledge about both builds and first builds imperative then Zowe CLI.
+  
