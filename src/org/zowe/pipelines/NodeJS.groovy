@@ -16,20 +16,22 @@ class NodeJS {
     public Map gitConfig
     public Map publishConfig
 
+    public String defaultBuildHistory = '5'
+    public String protectedBranchBuildHistory = '20'
+
     def steps
     NodeJS() { this.steps = steps }
 
     def setup() {
+        steps.properties(steps.buildDiscarder(steps.logRotator(numToKeepStr: 5)))
+
         _createStage('checkout', {
             steps.checkout steps.scm
         })
 
         _createStage('setup', {
             steps.echo "Initializing Git Config"
-
-            if (!gitConfig.user) {
-                steps.fail "Missing the git user name"
-            }
+            // @TODO as part of CD this should get filled out
         })
 
         _setupCalled = true
