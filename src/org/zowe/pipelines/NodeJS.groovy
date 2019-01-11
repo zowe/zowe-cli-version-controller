@@ -12,7 +12,7 @@ class NodeJS {
 
     def setup2(String test) {
         steps.stage('setup2') {
-            steps.sh "echo ${test}"
+            steps.sh "ls -al"
         }
     }
 }
