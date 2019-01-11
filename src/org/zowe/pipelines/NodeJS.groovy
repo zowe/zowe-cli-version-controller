@@ -8,7 +8,7 @@ class NodeJS {
         // steps.step('setup') {
         //     sh: "echo ${test}"
         // }
-        node.stages {
+        node {
             stage('setup') {
                 sh: "echo ${test}"
             }
