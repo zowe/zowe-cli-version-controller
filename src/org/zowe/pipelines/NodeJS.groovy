@@ -6,7 +6,7 @@ class NodeJS {
 
     def setup(String test) {
         steps.stage('checkout') {
-            steps.checkout scm
+            steps.checkout steps.scm
         }
 
         steps.stage('setup') {
