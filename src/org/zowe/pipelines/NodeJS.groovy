@@ -26,12 +26,12 @@ class NodeJS {
         def map = defaultMap << inputMap
         
         steps.stage(name) {
-            if (shouldSkip()) {
+            if (map.shouldSkip()) {
                 Utils.markStageSkippedForConditional(name);
             } else {
                 steps.echo "Executing stage ${name}"
 
-                if (isSkipable) { // @TODO FILL STRING OUT
+                if (map.isSkipable) { // @TODO FILL STRING OUT
                     steps.echo "Inform how to skip the step here"
                 }
 
