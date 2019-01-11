@@ -13,8 +13,11 @@ class NodeJS {
     // Key is branch name and value is npm tag name
     public Map protectedBranches = [master: 'latest']
 
+    public Map gitConfig
+    public Map publishConfig
+
     def steps
-    NodeJS(steps) { this.steps = steps }
+    NodeJS() { this.steps = steps }
 
     def setup() {
         _createStage('checkout', {
@@ -22,7 +25,11 @@ class NodeJS {
         })
 
         _createStage('setup', {
-            steps.sh "echo SETUP HAPPENING"
+            steps.echo "Initializing Git Config"
+
+            if (!gitConfig.user) {
+                steps.fail "Missing the git user name"
+            }
         })
 
         _setupCalled = true
