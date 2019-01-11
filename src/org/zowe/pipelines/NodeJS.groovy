@@ -8,10 +8,10 @@ class NodeJS {
         // steps.step('setup') {
         //     sh: "echo ${test}"
         // }
-        steps.node {
+        steps.node({
             stage('setup') {
                 sh: "echo ${test}"
             }
-        }
+        })
     }
 }
