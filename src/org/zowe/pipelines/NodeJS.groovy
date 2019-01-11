@@ -5,11 +5,16 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup(String test) {
-        // steps.step('setup') {
-        //     sh: "echo ${test}"
-        // }
         steps.node {
             steps.stage('setup') {
+                steps.sh "echo ${test}"
+            }
+        }
+    }
+
+    def setup2(String test) {
+        steps.node {
+            steps.stage('setup2') {
                 steps.sh "echo ${test}"
             }
         }
