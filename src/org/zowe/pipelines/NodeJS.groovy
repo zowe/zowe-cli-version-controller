@@ -20,6 +20,7 @@ class NodeJS {
     public String protectedBranchBuildHistory = '20'
 
     private boolean _isProtectedBranch = false
+    private boolean _shouldSkipRemainingSteps = false
 
     def steps
     NodeJS(steps) { this.steps = steps }
@@ -65,7 +66,7 @@ class NodeJS {
         
         steps.stage(name) {
             steps.timeout(time: map.timeout, unit: map.timeoutUnit) {
-                if (map.shouldSkip()) {
+                if ((_shouldSkipRemainingSteps && map.isSkipable) || map.shouldSkip()) {
                     Utils.markStageSkippedForConditional(name);
                 } else {
                     steps.echo "Executing stage ${name}"
