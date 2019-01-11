@@ -7,7 +7,7 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup(String test) {
-        _createStage('checkout', false, {
+        _createStage('checkout', {
             steps.checkout steps.scm
         })
 
