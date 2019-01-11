@@ -16,11 +16,11 @@ class NodeJS {
         })
     }
 
-    // def setup2(String test) {
-    //     steps.stage('setup2') {
-    //         Utils.markStageSkippedForConditional('setup2')
-    //     }
-    // }
+    def setup2(String test) {
+        steps.stage('setup2') {
+            Utils.markStageSkippedForConditional('setup2')
+        }
+    }
 
     private def _createStage(String name, boolean isSkipable, Closure stepContents) {
         steps.stage(name) {
