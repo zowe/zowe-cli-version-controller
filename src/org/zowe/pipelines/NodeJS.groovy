@@ -16,6 +16,10 @@ class NodeJS {
 
     def setup2(String test) {
         steps.stage('setup2') {
+            steps.when {
+                branch 'master'
+            }
+
             steps.sh "ls -al"
             steps.sh "pwd"
         }
