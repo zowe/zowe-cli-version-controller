@@ -13,7 +13,7 @@ class NodeJS {
 
         _createStage('setup', false, {
             steps.sh "echo ${test}"
-        }, shouldSkip: { true })
+        }, shouldSkip: { -> true })
     }
 
     // Define this function later
@@ -23,7 +23,7 @@ class NodeJS {
         Closure stepContents,
         int timeout = 10,
         String timeoutUnit = 'MINUTES',
-        Closure shouldSkip = { false }
+        Closure<boolean> shouldSkip = { -> false }
     ) {
         steps.stage(name) {
             if (shouldSkip()) {
