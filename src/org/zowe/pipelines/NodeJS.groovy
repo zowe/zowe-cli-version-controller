@@ -13,7 +13,7 @@ class NodeJS {
 
         _createStage('setup', {
             steps.sh "echo ${test}"
-        }, shouldSkip: { -> true })
+        }, [shouldSkip: { -> true }])
     }
 
     // Define this function later
