@@ -1,5 +1,7 @@
 package org.zowe.pipelines
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 class NodeJS {
     def steps
     NodeJS(steps) { this.steps = steps }
@@ -16,12 +18,7 @@ class NodeJS {
 
     def setup2(String test) {
         steps.stage('setup2') {
-            steps.when {
-                branch 'master'
-            }
-
-            steps.sh "ls -al"
-            steps.sh "pwd"
+            Utils.markStageSkippedForConditional('setup2')
         }
     }
 }
