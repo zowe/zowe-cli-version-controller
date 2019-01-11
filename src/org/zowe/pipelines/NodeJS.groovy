@@ -1,13 +1,17 @@
 package org.zowe.pipelines
 
 class NodeJS {
-    def steps
-    NodeJS(steps) { this.steps = steps }
+    def node
+    NodeJS(steps) { this.node = node }
 
     def setup(String test) {
         // steps.step('setup') {
         //     sh: "echo ${test}"
         // }
-        echo(steps)
+        node.stages {
+            stage('setup') {
+                sh: "echo ${test}"
+            }
+        }
     }
 }
