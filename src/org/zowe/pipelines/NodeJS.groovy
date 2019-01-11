@@ -45,10 +45,9 @@ class NodeJS {
             steps.checkout steps.scm
         })
 
-        // _createStage('setup', {
-        //     steps.echo "Initializing Git Config"
-        //     // @TODO as part of CD this should get filled out
-        // })
+        _createStage('Check for CI Skip', {
+            steps.echo "@TODO"
+        }, [isSkipable: true])
 
         _setupCalled = true
 
