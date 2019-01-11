@@ -11,7 +11,7 @@ class NodeJS {
     public String[] adminEmails = []
 
     // Key is branch name and value is npm tag name
-    public Map[] protectedBranches = [master: 'latest']
+    public Map protectedBranches = [master: 'latest']
 
     def steps
     NodeJS(steps) { this.steps = steps }
