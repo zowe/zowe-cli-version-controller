@@ -23,7 +23,7 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup() {
-        steps.properties(steps.buildDiscarder(steps.logRotator(numToKeepStr: 5)))
+        steps.properties([steps.buildDiscarder(steps.logRotator(numToKeepStr: 5))])
 
         _createStage('checkout', {
             steps.checkout steps.scm
