@@ -17,7 +17,7 @@ class NodeJS {
     }
 
     // Define this function later
-    private def _createStage(
+    private void _createStage(
         String name,
         boolean isSkipable,
         Closure stepContents,
