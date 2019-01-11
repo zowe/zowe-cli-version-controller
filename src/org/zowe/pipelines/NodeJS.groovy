@@ -9,10 +9,8 @@ class NodeJS {
         //     sh: "echo ${test}"
         // }
         steps.node {
-            stages {
-                stage('setup') {
-                    sh: "echo ${test}"
-                }
+            stage('setup') {
+                sh: "echo ${test}"
             }
         }
     }
