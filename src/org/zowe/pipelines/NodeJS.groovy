@@ -37,7 +37,7 @@ class NodeJS {
                 opts.push(steps.disableConcurrentBuilds())
             }
 
-            opts.push([steps.buildDiscarder(steps.logRotator(numToKeepStr: history))])
+            opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
             
         })
