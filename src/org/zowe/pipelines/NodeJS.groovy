@@ -13,24 +13,30 @@ class NodeJS {
 
         _createStage('setup', false, {
             steps.sh "echo ${test}"
-        })
+        }, shouldSkip: { true })
     }
 
-    def setup2(String test) {
-        steps.stage('setup2') {
-            Utils.markStageSkippedForConditional('setup2')
-        }
-    }
-
-    private def _createStage(String name, boolean isSkipable, Closure stepContents) {
+    // Define this function later
+    private def _createStage(
+        String name,
+        boolean isSkipable,
+        Closure stepContents,
+        int timeout = 10,
+        int timeoutUnit = 'MINUTES'
+        Closure shouldSkip = { false }
+    ) {
         steps.stage(name) {
-            steps.echo "Executing stage ${name}"
+            if (shouldSkip()) {
+                Utils.markStageSkippedForConditional(name);
+            } else {
+                steps.echo "Executing stage ${name}"
 
-            if (isSkipable) {
-                steps.echo "Inform how to skip the step here"
+                if (isSkipable) { // @TODO FILL STRING OUT
+                    steps.echo "Inform how to skip the step here"
+                }
+
+                stepContents()
             }
-
-            stepContents()
         }
     }
 }
