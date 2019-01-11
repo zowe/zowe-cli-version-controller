@@ -11,7 +11,7 @@ class NodeJS {
             steps.checkout steps.scm
         })
 
-        _createStage('setup', false, {
+        _createStage('setup', {
             steps.sh "echo ${test}"
         }, shouldSkip: { -> true })
     }
@@ -19,12 +19,12 @@ class NodeJS {
     // Define this function later
     private void _createStage(
         String name,
-        boolean isSkipable,
         Closure stepContents,
-        int timeout = 10,
-        String timeoutUnit = 'MINUTES',
-        Closure<Boolean> shouldSkip = { -> false }
+        Map inputMap = [:]
     ) {
+        def defaultMap = [isSkipable: false, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
+        def map = defaultMap << inputMap
+        
         steps.stage(name) {
             if (shouldSkip()) {
                 Utils.markStageSkippedForConditional(name);
