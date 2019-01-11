@@ -5,6 +5,10 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup(String test) {
+        steps.stage('checkout') {
+            steps.checkout scm
+        }
+
         steps.stage('setup') {
             steps.sh "echo ${test}"
         }
