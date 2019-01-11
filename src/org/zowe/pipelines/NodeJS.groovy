@@ -19,20 +19,36 @@ class NodeJS {
     public String defaultBuildHistory = '5'
     public String protectedBranchBuildHistory = '20'
 
+    private boolean _isProtectedBranch = false
+
     def steps
     NodeJS(steps) { this.steps = steps }
 
     def setup() {
-        steps.properties([steps.buildDiscarder(steps.logRotator(numToKeepStr: 5))])
+        _createStage('setup', {
+            steps.echo "Setting up build configuration"
 
+            def opts = [];
+            def history = defaultBuildHistory;
+
+            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true;
+                history = protectedBranchBuildHistory
+                opts.push(steps.disableConcurrentBuilds())
+            }
+
+            opts.push([steps.buildDiscarder(steps.logRotator(numToKeepStr: history))])
+            steps.properties(opts)
+            
+        })
         _createStage('checkout', {
             steps.checkout steps.scm
         })
 
-        _createStage('setup', {
-            steps.echo "Initializing Git Config"
-            // @TODO as part of CD this should get filled out
-        })
+        // _createStage('setup', {
+        //     steps.echo "Initializing Git Config"
+        //     // @TODO as part of CD this should get filled out
+        // })
 
         _setupCalled = true
 
