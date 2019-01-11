@@ -22,7 +22,7 @@ class NodeJS {
         boolean isSkipable,
         Closure stepContents,
         int timeout = 10,
-        int timeoutUnit = 'MINUTES'
+        int timeoutUnit = 'MINUTES',
         Closure shouldSkip = { false }
     ) {
         steps.stage(name) {
