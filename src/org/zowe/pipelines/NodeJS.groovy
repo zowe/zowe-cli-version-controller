@@ -23,7 +23,7 @@ class NodeJS {
         Closure stepContents,
         int timeout = 10,
         String timeoutUnit = 'MINUTES',
-        Closure<boolean> shouldSkip = { -> false }
+        Closure<Boolean> shouldSkip = { -> false }
     ) {
         steps.stage(name) {
             if (shouldSkip()) {
