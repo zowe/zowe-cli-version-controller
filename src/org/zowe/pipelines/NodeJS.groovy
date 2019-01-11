@@ -7,18 +7,30 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup(String test) {
-        steps.stage('checkout') {
+        _createStage('checkout', false) {
             steps.checkout steps.scm
         }
 
-        steps.stage('setup') {
+        _createStage('setup', false) {
             steps.sh "echo ${test}"
         }
     }
 
-    def setup2(String test) {
-        steps.stage('setup2') {
-            Utils.markStageSkippedForConditional('setup2')
+    // def setup2(String test) {
+    //     steps.stage('setup2') {
+    //         Utils.markStageSkippedForConditional('setup2')
+    //     }
+    // }
+
+    private def _createStage(String name, boolean isSkipable, Closure stepContents) {
+        steps.stage(name) {
+            steps.echo "Executing stage ${name}"
+
+            if (isSkipable) {
+                steps.echo "Inform how to skip the step here"
+            }
+
+            stepContents()
         }
     }
 }
