@@ -7,13 +7,13 @@ class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     def setup(String test) {
-        _createStage('checkout', false) {
+        _createStage('checkout', false, {
             steps.checkout steps.scm
-        }
+        })
 
-        _createStage('setup', false) {
+        _createStage('setup', false, {
             steps.sh "echo ${test}"
-        }
+        })
     }
 
     // def setup2(String test) {
