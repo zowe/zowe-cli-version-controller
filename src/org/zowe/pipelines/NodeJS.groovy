@@ -13,6 +13,7 @@ class NodeJS {
     def setup2(String test) {
         steps.stage('setup2') {
             steps.sh "ls -al"
+            steps.sh "pwd"
         }
     }
 }
