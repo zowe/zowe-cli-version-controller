@@ -20,10 +20,10 @@ class NodeJS {
     public String protectedBranchBuildHistory = '20'
 
     def steps
-    NodeJS() { this.steps = steps }
+    NodeJS(steps) { this.steps = steps }
 
     def setup() {
-        // steps.properties(steps.buildDiscarder(steps.logRotator(numToKeepStr: 5)))
+        steps.properties(steps.buildDiscarder(steps.logRotator(numToKeepStr: 5)))
 
         _createStage('checkout', {
             steps.checkout steps.scm
