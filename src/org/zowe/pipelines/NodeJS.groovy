@@ -2,7 +2,7 @@ package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-class NodeJS {
+public class NodeJS {
     /**
      * Store if the setup method was called
      */
@@ -25,8 +25,10 @@ class NodeJS {
     def steps
     NodeJS(steps) { this.steps = steps }
 
-    def setup() {
-        _createStage('setup', {
+    public void setup() {
+        _setupCalled = true
+
+        createStage('setup', {
             steps.echo "Setting up build configuration"
 
             def opts = [];
@@ -40,23 +42,19 @@ class NodeJS {
 
             opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
-            
         })
-        _createStage('checkout', {
+        createStage('checkout', {
             steps.checkout steps.scm
         })
 
-        _createStage('Check for CI Skip', {
+        createStage('Check for CI Skip', {
             steps.echo "@TODO"
         }, [isSkipable: true])
-
-        _setupCalled = true
-
         // @TODO ADD STEP TO SEND EMAIL OUT HERE
     }
 
     // document later
-    private void _createStage(
+    public void createStage(
         String name,
         Closure stepContents,
         Map inputMap = [:]
@@ -66,7 +64,9 @@ class NodeJS {
         
         steps.stage(name) {
             steps.timeout(time: map.timeout, unit: map.timeoutUnit) {
-                if ((_shouldSkipRemainingSteps && map.isSkipable) || map.shouldSkip()) {
+                if (!_setupCalled) {
+                    steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                } else if ((_shouldSkipRemainingSteps && map.isSkipable) || map.shouldSkip()) {
                     Utils.markStageSkippedForConditional(name);
                 } else {
                     steps.echo "Executing stage ${name}"
@@ -79,5 +79,22 @@ class NodeJS {
                 }
             }
         }
+    }
+
+    public void buildStage() {
+        // skipable only allow one of these, must happen before testing
+        // allow custom build command, archive artifact
+
+        createStage("build", {
+            steps.echo "FILL THIS OUT"  
+        })
+    }
+
+    public void testStage() {
+        // skipable, can have multiple, must happen before deploy after build
+        // run in d-bus or not, allow custom test command, archive test results
+        createStage("test", {
+            steps.echo "FILL THIS OUT"  
+        })
     }
 }
