@@ -97,6 +97,8 @@ public class NodeJS {
         // allow custom build command, archive artifact
 
         createStage("build", {
+            steps.echo name
+            steps.echo test
             steps.echo "FILL THIS OUT"  
         })
     }
