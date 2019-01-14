@@ -42,14 +42,18 @@ public class NodeJS {
 
             opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
-        })
+        }, [isSkipable: false])
         createStage('checkout', {
             steps.checkout steps.scm
-        })
+        }, [isSkipable: false])
 
         createStage('Check for CI Skip', {
             steps.echo "@TODO"
-        }, [isSkipable: true])
+        })
+
+        createStage('Install Node Package Dependencies', {
+            steps.sh "npm install"
+        }, [isSkipable: false])
         // @TODO ADD STEP TO SEND EMAIL OUT HERE
     }
 
@@ -59,7 +63,7 @@ public class NodeJS {
         Closure stepContents,
         Map inputMap = [:]
     ) {
-        def defaultMap = [isSkipable: false, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
+        def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
         def map = defaultMap << inputMap
         
         steps.stage(name) {
