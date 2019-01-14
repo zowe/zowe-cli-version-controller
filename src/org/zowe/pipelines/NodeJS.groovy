@@ -91,7 +91,7 @@ public class NodeJS {
     //     @NamedParam String test = "Hello"
     // ) {
     // Above doesn't work cause of groovy version
-    public void buildStage(String name, String test = "Hello")
+    public void buildStage(String name, String test = "Hello") {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
