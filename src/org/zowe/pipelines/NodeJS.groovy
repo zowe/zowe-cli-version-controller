@@ -2,6 +2,9 @@ package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+import groovy.transform.NamedVariant
+import groovy.transform.NamedParam
+
 public class NodeJS {
     /**
      * Store if the setup method was called
@@ -85,7 +88,11 @@ public class NodeJS {
         }
     }
 
-    public void buildStage() {
+    @NamedVariant
+    public void buildStage(
+        @NamedParam(required = true) String name,
+        @NamedParam String test = "Hello"
+    ) {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
