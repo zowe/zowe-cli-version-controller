@@ -59,7 +59,7 @@ public class NodeJS {
 
             createStage(name: 'Install Node Package Dependencies', stage: {
                 steps.sh "npm install"
-            }, isSkipable: false, environment: [TEST_ENV: 'TEST', TEST_ENV_2: 'TEST_2'])
+            }, isSkipable: false)
 
         } catch (e) {
             // If there was an exception thrown, the build failed
