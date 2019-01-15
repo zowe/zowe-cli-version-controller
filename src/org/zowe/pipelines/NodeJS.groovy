@@ -115,7 +115,7 @@ public class NodeJS {
     }
 }
 
-@ToString(includeFields = true, includeNames = true)
+// @ToString(includeFields = true, includeNames = true)
 class TestArgs {
     String name
     String test = "Hello"
