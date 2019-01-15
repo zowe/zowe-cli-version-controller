@@ -166,7 +166,7 @@ public class NodeJS {
                         """
 
         // Add any details of an exception, if encountered
-        if (encounteredException !== null) {
+        if (encounteredException != null) {
             bodyText += encounteredException + ""
         }
 
