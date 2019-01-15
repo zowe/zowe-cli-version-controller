@@ -133,9 +133,9 @@ public class NodeJS {
                         }
                     }
                 }
+            } finally {
+                stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
             }
-        } finally {
-            stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
     }
 
