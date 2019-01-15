@@ -151,15 +151,19 @@ public class NodeJS {
      */
     public void sendEmailNotification() {
         steps.echo "Sending email notification..."
+        List<String> ccList = new ArrayList<String>();
+        for (String email : adminEmails) {
+            ccList.add("cc: " + email);
+        }
         steps.emailext(
-                subject: "Build Email",
-                to: "cc: " + adminEmails.join(","),
+                subject: "Build " + steps.env.BUILD_NUMBER + " : " + steps.currentBuild.currentResult,
+                to: ccList.join(","),
                 body: "This is an email",
                 mimeType: "text/html",
-//                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-//                                     [$class: 'UpstreamComitterRecipientProvider'],
-//                                     [$class: 'CulpritsRecipientProvider'],
-//                                     [$class: 'RequesterRecipientProvider']]
+                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+                                     [$class: 'UpstreamComitterRecipientProvider'],
+                                     [$class: 'CulpritsRecipientProvider'],
+                                     [$class: 'RequesterRecipientProvider']]
         )
     }
 }
