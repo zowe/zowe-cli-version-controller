@@ -168,7 +168,9 @@ public class NodeJS {
 
         // Add any details of an exception, if encountered
         if (encounteredException != null) {
-            bodyText += encounteredException + ""
+            bodyText += encounteredException.toString();
+            bodyText += encounteredException.getMessage();
+            bodyText += encounteredException.getStackTrace();
         }
 
         List<String> ccList = new ArrayList<String>();
