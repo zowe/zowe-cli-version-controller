@@ -75,7 +75,7 @@ public class NodeJS {
                 if (result == 0) {
                     steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
                     _shouldSkipRemainingSteps = true
-                    steps.currentBuild.rawBuild@result = hudson.model.Result.NOT_BUILT
+                    steps.currentBuild.result = hudson.model.Result.NOT_BUILT
                 }
             })
 
