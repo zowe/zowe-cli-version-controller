@@ -106,11 +106,16 @@ public class NodeJS {
         // allow custom build command, archive artifact
         BuildArgs args = new BuildArgs(arguments)
 
-        createStage(name: "build", stage: {
-            steps.echo args.tarFileName
-            steps.echo args.timeoutUnit
-            steps.echo "FILL THIS OUT"  
-        })
+        createStage(arguments + [name: "Build: ${args.name}", stage: {
+            steps.echo "FILL THIS OUT"
+
+            // Either use a custom build script or the default npm run build
+            if (args.buildOperation) {
+                args.buildOperation()
+            } else {
+                steps.sh 'npm run build'
+            }
+        }])
     }
 
     public void testStage() {
@@ -135,4 +140,5 @@ class StageArgs {
 
 class BuildArgs extends StageArgs {
     String tarFileName = "TEST"
+    Closure buildOperation
 }
