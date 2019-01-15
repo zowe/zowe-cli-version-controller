@@ -32,6 +32,8 @@ public class NodeJS {
     private boolean _shouldSkipRemainingSteps = false
     private boolean _didBuild = false
 
+    private Map<String, Stage> _stages = [:]
+
     // The build revision at the start of the build
     private String _buildRevision
 
@@ -42,11 +44,11 @@ public class NodeJS {
     public void setup() {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
         // @TODO Allow for input to override control variables, takes an array of step names define in the current pipeline and allows for enable or disabling the step. There should also be skippable steps for ones that are automatically generated. For steps we might want to echo how it can be disabled as the first line of output in the step.
-
+        // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
         try {
             _setupCalled = true
 
-            createStage(name: 'setup', stage: {
+            createStage(name: 'Setup', stage: {
                 steps.echo "Setting up build configuration"
 
                 def opts = [];
@@ -62,7 +64,7 @@ public class NodeJS {
                 steps.properties(opts)
             }, isSkipable: false)
 
-            createStage(name: 'checkout', stage: {
+            createStage(name: 'Checkout', stage: {
                 steps.checkout steps.scm
             }, isSkipable: false)
 
@@ -98,33 +100,41 @@ public class NodeJS {
     // document later
     public void createStage(Map arguments) {
         StageArgs args = new StageArgs(arguments)
+        Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
+
 
         steps.stage(args.name) {
-            steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
-                if (!_setupCalled) {
-                    steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                } else if (_shouldSkipRemainingSteps || args.shouldSkip()) {
-                    Utils.markStageSkippedForConditional(args.name);
-                } else {
-                    steps.echo "Executing stage ${args.name}"
+            try {
+                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                    if (!_setupCalled) {
+                        steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                    } else if (_shouldSkipRemainingSteps || args.shouldSkip()) {
+                        Utils.markStageSkippedForConditional(args.name);
+                    } else {
+                        steps.echo "Executing stage ${args.name}"
 
-                    if (args.isSkipable) { // @TODO FILL STRING OUT
-                        steps.echo "Inform how to skip the step here"
-                    }
+                        stageInfo.wasExecuted = true
 
-                    def environment = []
+                        if (args.isSkipable) { // @TODO FILL STRING OUT
+                            steps.echo "Inform how to skip the step here"
+                        }
 
-                    // Add items to the environment if needed
-                    if (args.environment) {
-                        args.environment.each { key, value -> environment.push("${key}=${value}") }
-                    }
+                        def environment = []
 
-                    // Run the passed stage with the proper environment variables
-                    steps.withEnv(environment) {
-                        args.stage()
+                        // Add items to the environment if needed
+                        if (args.environment) {
+                            args.environment.each { key, value -> environment.push("${key}=${value}") }
+                        }
+
+                        // Run the passed stage with the proper environment variables
+                        steps.withEnv(environment) {
+                            args.stage()
+                        }
                     }
                 }
             }
+        } finally {
+            stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
     }
 
@@ -191,7 +201,7 @@ public class NodeJS {
 
     // Shorthand for setting results
     public void setResult(Result result) {
-        steps.currentBuild.result = result
+        steps.currentBuild.currentResult = result
     }
 }
 
@@ -210,4 +220,11 @@ class BuildArgs extends StageArgs {
     String output = "./lib/"
     String name = "Source"
     Closure buildOperation
+}
+
+class Stage {
+    String name
+    int order
+    boolean wasExecuted = false
+    Result endOfStepBuildStatus
 }
