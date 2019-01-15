@@ -202,7 +202,7 @@ public class NodeJS {
 
     // Shorthand for setting results
     public void setResult(Result result) {
-        steps.currentBuild.currentResult = result
+        steps.currentBuild.result = result
     }
 }
 
