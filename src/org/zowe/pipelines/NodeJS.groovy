@@ -63,7 +63,7 @@ public class NodeJS {
 
         } catch (e) {
             // If there was an exception thrown, the build failed
-            currentBuild.result = "FAILED"
+            // currentBuild.result = "FAILED"  TODO: what is the equivalent in scripted pipeline?
             throw e
         } finally {
             sendEmailNotification()
@@ -120,7 +120,7 @@ public class NodeJS {
         createStage(arguments + [name: "Build: ${args.name}", stage: {
             steps.echo "FILL THIS OUT"
 
-            if(_didBuild) {
+            if (_didBuild) {
                 steps.error "Only one build step is allowed per pipeline."
             }
 
