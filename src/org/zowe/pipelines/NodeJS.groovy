@@ -5,6 +5,12 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
+    // Look up the git version
+    private static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
+
+    // CI Skip text
+    private static final String _CI_SKIP = "[ci skip]"
+
     /**
      * Store if the setup method was called
      */
@@ -24,6 +30,9 @@ public class NodeJS {
     private boolean _isProtectedBranch = false
     private boolean _shouldSkipRemainingSteps = false
     private boolean _didBuild = false
+
+    // The build revision at the start of the build
+    private String _buildRevision
 
     def steps
 
@@ -54,7 +63,19 @@ public class NodeJS {
             }, isSkipable: false)
 
             createStage(name: 'Check for CI Skip', stage: {
-                steps.echo "@TODO"
+                // We need to keep track of the current commit revision. This is to prevent the condition where
+                // the build starts on master and another branch gets merged to master prior to version bump
+                // commit taking place. If left unhandled, the version bump could be done on latest master branch
+                // code which would already be ahead of this build.
+                _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+
+                // This checks for the [ci skip] text. If found, the status code is 0
+                def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+                if (result == 0) {
+                    echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                    _shouldSkipRemainingSteps = true
+                    steps.currentBuild.result = 'NOT_BUILT'
+                }
             })
 
             createStage(name: 'Install Node Package Dependencies', stage: {
@@ -81,7 +102,7 @@ public class NodeJS {
             steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                 if (!_setupCalled) {
                     steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
+                } else if (_shouldSkipRemainingSteps || args.shouldSkip()) {
                     Utils.markStageSkippedForConditional(args.name);
                 } else {
                     steps.echo "Executing stage ${args.name}"
@@ -131,6 +152,9 @@ public class NodeJS {
 
             steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
             steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
+
+            // @TODO should probably delete the archive from the workspace as soon
+            // @TODO as it gets archived so that we can keep the git status clean
 
             _didBuild = true
         }])
