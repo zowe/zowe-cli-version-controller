@@ -103,7 +103,6 @@ public class NodeJS {
                     }
                 }
             }
-            throw new Exception("Hello!")
         }
         catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
@@ -174,8 +173,11 @@ public class NodeJS {
         }
 
         List<String> ccList = new ArrayList<String>();
-        for (String email : adminEmails) {
-            ccList.add("cc: " + email);
+        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+            // only CC administrators if we are on a protected branch
+            for (String email : adminEmails) {
+                ccList.add("cc: " + email);
+            }
         }
         steps.emailext(
                 subject: subject,
