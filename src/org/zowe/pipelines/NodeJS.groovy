@@ -3,6 +3,8 @@ package org.zowe.pipelines
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 public class NodeJS {
+    public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
+
     /**
      * Store if the setup method was called
      */
@@ -21,6 +23,7 @@ public class NodeJS {
 
     private boolean _isProtectedBranch = false
     private boolean _shouldSkipRemainingSteps = false
+    private boolean _didBuild = false
 
     def steps
 
@@ -56,7 +59,7 @@ public class NodeJS {
 
             createStage(name: 'Install Node Package Dependencies', stage: {
                 steps.sh "npm install"
-            }, isSkipable: false, environment: [TEST_ENV: 'TEST', TEST_ENV_2: 'TEST_2'])
+            }, isSkipable: false)
 
         } catch (e) {
             // If there was an exception thrown, the build failed
@@ -117,12 +120,21 @@ public class NodeJS {
         createStage(arguments + [name: "Build: ${args.name}", stage: {
             steps.echo "FILL THIS OUT"
 
+            if(_didBuild) {
+                steps.error "Only one build step is allowed per pipeline."
+            }
+
             // Either use a custom build script or the default npm run build
             if (args.buildOperation) {
                 args.buildOperation()
             } else {
                 steps.sh 'npm run build'
             }
+
+            steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
+            steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
+
+            _didBuild = true
         }])
     }
 
@@ -164,6 +176,6 @@ class StageArgs {
 }
 
 class BuildArgs extends StageArgs {
-    String tarFileName = "TEST"
+    String output = "./lib/"
     Closure buildOperation
 }
