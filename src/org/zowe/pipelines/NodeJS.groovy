@@ -1,6 +1,7 @@
 package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import hudson.model.Result
 
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
@@ -74,7 +75,7 @@ public class NodeJS {
                 if (result == 0) {
                     steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
                     _shouldSkipRemainingSteps = true
-                    steps.currentBuild.result = 'NOT_BUILT'
+                    steps.currentBuild.rawBuild@result = hudson.model.Result.NOT_BUILT
                 }
             })
 
