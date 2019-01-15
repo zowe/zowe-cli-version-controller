@@ -10,6 +10,12 @@ public class NodeJS {
      */
     private boolean _setupCalled = false
 
+    /**
+     * Any exception that has been encountered during the execution of the pipeline
+     *
+     */
+    private Exception encounteredException = null
+
     public String[] adminEmails = []
 
     // Key is branch name and value is npm tag name
@@ -30,79 +36,78 @@ public class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
-        try {
-            _setupCalled = true
+        _setupCalled = true
 
-            createStage(name: 'setup', stage: {
-                steps.echo "Setting up build configuration"
+        createStage(name: 'setup', stage: {
+            steps.echo "Setting up build configuration"
 
-                def opts = [];
-                def history = defaultBuildHistory;
+            def opts = [];
+            def history = defaultBuildHistory;
 
-                if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                    _isProtectedBranch = true;
-                    history = protectedBranchBuildHistory
-                    opts.push(steps.disableConcurrentBuilds())
-                }
+            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true;
+                history = protectedBranchBuildHistory
+                opts.push(steps.disableConcurrentBuilds())
+            }
 
-                opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-                steps.properties(opts)
-            }, isSkipable: false)
+            opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+            steps.properties(opts)
+        }, isSkipable: false)
 
-            createStage(name: 'checkout', stage: {
-                steps.checkout steps.scm
-            }, isSkipable: false)
+        createStage(name: 'checkout', stage: {
+            steps.checkout steps.scm
+        }, isSkipable: false)
 
-            createStage(name: 'Check for CI Skip', stage: {
-                steps.echo "@TODO"
-            })
+        createStage(name: 'Check for CI Skip', stage: {
+            steps.echo "@TODO"
+        })
 
-            createStage(name: 'Install Node Package Dependencies', stage: {
-                steps.sh "npm install"
-            }, isSkipable: false)
+        createStage(name: 'Install Node Package Dependencies', stage: {
+            steps.sh "npm install"
+        }, isSkipable: false)
 
-        } catch (e) {
-            // If there was an exception thrown, the build failed
-            // currentBuild.result = "FAILED"  TODO: what is the equivalent in scripted pipeline?
-            throw e
-        } finally {
-            sendEmailNotification()
-        }
     }
 
     // document later
     public void createStage(Map arguments) {
-        StageArgs args = new StageArgs(arguments)
+        try {
+            StageArgs args = new StageArgs(arguments)
 
-        // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
-        // def map = defaultMap << inputMap
+            // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
+            // def map = defaultMap << inputMap
 
-        steps.stage(args.name) {
-            steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
-                if (!_setupCalled) {
-                    steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
-                    Utils.markStageSkippedForConditional(args.name);
-                } else {
-                    steps.echo "Executing stage ${args.name}"
+            steps.stage(args.name) {
+                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                    if (!_setupCalled) {
+                        steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                    } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
+                        Utils.markStageSkippedForConditional(args.name);
+                    } else {
+                        steps.echo "Executing stage ${args.name}"
 
-                    if (args.isSkipable) { // @TODO FILL STRING OUT
-                        steps.echo "Inform how to skip the step here"
-                    }
+                        if (args.isSkipable) { // @TODO FILL STRING OUT
+                            steps.echo "Inform how to skip the step here"
+                        }
 
-                    def environment = []
+                        def environment = []
 
-                    // Add items to the environment if needed
-                    if (args.environment) {
-                        args.environment.each { key, value -> environment.push("${key}=${value}") }
-                    }
+                        // Add items to the environment if needed
+                        if (args.environment) {
+                            args.environment.each { key, value -> environment.push("${key}=${value}") }
+                        }
 
-                    // Run the passed stage with the proper environment variables
-                    steps.withEnv(environment) {
-                        args.stage()
+                        // Run the passed stage with the proper environment variables
+                        steps.withEnv(environment) {
+                            args.stage()
+                        }
                     }
                 }
             }
+        }
+        catch (e) {
+            // If there was an exception thrown, the build failed. Save the exception we encountered
+            steps.currentBuild.result = "FAILED"
+            encounteredException = e
         }
     }
 
@@ -151,20 +156,43 @@ public class NodeJS {
      */
     public void sendEmailNotification() {
         steps.echo "Sending email notification..."
+
+        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def bodyText = """
+                        <p>Branch: <b>${BRANCH_NAME}</b></p>
+                        <p>Check console output at <a href="${RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
+            steps.env.BUILD_NUMBER
+        }]</a></p>
+                        """
+
+        // Add any details of an exception, if encountered
+        if (encounteredException !== null) {
+            bodyText += encounteredException + ""
+        }
+
         List<String> ccList = new ArrayList<String>();
         for (String email : adminEmails) {
             ccList.add("cc: " + email);
         }
         steps.emailext(
-                subject: "Build " + steps.env.BUILD_NUMBER + " : " + steps.currentBuild.currentResult,
+                subject: subject,
                 to: ccList.join(","),
-                body: "This is an email",
+                body: bodyText,
                 mimeType: "text/html",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider'],
                                      [$class: 'UpstreamComitterRecipientProvider'],
                                      [$class: 'CulpritsRecipientProvider'],
                                      [$class: 'RequesterRecipientProvider']]
         )
+    }
+
+    /**
+     * Call this after you have created all of your stages and done all of the work of your pipeline.
+     *
+     * This performs any tear-down steps for the pipeline and send an email notification
+     */
+    public void end() {
+        sendEmailNotification();
     }
 }
 
