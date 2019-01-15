@@ -4,6 +4,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import groovy.transform.ToString
 
 public class NodeJS {
+    public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
+
     /**
      * Store if the setup method was called
      */
@@ -22,6 +24,7 @@ public class NodeJS {
 
     private boolean _isProtectedBranch = false
     private boolean _shouldSkipRemainingSteps = false
+    private boolean _didBuild = false
 
     def steps
     NodeJS(steps) { this.steps = steps }
@@ -109,12 +112,21 @@ public class NodeJS {
         createStage(arguments + [name: "Build: ${args.name}", stage: {
             steps.echo "FILL THIS OUT"
 
+            if(_didBuild) {
+                steps.error "Only one build step is allowed per pipeline."
+            }
+
             // Either use a custom build script or the default npm run build
             if (args.buildOperation) {
                 args.buildOperation()
             } else {
                 steps.sh 'npm run build'
             }
+
+            steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
+            steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
+
+            _didBuild = true
         }])
     }
 
@@ -139,6 +151,6 @@ class StageArgs {
 }
 
 class BuildArgs extends StageArgs {
-    String tarFileName = "TEST"
+    String output = "./lib/"
     Closure buildOperation
 }
