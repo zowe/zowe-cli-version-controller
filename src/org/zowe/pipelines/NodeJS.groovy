@@ -101,12 +101,12 @@ public class NodeJS {
     //     @NamedParam String test = "Hello"
     // ) {
     // Above doesn't work cause of groovy version
-    public void buildStage(Map arguments) {
+    public void buildStage(Map arguments = [:]) {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
         BuildArgs args = new BuildArgs(arguments)
 
-        createStage("build", {
+        createStage(name: "build", stage: {
             steps.echo args.tarFileName
             steps.echo args.timeoutUnit
             steps.echo "FILL THIS OUT"  
