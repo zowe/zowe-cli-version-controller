@@ -68,7 +68,7 @@ public class NodeJS {
         // def map = defaultMap << inputMap
         
         steps.stage(args.name) {
-            steps.timeout(time: args.timeout.duration, unit: args.timeout.unit) {
+            steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                 if (!_setupCalled) {
                     steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
                 } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
@@ -121,11 +121,7 @@ class StageArgs {
     String name
     Closure stage
     boolean isSkipable = true
-    TimeoutArg timeout
+    int timeoutVal = 10
+    String timeoutUnit = 'MINUTES'
     Closure shouldSkip = { -> false }
-}
-
-class TimeoutArg {
-    int duration = 10
-    String unit = 'MINUTES'
 }
