@@ -40,6 +40,9 @@ public class NodeJS {
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
+        // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
+        // @TODO Allow for input to override control variables, takes an array of step names define in the current pipeline and allows for enable or disabling the step. There should also be skippable steps for ones that are automatically generated. For steps we might want to echo how it can be disabled as the first line of output in the step.
+
         try {
             _setupCalled = true
 
@@ -75,7 +78,7 @@ public class NodeJS {
                 if (result == 0) {
                     steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
                     _shouldSkipRemainingSteps = true
-                    steps.currentBuild.result = Result.NOT_BUILT
+                    setResult(Result.NOT_BUILT)
                 }
             })
 
@@ -95,9 +98,6 @@ public class NodeJS {
     // document later
     public void createStage(Map arguments) {
         StageArgs args = new StageArgs(arguments)
-
-        // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
-        // def map = defaultMap << inputMap
 
         steps.stage(args.name) {
             steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
@@ -135,8 +135,7 @@ public class NodeJS {
     // ) {
     // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
-        // skipable only allow one of these, must happen before testing
-        // allow custom build command, archive artifact
+        // @TODO must happen before testing
         BuildArgs args = new BuildArgs(arguments)
 
         createStage(arguments + [name: "Build: ${args.name}", stage: {
@@ -162,8 +161,12 @@ public class NodeJS {
     }
 
     public void testStage() {
-        // skipable, can have multiple, must happen before deploy after build
-        // run in d-bus or not, allow custom test command, archive test results
+        // @TODO skipable
+        // @TODO can have multiple
+        // @TODO must happen before deploy after build
+        // @TODO  run in d-bus or not
+        // @TODO allow custom test command
+        // @TODO archive test results
         createStage("test", {
             steps.echo "FILL THIS OUT"
         })
@@ -184,6 +187,11 @@ public class NodeJS {
 //                                     [$class: 'CulpritsRecipientProvider'],
 //                                     [$class: 'RequesterRecipientProvider']]
         )
+    }
+
+    // Shorthand for setting results
+    public void setResult(Result result) {
+        steps.currentBuild.result = result
     }
 }
 
