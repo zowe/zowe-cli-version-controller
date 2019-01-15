@@ -1,7 +1,6 @@
 package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import groovy.transform.ToString
 
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
@@ -27,39 +26,48 @@ public class NodeJS {
     private boolean _didBuild = false
 
     def steps
+
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
-        _setupCalled = true
+        try {
+            _setupCalled = true
 
-        createStage(name: 'setup', stage: {
-            steps.echo "Setting up build configuration"
+            createStage(name: 'setup', stage: {
+                steps.echo "Setting up build configuration"
 
-            def opts = [];
-            def history = defaultBuildHistory;
+                def opts = [];
+                def history = defaultBuildHistory;
 
-            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                _isProtectedBranch = true;
-                history = protectedBranchBuildHistory
-                opts.push(steps.disableConcurrentBuilds())
-            }
+                if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+                    _isProtectedBranch = true;
+                    history = protectedBranchBuildHistory
+                    opts.push(steps.disableConcurrentBuilds())
+                }
 
-            opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-            steps.properties(opts)
-        }, isSkipable: false)
+                opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+                steps.properties(opts)
+            }, isSkipable: false)
 
-        createStage(name: 'checkout', stage: {
-            steps.checkout steps.scm
-        }, isSkipable: false)
+            createStage(name: 'checkout', stage: {
+                steps.checkout steps.scm
+            }, isSkipable: false)
 
-        createStage(name: 'Check for CI Skip', stage: {
-            steps.echo "@TODO"
-        })
+            createStage(name: 'Check for CI Skip', stage: {
+                steps.echo "@TODO"
+            })
 
-        createStage(name: 'Install Node Package Dependencies', stage: {
-            steps.sh "npm install"
-        }, isSkipable: false, environment: [TEST_ENV: 'TEST', TEST_ENV_2: 'TEST_2'])
-        // @TODO ADD STEP TO SEND EMAIL OUT HERE
+            createStage(name: 'Install Node Package Dependencies', stage: {
+                steps.sh "npm install"
+            }, isSkipable: false, environment: [TEST_ENV: 'TEST', TEST_ENV_2: 'TEST_2'])
+
+        } catch (e) {
+            // If there was an exception thrown, the build failed
+            currentBuild.result = "FAILED"
+            throw e
+        } finally {
+            sendEmailNotification()
+        }
     }
 
     // document later
@@ -68,7 +76,7 @@ public class NodeJS {
 
         // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
         // def map = defaultMap << inputMap
-        
+
         steps.stage(args.name) {
             steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                 if (!_setupCalled) {
@@ -85,7 +93,7 @@ public class NodeJS {
                     def environment = []
 
                     // Add items to the environment if needed
-                    if(args.environment) {
+                    if (args.environment) {
                         args.environment.each { key, value -> environment.push("${key}=${value}") }
                     }
 
@@ -134,8 +142,25 @@ public class NodeJS {
         // skipable, can have multiple, must happen before deploy after build
         // run in d-bus or not, allow custom test command, archive test results
         createStage("test", {
-            steps.echo "FILL THIS OUT"  
+            steps.echo "FILL THIS OUT"
         })
+    }
+
+    /**
+     * Send an email notification about the result of the build to the appropriate users
+     */
+    public void sendEmailNotification() {
+        steps.echo "Sending email notification..."
+        emailext(
+                subject: "Build ${currentBuild.result}",
+                to: adminEmails,
+                body: "This is an email",
+                mimeType: "text/html",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+                                     [$class: 'UpstreamComitterRecipientProvider'],
+                                     [$class: 'CulpritsRecipientProvider'],
+                                     [$class: 'RequesterRecipientProvider']]
+        )
     }
 }
 
@@ -147,7 +172,7 @@ class StageArgs {
     int timeoutVal = 10
     String timeoutUnit = 'MINUTES'
     Closure shouldSkip = { -> false }
-    Map<String,String> environment
+    Map<String, String> environment
 }
 
 class BuildArgs extends StageArgs {
