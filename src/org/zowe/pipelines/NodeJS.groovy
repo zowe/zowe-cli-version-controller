@@ -44,6 +44,7 @@ public class NodeJS {
             opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
         }, isSkipable: false)
+
         createStage(name: 'checkout', stage: {
             steps.checkout steps.scm
         }, isSkipable: false)
@@ -54,7 +55,7 @@ public class NodeJS {
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             steps.sh "npm install"
-        }, isSkipable: false)
+        }, isSkipable: false, environment: [TEST_ENV: 'TEST', TEST_ENV_2: 'TEST_2'])
         // @TODO ADD STEP TO SEND EMAIL OUT HERE
     }
 
@@ -80,7 +81,18 @@ public class NodeJS {
                         steps.echo "Inform how to skip the step here"
                     }
 
-                    args.stage()
+                    def environment = []
+
+                    // Add items to the environment if needed
+                    if(args.environment) {
+                        args.environment.each { key, value -> environment.push("${key}=${value}") }
+                    }
+
+                    steps.withEnv(environment) {
+                        steps.echo environment
+
+                        args.stage()
+                    }
                 }
             }
         }
@@ -102,7 +114,6 @@ public class NodeJS {
         createStage("build", {
             steps.echo args.name
             steps.echo args.test
-            steps.echo args.toString()
             steps.echo "FILL THIS OUT"  
         })
     }
@@ -124,4 +135,5 @@ class StageArgs {
     int timeoutVal = 10
     String timeoutUnit = 'MINUTES'
     Closure shouldSkip = { -> false }
+    Map<String,String> environment
 }
