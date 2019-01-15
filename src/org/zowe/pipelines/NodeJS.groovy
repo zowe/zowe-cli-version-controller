@@ -168,10 +168,9 @@ public class NodeJS {
 
         // Add any details of an exception, if encountered
         if (encounteredException != null) {
-            bodyText += "The following exception was encountered during the build: </br>"
-            bodyText += encounteredException.toString();
-            bodyText += encounteredException.getMessage();
-            bodyText += encounteredException.getStackTrace().join("</br>");
+            bodyText += "<p>The following exception was encountered during the build: </p>"
+            bodyText += "<p>" + encounteredException.toString() + "</p>";
+            bodyText += "<p>" + encounteredException.getStackTrace().join("</p><p>") + "</p>";
         }
 
         List<String> ccList = new ArrayList<String>();
