@@ -60,9 +60,7 @@ public class NodeJS {
     }
 
     // document later
-    public void createStage(
-        Map arguments
-    ) {
+    public void createStage(Map arguments) {
         StageArgs args = new StageArgs(arguments)
 
         // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
@@ -88,9 +86,8 @@ public class NodeJS {
                         args.environment.each { key, value -> environment.push("${key}=${value}") }
                     }
 
+                    // Run the passed stage with the proper environment variables
                     steps.withEnv(environment) {
-                        steps.sh 'printenv'
-
                         args.stage()
                     }
                 }
@@ -104,16 +101,14 @@ public class NodeJS {
     //     @NamedParam String test = "Hello"
     // ) {
     // Above doesn't work cause of groovy version
-    public void buildStage(Map args) {
+    public void buildStage(Map arguments) {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
-
-        // TestArgs test = new TestArgs(args)
-
+        BuildArgs args = new BuildArgs(arguments)
 
         createStage("build", {
-            steps.echo args.name
-            steps.echo args.test
+            steps.echo args.tarFileName
+            steps.echo args.timeoutUnit
             steps.echo "FILL THIS OUT"  
         })
     }
@@ -136,4 +131,8 @@ class StageArgs {
     String timeoutUnit = 'MINUTES'
     Closure shouldSkip = { -> false }
     Map<String,String> environment
+}
+
+class BuildArgs extends StageArgs {
+    String tarFileName = "TEST"
 }
