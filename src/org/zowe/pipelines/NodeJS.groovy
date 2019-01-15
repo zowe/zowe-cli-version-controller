@@ -1,6 +1,7 @@
 package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import groovy.transform.ToString
 
 public class NodeJS {
     /**
@@ -95,11 +96,12 @@ public class NodeJS {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
-        TestArgs test = TestArgs(args)
+        TestArgs test = new TestArgs(args)
 
         createStage("build", {
             steps.echo test.name
             steps.echo test.test
+            steps.echo test.toString()
             steps.echo "FILL THIS OUT"  
         })
     }
@@ -113,7 +115,7 @@ public class NodeJS {
     }
 }
 
-
+@ToString(includeFields = true, includeNames = true)
 class TestArgs {
     String name
     String test = "Hello"
