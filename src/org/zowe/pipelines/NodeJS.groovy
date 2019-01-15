@@ -80,7 +80,7 @@ public class NodeJS {
                         steps.echo "Inform how to skip the step here"
                     }
 
-                    stepContents()
+                    args.stage()
                 }
             }
         }
