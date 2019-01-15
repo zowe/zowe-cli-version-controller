@@ -60,23 +60,23 @@ public class NodeJS {
 
     // document later
     public void createStage(
-        String name,
-        Closure stepContents,
-        Map inputMap = [:]
+        Map arguments
     ) {
-        def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
-        def map = defaultMap << inputMap
+        StageArgs args = new StageArgs(arguments)
+
+        // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
+        // def map = defaultMap << inputMap
         
-        steps.stage(name) {
-            steps.timeout(time: map.timeout, unit: map.timeoutUnit) {
+        steps.stage(args.name) {
+            steps.timeout(time: args.timeout.duration, unit: args.timeout.unit) {
                 if (!_setupCalled) {
                     steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                } else if ((_shouldSkipRemainingSteps && map.isSkipable) || map.shouldSkip()) {
+                } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
                     Utils.markStageSkippedForConditional(name);
                 } else {
-                    steps.echo "Executing stage ${name}"
+                    steps.echo "Executing stage ${args.name}"
 
-                    if (map.isSkipable) { // @TODO FILL STRING OUT
+                    if (args..isSkipable) { // @TODO FILL STRING OUT
                         steps.echo "Inform how to skip the step here"
                     }
 
@@ -92,7 +92,7 @@ public class NodeJS {
     //     @NamedParam String test = "Hello"
     // ) {
     // Above doesn't work cause of groovy version
-    public void buildStage(TestArgs args) {
+    public void buildStage(Map args) {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
@@ -117,7 +117,15 @@ public class NodeJS {
 }
 
 // @ToString(includeFields = true, includeNames = true)
-class TestArgs {
+class StageArgs {
     String name
-    String test = "Hello"
+    Closure stage
+    boolean isSkipable = true
+    TimeoutArg timeout
+    Closure shouldSkip = { -> false }
+}
+
+class TimeoutArg {
+    int duration = 10
+    String unit = 'MINUTES'
 }
