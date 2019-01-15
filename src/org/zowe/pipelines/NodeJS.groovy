@@ -29,7 +29,7 @@ public class NodeJS {
     public void setup() {
         _setupCalled = true
 
-        createStage('setup', {
+        createStage(name: 'setup', stage: {
             steps.echo "Setting up build configuration"
 
             def opts = [];
@@ -43,18 +43,18 @@ public class NodeJS {
 
             opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
-        }, [isSkipable: false])
-        createStage('checkout', {
+        }, isSkipable: false)
+        createStage(name: 'checkout', stage: {
             steps.checkout steps.scm
-        }, [isSkipable: false])
+        }, isSkipable: false)
 
-        createStage('Check for CI Skip', {
+        createStage(name: 'Check for CI Skip', stage: {
             steps.echo "@TODO"
         })
 
-        createStage('Install Node Package Dependencies', {
+        createStage(name: 'Install Node Package Dependencies', stage: {
             steps.sh "npm install"
-        }, [isSkipable: false])
+        }, isSkipable: false)
         // @TODO ADD STEP TO SEND EMAIL OUT HERE
     }
 
