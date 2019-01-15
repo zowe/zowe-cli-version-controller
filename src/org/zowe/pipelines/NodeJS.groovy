@@ -153,7 +153,7 @@ public class NodeJS {
         steps.echo "Sending email notification..."
         steps.emailext(
                 subject: "Build Email",
-                to: adminEmails,
+                to: "cc: " + adminEmails.join(","),
                 body: "This is an email",
                 mimeType: "text/html",
 //                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
