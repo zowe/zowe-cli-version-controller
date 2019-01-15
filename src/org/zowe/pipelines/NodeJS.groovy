@@ -95,7 +95,7 @@ public class NodeJS {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
-        TestArgs test = args as TestArgs
+        TestArgs test = TestArgs(args)
 
         createStage("build", {
             steps.echo test.name
