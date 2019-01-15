@@ -89,7 +89,7 @@ public class NodeJS {
                     }
 
                     steps.withEnv(environment) {
-                        steps.echo environment
+                        steps.sh 'printenv'
 
                         args.stage()
                     }
