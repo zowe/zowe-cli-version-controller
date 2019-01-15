@@ -146,7 +146,7 @@ public class NodeJS {
     public void testStage() {
         // skipable, can have multiple, must happen before deploy after build
         // run in d-bus or not, allow custom test command, archive test results
-        createStage("test", stage: {
+        createStage(name: "test", stage: {
             steps.echo "FILL THIS OUT"
         })
     }
