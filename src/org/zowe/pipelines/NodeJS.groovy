@@ -156,10 +156,10 @@ public class NodeJS {
                 to: adminEmails,
                 body: "This is an email",
                 mimeType: "text/html",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-                                     [$class: 'UpstreamComitterRecipientProvider'],
-                                     [$class: 'CulpritsRecipientProvider'],
-                                     [$class: 'RequesterRecipientProvider']]
+//                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+//                                     [$class: 'UpstreamComitterRecipientProvider'],
+//                                     [$class: 'CulpritsRecipientProvider'],
+//                                     [$class: 'RequesterRecipientProvider']]
         )
     }
 }
