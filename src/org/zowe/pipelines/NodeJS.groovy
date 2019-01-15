@@ -91,13 +91,15 @@ public class NodeJS {
     //     @NamedParam String test = "Hello"
     // ) {
     // Above doesn't work cause of groovy version
-    public void buildStage(String name, String test = "Hello") {
+    public void buildStage(Map args) {
         // skipable only allow one of these, must happen before testing
         // allow custom build command, archive artifact
 
+        TestArgs test = args as TestArgs
+
         createStage("build", {
-            steps.echo name
-            steps.echo test
+            steps.echo test.name
+            steps.echo test.test
             steps.echo "FILL THIS OUT"  
         })
     }
@@ -109,4 +111,10 @@ public class NodeJS {
             steps.echo "FILL THIS OUT"  
         })
     }
+}
+
+
+class TestArgs {
+    String name
+    String test = "Hello"
 }
