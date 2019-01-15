@@ -138,8 +138,9 @@ public class NodeJS {
      * Send an email notification about the result of the build to the appropriate users
      */
     public void sendEmailNotification() {
+        echo "Sending email notification..."
         emailext(
-                subject: "Build ${env.BUILD_NUMBER} ${currentBuild.result}",
+                subject: "Build ${currentBuild.result}",
                 to: adminEmails,
                 body: "This is an email",
                 mimeType: "text/html",
