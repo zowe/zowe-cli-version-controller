@@ -72,7 +72,7 @@ public class NodeJS {
                 // This checks for the [ci skip] text. If found, the status code is 0
                 def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
                 if (result == 0) {
-                    echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                    steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
                     _shouldSkipRemainingSteps = true
                     steps.currentBuild.result = 'NOT_BUILT'
                 }
