@@ -118,8 +118,6 @@ public class NodeJS {
         BuildArgs args = new BuildArgs(arguments)
 
         createStage(arguments + [name: "Build: ${args.name}", stage: {
-            steps.echo "FILL THIS OUT"
-
             if (_didBuild) {
                 steps.error "Only one build step is allowed per pipeline."
             }
@@ -177,5 +175,6 @@ class StageArgs {
 
 class BuildArgs extends StageArgs {
     String output = "./lib/"
+    String name = "Source"
     Closure buildOperation
 }
