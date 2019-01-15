@@ -134,7 +134,7 @@ public class NodeJS {
                     }
                 }
             } finally {
-                stageInfo.endOfStepBuildStatus = steps.currentBuild.getResult()
+                stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
             }
         }
     }
@@ -201,7 +201,7 @@ public class NodeJS {
     }
 
     // Shorthand for setting results
-    public void setResult(Result result) {
+    public void setResult(Result result) { // @TODO need to make this an internal enum
         steps.currentBuild.result = result
     }
 }
@@ -227,5 +227,5 @@ class Stage {
     String name
     int order
     boolean wasExecuted = false
-    Result endOfStepBuildStatus
+    String endOfStepBuildStatus
 }
