@@ -60,7 +60,7 @@ public class NodeJS {
 
     // document later
     public void createStage(
-        Map args
+        Map arguments
     ) {
         StageArgs args = new StageArgs(arguments)
 
