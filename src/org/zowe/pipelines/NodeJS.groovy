@@ -60,7 +60,7 @@ public class NodeJS {
 
     // document later
     public void createStage(
-        Map arguments
+        Map args
     ) {
         StageArgs args = new StageArgs(arguments)
 
@@ -72,11 +72,11 @@ public class NodeJS {
                 if (!_setupCalled) {
                     steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
                 } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
-                    Utils.markStageSkippedForConditional(name);
+                    Utils.markStageSkippedForConditional(args.name);
                 } else {
                     steps.echo "Executing stage ${args.name}"
 
-                    if (args..isSkipable) { // @TODO FILL STRING OUT
+                    if (args.isSkipable) { // @TODO FILL STRING OUT
                         steps.echo "Inform how to skip the step here"
                     }
 
