@@ -151,7 +151,7 @@ public class NodeJS {
      */
     public void sendEmailNotification() {
         steps.echo "Sending email notification..."
-        emailext(
+        steps.emailext(
                 subject: "Build Email",
                 to: adminEmails,
                 body: "This is an email",
