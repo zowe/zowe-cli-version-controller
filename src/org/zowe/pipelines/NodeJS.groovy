@@ -225,9 +225,10 @@ public class NodeJS {
     public void end() {
         Stage stage = _firstStage
 
-        do {
+        while (stage != null) {
             stage.execute()
-        } while ((stage = stage.next) != null)
+            stage = stage.next
+        }
     }
 
     /**
