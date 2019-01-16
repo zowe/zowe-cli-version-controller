@@ -105,7 +105,7 @@ public class NodeJS {
     public void createStage(Map arguments) {
         // Parse arguments and initialize the stage
         StageArgs args = new StageArgs(arguments)
-        Stage stage = new Stage(name: args.name, order: _stages.size() + 1)
+        Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
         // Add stage to map
         _stages.putAt(args.name, stage)
@@ -155,6 +155,7 @@ public class NodeJS {
                             
                             if (args.isSkipable) { // @TODO FILL STRING OUT
                                 steps.echo "Inform how to skip the step here"
+                                steps.echo steps.params[getStageSkipOption(stage.name)]
                             }
 
                             def environment = []
@@ -247,7 +248,9 @@ public class NodeJS {
 
         while (stage) {
             // Get the parameters for the stage
-            println steps.params
+            if (stage.args.isSkipable) {
+                steps.echo steps.params[getStageSkipOption(stage.name)]
+            }
             // stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
 
             stage.execute()
@@ -306,5 +309,6 @@ class Stage {
     boolean wasExecuted = false
     String endOfStepBuildStatus // The result of the build at the end
     Stage next // The next stage
+    StageArgs args
     Closure execute // The closure to execute for the stage
 }
