@@ -33,6 +33,7 @@ public class NodeJS {
     private boolean _didBuild = false
 
     def buildOptions = []
+    def buildParameters = [] // Build parameter definitions
 
     // Map of all stages run
     private Map<String, Stage> _stages = [:]
@@ -59,23 +60,6 @@ public class NodeJS {
         // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
         try {
             _setupCalled = true
-
-            createStage(name: 'Setup', stage: {
-                steps.echo "Setting up build configuration"
-
-                def history = defaultBuildHistory;
-
-                // Add protected branch to build options
-                if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                    _isProtectedBranch = true;
-                    history = protectedBranchBuildHistory
-                    buildOptions.push(steps.disableConcurrentBuilds())
-                }
-
-                // Add log rotator to build options
-                buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-                steps.properties(buildOptions)
-            }, isSkipable: false)
 
             createStage(name: 'Checkout', stage: {
                 steps.checkout steps.scm
@@ -134,12 +118,8 @@ public class NodeJS {
 
         if (args.isSkipable) {
             // Add the option to the build, this will be called in setup
-            buildOptions.push([
-                steps.parameters(
-                    [
-                        steps.booleanParam(defaultValue: false, description: "Setting this to true will skip the stage \"${args.name}\"", name: "Skip Stage: ${args.name}")
-                    ]
-                )
+            buildParameters.push([
+                steps.booleanParam(defaultValue: false, description: "Setting this to true will skip the stage \"${args.name}\"", name: "Skip Stage: ${args.name}")
             ])
         }
 
@@ -228,6 +208,24 @@ public class NodeJS {
     }
 
     public void end() {
+        // First setup the build properties
+        def history = defaultBuildHistory;
+
+        // Add protected branch to build options
+        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+            _isProtectedBranch = true;
+            history = protectedBranchBuildHistory
+            buildOptions.push(steps.disableConcurrentBuilds())
+        }
+
+        // Add log rotator to build options
+        buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+
+        // Add any parameters to the build here
+        buildOptions.push(steps.parameters(buildParameters))
+
+        steps.properties(buildOptions)
+
         Stage stage = _firstStage
 
         while (stage) {
