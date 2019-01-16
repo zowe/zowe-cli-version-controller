@@ -129,7 +129,7 @@ public class NodeJS {
                 steps.booleanParam(
                     defaultValue: false,
                     description: "Setting this to true will skip the stage \"${args.name}\"",
-                    name: "Skip Stage: ${args.name}"
+                    name: getStageSkipOption(args.name)
                 )
             )
         }
@@ -245,9 +245,16 @@ public class NodeJS {
         Stage stage = _firstStage
 
         while (stage) {
+            // Get the parameters for the stage
+            stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+
             stage.execute()
             stage = stage.next
         }
+    }
+
+    private String getStageSkipOption(String name) {
+        return "Skip Stage: ${name}"
     }
 
     /**
