@@ -59,7 +59,10 @@ public class NodeJS {
         // @TODO Allow for input to override control variables, takes an array of step names define in the current pipeline and allows for enable or disabling the step. There should also be skippable steps for ones that are automatically generated. For steps we might want to echo how it can be disabled as the first line of output in the step.
         // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
         try {
-            _setupCalled = true
+            createStage (name: 'Setup', stage: {
+                steps.echo "Setup was called first"
+                _setupCalled = true
+            }, isSkipable: false)
 
             createStage(name: 'Checkout', stage: {
                 steps.checkout steps.scm
