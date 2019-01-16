@@ -212,10 +212,14 @@ public class NodeJS {
         try {
             closure()
         } catch (e) {
-            // If there was an exception thrown, the build failed. Save the exception we encountered
-            _firstFailingStage = stage
+            if (!_firstFailingStage) {
+                // If there was an exception thrown, the build failed. Save the exception we encountered
+                _firstFailingStage = stage
+            }
             steps.currentBuild.result = BUILD_FAILURE
-            encounteredException = e
+            encounteredException = e // @TODO place this as part of the stage class
+
+            throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
