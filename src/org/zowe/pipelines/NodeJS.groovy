@@ -159,7 +159,7 @@ public class NodeJS {
         try {
             stage.execute = {
                 steps.stage(args.name) {
-                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) { // @TODO investigate how these closures affect the try catch
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
