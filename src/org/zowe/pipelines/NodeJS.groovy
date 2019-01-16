@@ -196,7 +196,7 @@ public class NodeJS {
                                     _firstFailingStage = stage
                                     steps.currentBuild.result = BUILD_FAILURE
                                     encounteredException = e
-                                    throw
+                                    throw e
                                 } finally {
                                     stage.endOfStepBuildStatus = steps.currentBuild.currentResult
                                 }
