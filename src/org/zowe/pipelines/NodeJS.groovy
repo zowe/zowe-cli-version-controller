@@ -132,7 +132,7 @@ public class NodeJS {
         }
         catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
-            steps.currentBuild.result = BUILD_UNSTABLE
+            steps.currentBuild.result = BUILD_FAILURE
             encounteredException = e
         }
     }
