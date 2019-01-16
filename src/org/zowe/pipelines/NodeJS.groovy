@@ -207,7 +207,7 @@ public class NodeJS {
     }
 
     private Closure _closureWrapper(Stage stage, Closure closure) {
-       return { ->
+       return {
             try {
                 closure()
             } catch (e) {
