@@ -47,11 +47,16 @@ public class NodeJS {
     private boolean _shouldSkipRemainingSteps = false
     private boolean _didBuild = false
 
+    def buildOptions = []
+
     // Map of all stages run
     private Map<String, Stage> _stages = [:]
 
     // Keeps track of the current stage
     private Stage _currentStage
+
+    // The first stage to execute
+    private Stage _firstStage
 
     // Keeps track of the first failing stage
     private Stage _firstFailingStage
@@ -85,16 +90,17 @@ public class NodeJS {
         createStage(name: 'Setup', stage: {
             steps.echo "Setting up build configuration"
 
-            def opts = [];
+
             def history = defaultBuildHistory;
 
-            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+            // Add protected branch to build optionsif (protectedBranches.containsKey(steps.BRANCH_NAME)) {
                 _isProtectedBranch = true;
                 history = protectedBranchBuildHistory
-                opts.push(steps.disableConcurrentBuilds())
+                buildOptions.push(steps.disableConcurrentBuilds())
             }
 
-            opts.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+            // Add log rotator to build options
+                buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
             steps.properties(opts)
         }, isSkipable: false)
 
@@ -142,46 +148,49 @@ public class NodeJS {
         _currentStage = stageInfo
 
         if (args.isSkipable) {
-            // Now get the control property option to see if the stage was forced skipped
-            steps.properties([
+            // Add the option to the build, this will be called in setup
+            buildOptions.push([
                 steps.parameters(
                     [
-                        steps.booleanParam(defaultValue: false, description: "Skip Stage: ${args.name}", name: args.name)
+                        steps.booleanParam(defaultValue: false, description: "Setting this to true will skip the stage \"${args.name}\"", name: "Skip Stage: ${args.name}")
                     ]
                 )
             ])
         }
         try {
-            steps.stage(args.name) {
-                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
-                    if (!_setupCalled) {
-                        steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                    } else if (stageInfo.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
-                        Utils.markStageSkippedForConditional(args.name);
-                    } else {
-                        steps.echo "Executing stage ${args.name}"
+            stageInfo.execute = {
+                steps.stage(args.name) {
 
-                        stageInfo.wasExecuted = true
+                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                        if (!_setupCalled) {
+                            steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                        } else if (stageInfo.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
+                            Utils.markStageSkippedForConditional(args.name);
+                        } else {
+                            steps.echo "Executing stage ${args.name}"
 
-                        if (args.isSkipable) { // @TODO FILL STRING OUT
-                            steps.echo "Inform how to skip the step here"
-                        }
+                            stageInfo.wasExecuted = true
 
-                        def environment = []
+                            if (args.isSkipable) { // @TODO FILL STRING OUT
+                                steps.echo "Inform how to skip the step here"
+                            }
 
-                        // Add items to the environment if needed
-                        if (args.environment) {
-                            args.environment.each { key, value -> environment.push("${key}=${value}") }
-                        }
+                            def environment = []
 
-                        // Run the passed stage with the proper environment variables
-                        steps.withEnv(environment) {
-                            args.stage()
+                            // Add items to the environment if needed
+                            if (args.environment) {
+                                args.environment.each { key, value -> environment.push("${key}=${value}") }
+                            }
+
+                            // Run the passed stage with the proper environment variables
+                            steps.withEnv(environment) {
+                                args.stage()
+                            }
                         }
                     }
                 }
             }
-        } catch (e) {
+        }catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
             _firstFailingStage = stageInfo
             steps.currentBuild.result = BUILD_FAILURE
@@ -235,6 +244,14 @@ public class NodeJS {
         createStage(name: "test", stage: {
             steps.echo "FILL THIS OUT"
         })
+    }
+
+    public void end() {
+        Stage stage = _firstStage
+
+        do {
+            stage.execute()
+        } while ((stage = stage.next) != null)
     }
 
     /**
@@ -336,4 +353,5 @@ class Stage {
     boolean wasExecuted = false
     String endOfStepBuildStatus // The result of the build at the end
     Stage next // The next stage
+    Closure execute // The closure to execute for the stage
 }
