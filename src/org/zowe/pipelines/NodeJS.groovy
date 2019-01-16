@@ -216,17 +216,24 @@ public class NodeJS {
                 ccList.add("cc: " + email);
             }
         }
-        // send the email
-        steps.emailext(
-                subject: subject,
-                to: ccList.join(","),
-                body: bodyText,
-                mimeType: "text/html",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-                                     [$class: 'UpstreamComitterRecipientProvider'],
-                                     [$class: 'CulpritsRecipientProvider'],
-                                     [$class: 'RequesterRecipientProvider']]
-        )
+        try {
+            // send the email
+            steps.emailext(
+                    subject: subject,
+                    to: ccList.join(","),
+                    body: bodyText,
+                    mimeType: "text/html",
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+                                         [$class: 'UpstreamComitterRecipientProvider'],
+                                         [$class: 'CulpritsRecipientProvider'],
+                                         [$class: 'RequesterRecipientProvider']]
+            )
+        }
+        catch (emailException) {
+            steps.echo "Exception encountered while attempting to send email!"
+            steps.echo emailException.toString();
+            steps.echo emailException.getStackTrace().join("\n")
+        }
     }
 
     /**
