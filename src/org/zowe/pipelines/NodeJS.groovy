@@ -128,6 +128,7 @@ public class NodeJS {
                     }
                 }
             }
+            throw new Error("hello!!");
         }
         catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
