@@ -1,7 +1,7 @@
 package org.zowe.pipelines
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
@@ -74,8 +74,6 @@ public class NodeJS {
 
     public void setup() {
         _setupCalled = true
-     try {
-            _setupCalled = true
 
         createStage(name: 'Setup', stage: {
             steps.echo "Setting up build configuration"
@@ -99,18 +97,18 @@ public class NodeJS {
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
-                // the build starts on master and another branch gets merged to master prior to version bump
-                // commit taking place. If left unhandled, the version bump could be done on latest master branch
-                // code which would already be ahead of this build.
-                _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+            // the build starts on master and another branch gets merged to master prior to version bump
+            // commit taking place. If left unhandled, the version bump could be done on latest master branch
+            // code which would already be ahead of this build.
+            _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
 
-                // This checks for the [ci skip] text. If found, the status code is 0
-                def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-                if (result == 0) {
-                    steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
-                    _shouldSkipRemainingSteps = true
-                    setResult(Result.NOT_BUILT)
-                }
+            // This checks for the [ci skip] text. If found, the status code is 0
+            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+            if (result == 0) {
+                steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                _shouldSkipRemainingSteps = true
+                setResult(Result.NOT_BUILT)
+            }
         })
 
         createStage(name: 'Install Node Package Dependencies', stage: {
@@ -123,20 +121,20 @@ public class NodeJS {
     public void createStage(Map arguments) {
         try {
             StageArgs args = new StageArgs(arguments)
-        Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
+            Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
 
             // @TODO add stage to map
 
             steps.stage(args.name) {
-                try {steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                     if (!_setupCalled) {
                         steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                    } else if (_shouldSkipRemainingSteps  || args.shouldSkip()) {
+                    } else if (_shouldSkipRemainingSteps || args.shouldSkip()) {
                         Utils.markStageSkippedForConditional(args.name);
                     } else {
                         steps.echo "Executing stage ${args.name}"
 
-                        stageInfo.wasExecuted = trueif (args.isSkipable) { // @TODO FILL STRING OUT
+                        stageInfo.wasExecuted = trueif(args.isSkipable) { // @TODO FILL STRING OUT
                             steps.echo "Inform how to skip the step here"
                         }
 
@@ -153,15 +151,15 @@ public class NodeJS {
                         }
                     }
                 }
-            } finally {
-                stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
             }
-        }
-        catch (e) {
+        } catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
             steps.currentBuild.result = BUILD_FAILURE
             encounteredException = e
+        } finally {
+            stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
+
     }
 
     // @NamedVariant
