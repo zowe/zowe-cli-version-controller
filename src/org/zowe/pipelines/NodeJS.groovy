@@ -187,7 +187,17 @@ public class NodeJS {
 
                             // Run the passed stage with the proper environment variables
                             steps.withEnv(environment) {
-                                args.stage()
+                                try {
+                                    args.stage()
+                                } catch (e) {
+                                    // If there was an exception thrown, the build failed. Save the exception we encountered
+                                    _firstFailingStage = stage
+                                    steps.currentBuild.result = BUILD_FAILURE
+                                    encounteredException = e
+                                    throw
+                                } finally {
+                                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+                                }
                             }
                         }
                     }
