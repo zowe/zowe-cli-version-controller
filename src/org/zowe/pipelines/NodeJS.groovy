@@ -143,7 +143,7 @@ public class NodeJS {
             ])
         }
 
-        stageInfo.execute = { 
+        stage.execute = { 
             steps.stage(args.name) {
                 try {
                     steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
