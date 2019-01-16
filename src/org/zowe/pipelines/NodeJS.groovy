@@ -188,18 +188,8 @@ public class NodeJS {
                             }
 
                             // Run the passed stage with the proper environment variables
-                            steps.withEnv(environment) {
-                                try {
-                                    args.stage()
-                                } catch (e) {
-                                    // If there was an exception thrown, the build failed. Save the exception we encountered
-                                    _firstFailingStage = stage
-                                    steps.currentBuild.result = BUILD_FAILURE
-                                    encounteredException = e
-                                    throw e
-                                } finally {
-                                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
-                                }
+                            steps.withEnv(environment) _closureWrapper(stage) {
+                                args.stage()
                             }
                         }
                     }
@@ -214,7 +204,17 @@ public class NodeJS {
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
+    }
 
+    private Closure _closureWrapper(Stage stage, Closure closure) {
+        try {
+            closure()
+        } catch (e) {
+            // If there was an exception thrown, the build failed. Save the exception we encountered
+            _firstFailingStage = stage
+            steps.currentBuild.result = BUILD_FAILURE
+            encounteredException = e
+        }
     }
 
     // @NamedVariant
