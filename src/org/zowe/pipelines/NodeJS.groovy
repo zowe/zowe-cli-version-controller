@@ -121,12 +121,23 @@ public class NodeJS {
         // Set the new current stage to this stage
         _currentStage = stageInfo
 
+        if (args.isSkipable) {
+            // Now get the control property option to see if the stage was forced skipped
+            steps.properties([
+                steps.parameters(
+                    [
+                        steps.booleanParam(defaultValue: false, description: "Skip Stage: ${args.name}", name: args.name)
+                    ]
+                )
+            ])
+        }
+
         steps.stage(args.name) {
             try {
                 steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                     if (!_setupCalled) {
                         steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                    } else if (_shouldSkipRemainingSteps || args.shouldSkip()) {
+                    } else if (stageInfo.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                         Utils.markStageSkippedForConditional(args.name);
                     } else {
                         steps.echo "Executing stage ${args.name}"
@@ -246,6 +257,7 @@ class BuildArgs extends StageArgs {
 class Stage {
     String name
     int order // The order of stage execution
+    boolean isSkippedByParam = false
     boolean wasExecuted = false
     String endOfStepBuildStatus // The result of the build at the end
     Stage next // The next stage
