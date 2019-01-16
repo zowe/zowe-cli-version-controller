@@ -74,7 +74,7 @@ public class NodeJS {
 
                 // Add log rotator to build options
                 buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-                steps.properties(opts)
+                steps.properties(buildOptions)
             }, isSkipable: false)
 
             createStage(name: 'Checkout', stage: {
