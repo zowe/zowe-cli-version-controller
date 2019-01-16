@@ -119,12 +119,12 @@ public class NodeJS {
 
     // document later
     public void createStage(Map arguments) {
+
+        StageArgs args = new StageArgs(arguments)
+        Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
+
+        // @TODO add stage to map
         try {
-            StageArgs args = new StageArgs(arguments)
-            Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
-
-            // @TODO add stage to map
-
             steps.stage(args.name) {
                 steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                     if (!_setupCalled) {
