@@ -320,7 +320,7 @@ public class NodeJS {
             bodyText += "<p>The following exception was encountered during the build: </p>"
             bodyText += "<p>" + encounteredException.toString() + "</p>";
             bodyText += "<p>" + encounteredException.getStackTrace().join("</p><p>") + "</p>";
-            steps.echo bodyText // log out the exception too
+
         }
 
         List<String> ccList = new ArrayList<String>();
@@ -331,6 +331,7 @@ public class NodeJS {
             }
         }
         try {
+            steps.echo bodyText // log out the exception too
             // send the email
             steps.emailext(
                     subject: subject,
