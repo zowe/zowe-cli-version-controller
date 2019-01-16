@@ -21,6 +21,15 @@ public class NodeJS {
     // Key is branch name and value is npm tag name
     public Map protectedBranches = [master: 'latest']
 
+    /**
+     * Images embedded in notification emails depending on the status of the build
+     */
+    public Map<String, List<String>> notificationImages = [SUCCESS : ['https://i.imgur.com/ixx5WSq.png', /*happy seal*/
+                                                                      'https://i.imgur.com/jiCQkYj.png' /* happy puppy*/],
+                                                           UNSTABLE: ['https://i.imgur.com/fV89ZD8.png' /* not sure if*/],
+                                                           FAILURE : ['https://i.imgur.com/QMrtJ2G.png' /* this is fine fire */
+                                                           ]]
+
     public Map gitConfig
     public Map publishConfig
 
@@ -164,6 +173,14 @@ public class NodeJS {
             steps.env.BUILD_NUMBER
         }]</a></p>
                         """
+
+        // add an image reflecting the result
+        if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
+                notificationImages[steps.currentBuild.currentResult].size() > 0) {
+            def imageList = notificationImages[steps.currentBuild.currentResult];
+            def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
+            bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"></p>"
+        }
 
         // Add any details of an exception, if encountered
         if (encounteredException != null) {
