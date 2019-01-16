@@ -114,18 +114,23 @@ public class NodeJS {
     public void createStage(Map arguments) {
         // Parse arguments and initialize the stage
         StageArgs args = new StageArgs(arguments)
-        Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
+        Stage stage = new Stage(name: args.name, order: _stages.size() + 1)
 
         // Add stage to map
-        _stages.putAt(args.name, stageInfo)
+        _stages.putAt(args.name, stage)
 
         // Set the next stage from the current stage
         if (_currentStage) {
-            _currentStage.next = stageInfo
+            _currentStage.next = stage
+        }
+
+        // If the first stage hasn't been created yet, set it here
+        if (!_firstStage) {
+            _firstStage = stage
         }
 
         // Set the new current stage to this stage
-        _currentStage = stageInfo
+        _currentStage = stage
 
         if (args.isSkipable) {
             // Add the option to the build, this will be called in setup
@@ -144,7 +149,7 @@ public class NodeJS {
                     steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                         if (!_setupCalled) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                        } else if (stageInfo.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
+                        } else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             Utils.markStageSkippedForConditional(args.name);
                         } else {
                             steps.echo "Executing stage ${args.name}"
@@ -225,7 +230,7 @@ public class NodeJS {
     public void end() {
         Stage stage = _firstStage
 
-        while (stage != null) {
+        while (stage) {
             stage.execute()
             stage = stage.next
         }
