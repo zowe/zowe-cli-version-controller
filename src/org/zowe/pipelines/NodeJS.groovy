@@ -154,7 +154,7 @@ public class NodeJS {
                         } else {
                             steps.echo "Executing stage ${args.name}"
 
-                            stageInfo.wasExecuted = true
+                            stage.wasExecuted = true
                             
                             if (args.isSkipable) { // @TODO FILL STRING OUT
                                 steps.echo "Inform how to skip the step here"
