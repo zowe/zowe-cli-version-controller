@@ -32,7 +32,14 @@ public class NodeJS {
     private boolean _shouldSkipRemainingSteps = false
     private boolean _didBuild = false
 
+    // Map of all stages run
     private Map<String, Stage> _stages = [:]
+
+    // Keeps track of the current stage
+    private Stage _currentStage
+
+    // Keeps track of the first failing stage
+    private Stage _firstFailingStage
 
     // The build revision at the start of the build
     private String _buildRevision
@@ -99,10 +106,20 @@ public class NodeJS {
 
     // document later
     public void createStage(Map arguments) {
+        // Parse arguments and initialize the stage
         StageArgs args = new StageArgs(arguments)
         Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
 
-        // @TODO add stage to map
+        // Add stage to map
+        _stages.putAt(args.name, stageInfo)
+
+        // Set the next stage from the current stage
+        if (_currentStage) {
+            _currentStage.next = stageInfo
+        }
+
+        // Set the new current stage to this stage
+        _currentStage = stageInfo
 
         steps.stage(args.name) {
             try {
@@ -115,7 +132,7 @@ public class NodeJS {
                         steps.echo "Executing stage ${args.name}"
 
                         stageInfo.wasExecuted = true
-
+                        
                         if (args.isSkipable) { // @TODO FILL STRING OUT
                             steps.echo "Inform how to skip the step here"
                         }
@@ -133,6 +150,9 @@ public class NodeJS {
                         }
                     }
                 }
+            } catch(e) {
+                _firstFailingStage = stageInfo
+                throw e
             } finally {
                 stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
             }
@@ -201,7 +221,7 @@ public class NodeJS {
     }
 
     // Shorthand for setting results
-    public void setResult(Result result) { // @TODO need to make this an internal enum
+    public void setResult(Result result) {
         steps.currentBuild.result = result
     }
 }
@@ -225,7 +245,8 @@ class BuildArgs extends StageArgs {
 
 class Stage {
     String name
-    int order
+    int order // The order of stage execution
     boolean wasExecuted = false
-    String endOfStepBuildStatus
+    String endOfStepBuildStatus // The result of the build at the end
+    Stage next // The next stage
 }
