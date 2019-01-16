@@ -1,9 +1,16 @@
 package org.zowe.pipelines
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import hudson.model.Result
 
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
+
+    // Look up the git version
+    private static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
+
+    // CI Skip text
+    private static final String _CI_SKIP = "[ci skip]"
 
     /**
      * Store if the setup method was called
@@ -40,6 +47,11 @@ public class NodeJS {
     private boolean _shouldSkipRemainingSteps = false
     private boolean _didBuild = false
 
+    private Map<String, Stage> _stages = [:]
+
+    // The build revision at the start of the build
+    private String _buildRevision
+
     def steps
 
     /**
@@ -62,8 +74,10 @@ public class NodeJS {
 
     public void setup() {
         _setupCalled = true
+     try {
+            _setupCalled = true
 
-        createStage(name: 'setup', stage: {
+        createStage(name: 'Setup', stage: {
             steps.echo "Setting up build configuration"
 
             def opts = [];
@@ -79,12 +93,24 @@ public class NodeJS {
             steps.properties(opts)
         }, isSkipable: false)
 
-        createStage(name: 'checkout', stage: {
+        createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
         }, isSkipable: false)
 
         createStage(name: 'Check for CI Skip', stage: {
-            steps.echo "@TODO"
+            // We need to keep track of the current commit revision. This is to prevent the condition where
+                // the build starts on master and another branch gets merged to master prior to version bump
+                // commit taking place. If left unhandled, the version bump could be done on latest master branch
+                // code which would already be ahead of this build.
+                _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+
+                // This checks for the [ci skip] text. If found, the status code is 0
+                def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+                if (result == 0) {
+                    steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                    _shouldSkipRemainingSteps = true
+                    setResult(Result.NOT_BUILT)
+                }
         })
 
         createStage(name: 'Install Node Package Dependencies', stage: {
@@ -97,20 +123,20 @@ public class NodeJS {
     public void createStage(Map arguments) {
         try {
             StageArgs args = new StageArgs(arguments)
+        Stage stageInfo = new Stage(name: args.name, order: _stages.size() + 1)
 
-            // def defaultMap = [isSkipable: true, timeout: 10, timeoutUnit: 'MINUTES', shouldSkip: { -> false }]
-            // def map = defaultMap << inputMap
+            // @TODO add stage to map
 
             steps.stage(args.name) {
-                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                try {steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                     if (!_setupCalled) {
                         steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                    } else if ((_shouldSkipRemainingSteps && args.isSkipable) || args.shouldSkip()) {
+                    } else if (_shouldSkipRemainingSteps  || args.shouldSkip()) {
                         Utils.markStageSkippedForConditional(args.name);
                     } else {
                         steps.echo "Executing stage ${args.name}"
 
-                        if (args.isSkipable) { // @TODO FILL STRING OUT
+                        stageInfo.wasExecuted = trueif (args.isSkipable) { // @TODO FILL STRING OUT
                             steps.echo "Inform how to skip the step here"
                         }
 
@@ -127,6 +153,8 @@ public class NodeJS {
                         }
                     }
                 }
+            } finally {
+                stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
             }
         }
         catch (e) {
@@ -143,13 +171,10 @@ public class NodeJS {
     // ) {
     // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
-        // skipable only allow one of these, must happen before testing
-        // allow custom build command, archive artifact
+        // @TODO must happen before testing
         BuildArgs args = new BuildArgs(arguments)
 
         createStage(arguments + [name: "Build: ${args.name}", stage: {
-            steps.echo "FILL THIS OUT"
-
             if (_didBuild) {
                 steps.error "Only one build step is allowed per pipeline."
             }
@@ -164,13 +189,20 @@ public class NodeJS {
             steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
             steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
 
+            // @TODO should probably delete the archive from the workspace as soon
+            // @TODO as it gets archived so that we can keep the git status clean
+
             _didBuild = true
         }])
     }
 
     public void testStage() {
-        // skipable, can have multiple, must happen before deploy after build
-        // run in d-bus or not, allow custom test command, archive test results
+        // @TODO skipable
+        // @TODO can have multiple
+        // @TODO must happen before deploy after build
+        // @TODO  run in d-bus or not
+        // @TODO allow custom test command
+        // @TODO archive test results
         createStage(name: "test", stage: {
             steps.echo "FILL THIS OUT"
         })
@@ -244,6 +276,11 @@ public class NodeJS {
     public void end() {
         sendEmailNotification();
     }
+
+    // Shorthand for setting results
+    public void setResult(Result result) { // @TODO need to make this an internal enum
+        steps.currentBuild.result = result
+    }
 }
 
 // @ToString(includeFields = true, includeNames = true)
@@ -259,5 +296,13 @@ class StageArgs {
 
 class BuildArgs extends StageArgs {
     String output = "./lib/"
+    String name = "Source"
     Closure buildOperation
+}
+
+class Stage {
+    String name
+    int order
+    boolean wasExecuted = false
+    String endOfStepBuildStatus
 }
