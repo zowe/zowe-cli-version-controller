@@ -155,7 +155,6 @@ public class NodeJS {
                             
                             if (args.isSkipable) { // @TODO FILL STRING OUT
                                 steps.echo "Inform how to skip the step here"
-                                steps.echo steps.params[getStageSkipOption(stage.name)]
                             }
 
                             def environment = []
@@ -249,9 +248,8 @@ public class NodeJS {
         while (stage) {
             // Get the parameters for the stage
             if (stage.args.isSkipable) {
-                steps.echo steps.params[getStageSkipOption(stage.name)]
+                stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
             }
-            // stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
 
             stage.execute()
             stage = stage.next
