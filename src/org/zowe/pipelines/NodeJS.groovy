@@ -168,7 +168,10 @@ public class NodeJS {
 
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
+                        <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
+                        <p><b>${steps.currentBuild.currentResult}</b></p>
+                        <hr>
                         <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
             steps.env.BUILD_NUMBER
         }]</a></p>
