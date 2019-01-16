@@ -188,9 +188,9 @@ public class NodeJS {
                             }
 
                             // Run the passed stage with the proper environment variables
-                            steps.withEnv(environment) _closureWrapper(stage) {
+                            steps.withEnv(environment) _closureWrapper(stage,{
                                 args.stage()
-                            }
+                            })
                         }
                     }
                 }
