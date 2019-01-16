@@ -144,6 +144,7 @@ public class NodeJS {
                         } 
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
+                            // @TODO echo out the condition that caused the skip
                             Utils.markStageSkippedForConditional(args.name);
                         }
                         // Run the stage
