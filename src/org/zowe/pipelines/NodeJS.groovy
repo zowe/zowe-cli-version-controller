@@ -196,7 +196,7 @@ public class NodeJS {
         } catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
             _firstFailingStage = stage
-            steps.currentBuild.result = BUILD_FAILURE
+            steps.currentBuild.currentResult = BUILD_FAILURE
             encounteredException = e
             throw e
         } finally {
