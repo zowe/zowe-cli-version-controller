@@ -121,9 +121,13 @@ public class NodeJS {
 
         if (args.isSkipable) {
             // Add the option to the build, this will be called in setup
-            buildParameters.push([
-                steps.booleanParam(defaultValue: false, description: "Setting this to true will skip the stage \"${args.name}\"", name: "Skip Stage: ${args.name}")
-            ])
+            buildParameters.push(
+                steps.booleanParam(
+                    defaultValue: false,
+                    description: "Setting this to true will skip the stage \"${args.name}\"",
+                    name: "Skip Stage: ${args.name}"
+                )
+            )
         }
 
         stage.execute = { 
