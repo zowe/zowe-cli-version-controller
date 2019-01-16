@@ -103,8 +103,6 @@ public class NodeJS {
         }, isSkipable: false)
 
         createStage(name: 'Check for CI Skip', stage: {
-            steps.error "this is a test"
-
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
@@ -199,7 +197,7 @@ public class NodeJS {
             }
         } catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
-            _firstFailingStage = stage
+            _firstFailingStage = stage // @TODO replace this with the closure call below
             steps.currentBuild.result = BUILD_FAILURE
             encounteredException = e
             throw e
