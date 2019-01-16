@@ -27,7 +27,7 @@ public class NodeJS {
     public Map<String, List<String>> notificationImages = [SUCCESS : ['https://i.imgur.com/ixx5WSq.png', /*happy seal*/
                                                                       'https://i.imgur.com/jiCQkYj.png' /* happy puppy*/],
                                                            UNSTABLE: ['https://i.imgur.com/fV89ZD8.png' /* not sure if*/],
-                                                           FAILURE : ['https://i.imgur.com/QMrtJ2G.png' /* this is fine fire */
+                                                           FAILURE : ['https://i.imgur.com/iQ4DuYL.png' /* this is fine fire */
                                                            ]]
 
     public Map gitConfig
