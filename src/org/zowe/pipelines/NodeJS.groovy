@@ -174,8 +174,8 @@ public class NodeJS {
                             steps.echo "Executing stage ${args.name}"
 
                             stage.wasExecuted = true
-                            if (args.isSkipable) { // @TODO FILL STRING OUT
-                                steps.echo "Inform how to skip the step here"
+                            if (args.isSkipable) {
+                                steps.echo "This step can be skipped by setting the `${getStageSkipOption(args.name)}` option to true"
                             }
 
                             def environment = []
