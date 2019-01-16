@@ -174,10 +174,10 @@ public class NodeJS {
                         }
                     }
                 } catch(e) {
-                    _firstFailingStage = stageInfo
+                    _firstFailingStage = stage
                     throw e
                 } finally {
-                    stageInfo.endOfStepBuildStatus = steps.currentBuild.currentResult
+                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
                 }
             }
         }
