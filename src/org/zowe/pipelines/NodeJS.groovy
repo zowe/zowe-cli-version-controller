@@ -247,7 +247,8 @@ public class NodeJS {
 
         while (stage) {
             // Get the parameters for the stage
-            stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+            println steps.params
+            // stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
 
             stage.execute()
             stage = stage.next
