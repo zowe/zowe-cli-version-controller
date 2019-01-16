@@ -158,8 +158,8 @@ public class NodeJS {
         }
 
         stage.execute = {
-            try {
-                steps.stage(args.name) {
+            steps.stage(args.name) {
+                try {
                     steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
@@ -193,17 +193,17 @@ public class NodeJS {
                         }
                     }
                 }
-            } catch (e) {
-                // If there was an exception thrown, the build failed. Save the exception we encountered
-                _firstFailingStage = stage
-                steps.currentBuild.currentResult = BUILD_FAILURE
-                encounteredException = e
-                throw e
-            } finally {
-                stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+                catch (e) {
+                    // If there was an exception thrown, the build failed. Save the exception we encountered
+                    _firstFailingStage = stage
+                    steps.currentBuild.currentResult = BUILD_FAILURE
+                    encounteredException = e
+                    throw e
+                } finally {
+                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+                }
             }
         }
-
     }
 
     // @NamedVariant
