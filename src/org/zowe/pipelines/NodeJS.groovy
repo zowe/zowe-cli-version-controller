@@ -1,7 +1,7 @@
 package org.zowe.pipelines
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
@@ -20,10 +20,25 @@ public class NodeJS {
     private boolean _setupCalled = false
     private boolean _setupStageCalled = false
 
+    /**
+     * Any exception that has been encountered during the execution of the pipeline
+     *
+     */
+    private Exception encounteredException = null
+
     public String[] adminEmails = []
 
     // Key is branch name and value is npm tag name
     public Map protectedBranches = [master: 'latest']
+
+    /**
+     * Images embedded in notification emails depending on the status of the build
+     */
+    public Map<String, List<String>> notificationImages = [SUCCESS : ['https://i.imgur.com/ixx5WSq.png', /*happy seal*/
+                                                                      'https://i.imgur.com/jiCQkYj.png' /* happy puppy*/],
+                                                           UNSTABLE: ['https://i.imgur.com/fV89ZD8.png' /* not sure if*/],
+                                                           FAILURE : ['https://i.imgur.com/iQ4DuYL.png' /* this is fine fire */
+                                                           ]]
 
     public Map gitConfig
     public Map publishConfig
@@ -55,6 +70,22 @@ public class NodeJS {
 
     def steps
 
+    /**
+     * The result string for a successful build
+     */
+    def BUILD_SUCCESS = 'SUCCESS'
+
+    /**
+     * The result string for an unstable build
+     */
+    def BUILD_UNSTABLE = 'UNSTABLE'
+
+    /**
+     * The result string for a failed build
+     */
+    def BUILD_FAILURE = 'FAILURE'
+
+
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
@@ -63,42 +94,34 @@ public class NodeJS {
         // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
         _setupCalled = true
 
-        try {
-            createStage (name: _SETUP_STAGE_NAME, stage: {
-                steps.echo "Setup was called first"
-            }, isSkipable: false)
+        createStage(name: _SETUP_STAGE_NAME, stage: {
+            steps.echo "Setup was called first"
+        }, isSkipable: false)
 
-            createStage(name: 'Checkout', stage: {
-                steps.checkout steps.scm
-            }, isSkipable: false)
+        createStage(name: 'Checkout', stage: {
+            steps.checkout steps.scm
+        }, isSkipable: false)
 
-            createStage(name: 'Check for CI Skip', stage: {
-                // We need to keep track of the current commit revision. This is to prevent the condition where
-                // the build starts on master and another branch gets merged to master prior to version bump
-                // commit taking place. If left unhandled, the version bump could be done on latest master branch
-                // code which would already be ahead of this build.
-                _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+        createStage(name: 'Check for CI Skip', stage: {
+            // We need to keep track of the current commit revision. This is to prevent the condition where
+            // the build starts on master and another branch gets merged to master prior to version bump
+            // commit taking place. If left unhandled, the version bump could be done on latest master branch
+            // code which would already be ahead of this build.
+            _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
 
-                // This checks for the [ci skip] text. If found, the status code is 0
-                def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-                if (result == 0) {
-                    steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
-                    _shouldSkipRemainingSteps = true
-                    setResult(Result.NOT_BUILT)
-                }
-            })
+            // This checks for the [ci skip] text. If found, the status code is 0
+            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+            if (result == 0) {
+                steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                _shouldSkipRemainingSteps = true
+                setResult(Result.NOT_BUILT)
+            }
+        })
 
-            createStage(name: 'Install Node Package Dependencies', stage: {
-                steps.sh "npm install"
-            }, isSkipable: false)
+        createStage(name: 'Install Node Package Dependencies', stage: {
+            steps.sh "npm install"
+        }, isSkipable: false)
 
-        } catch (e) {
-            // If there was an exception thrown, the build failed
-            // currentBuild.result = "FAILED"  TODO: what is the equivalent in scripted pipeline?
-            throw e
-        } finally {
-            sendEmailNotification()
-        }
     }
 
     // document later
@@ -126,22 +149,21 @@ public class NodeJS {
         if (args.isSkipable) {
             // Add the option to the build, this will be called in setup
             buildParameters.push(
-                steps.booleanParam(
-                    defaultValue: false,
-                    description: "Setting this to true will skip the stage \"${args.name}\"",
-                    name: getStageSkipOption(args.name)
-                )
+                    steps.booleanParam(
+                            defaultValue: false,
+                            description: "Setting this to true will skip the stage \"${args.name}\"",
+                            name: getStageSkipOption(args.name)
+                    )
             )
         }
-
-        stage.execute = { 
-            steps.stage(args.name) {
-                try {
+        try {
+            stage.execute = {
+                steps.stage(args.name) {
                     steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                        } 
+                        }
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             // @TODO echo out the condition that caused the skip
@@ -152,7 +174,6 @@ public class NodeJS {
                             steps.echo "Executing stage ${args.name}"
 
                             stage.wasExecuted = true
-                            
                             if (args.isSkipable) { // @TODO FILL STRING OUT
                                 steps.echo "Inform how to skip the step here"
                             }
@@ -170,14 +191,18 @@ public class NodeJS {
                             }
                         }
                     }
-                } catch(e) {
-                    _firstFailingStage = stage
-                    throw e
-                } finally {
-                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
                 }
             }
+        } catch (e) {
+            // If there was an exception thrown, the build failed. Save the exception we encountered
+            _firstFailingStage = stage
+            steps.currentBuild.result = BUILD_FAILURE
+            encounteredException = e
+            throw e
+        } finally {
+            stage.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
+
     }
 
     // @NamedVariant
@@ -219,40 +244,45 @@ public class NodeJS {
         // @TODO  run in d-bus or not
         // @TODO allow custom test command
         // @TODO archive test results
-        createStage("test", {
+        createStage(name: "test", stage: {
             steps.echo "FILL THIS OUT"
         })
     }
 
     public void end() {
-        // First setup the build properties
-        def history = defaultBuildHistory;
+        try {
 
-        // Add protected branch to build options
-        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-            _isProtectedBranch = true;
-            history = protectedBranchBuildHistory
-            buildOptions.push(steps.disableConcurrentBuilds())
-        }
+            // First setup the build properties
+            def history = defaultBuildHistory;
 
-        // Add log rotator to build options
-        buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-
-        // Add any parameters to the build here
-        buildOptions.push(steps.parameters(buildParameters))
-
-        steps.properties(buildOptions)
-
-        Stage stage = _firstStage
-
-        while (stage) {
-            // Get the parameters for the stage
-            if (stage.args.isSkipable) {
-                stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+            // Add protected branch to build options
+            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true;
+                history = protectedBranchBuildHistory
+                buildOptions.push(steps.disableConcurrentBuilds())
             }
 
-            stage.execute()
-            stage = stage.next
+            // Add log rotator to build options
+            buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+
+            // Add any parameters to the build here
+            buildOptions.push(steps.parameters(buildParameters))
+
+            steps.properties(buildOptions)
+
+            Stage stage = _firstStage
+
+            while (stage) {
+                // Get the parameters for the stage
+                if (stage.args.isSkipable) {
+                    stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+                }
+
+                stage.execute()
+                stage = stage.next
+            }
+        } finally {
+            sendEmailNotification();
         }
     }
 
@@ -265,23 +295,69 @@ public class NodeJS {
      */
     public void sendEmailNotification() {
         steps.echo "Sending email notification..."
-        steps.emailext(
-                subject: "Build Email",
-                to: "cc: " + adminEmails.join(","),
-                body: "This is an email",
-                mimeType: "text/html",
-//                recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-//                                     [$class: 'UpstreamComitterRecipientProvider'],
-//                                     [$class: 'CulpritsRecipientProvider'],
-//                                     [$class: 'RequesterRecipientProvider']]
-        )
+
+        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def bodyText = """
+                        <h3>${steps.env.JOB_NAME}</h3>
+                        <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
+                        <p><b>${steps.currentBuild.currentResult}</b></p>
+                        <hr>
+                        <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
+            steps.env.BUILD_NUMBER
+        }]</a></p>
+                        """
+
+        // add an image reflecting the result
+        if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
+                notificationImages[steps.currentBuild.currentResult].size() > 0) {
+            def imageList = notificationImages[steps.currentBuild.currentResult];
+            def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
+            bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"></p>"
+        }
+
+        // Add any details of an exception, if encountered
+        if (encounteredException != null) {
+            bodyText += "<p>The following exception was encountered during the build: </p>"
+            bodyText += "<p>" + encounteredException.toString() + "</p>";
+            bodyText += "<p>" + encounteredException.getStackTrace().join("</p><p>") + "</p>";
+
+        }
+
+        List<String> ccList = new ArrayList<String>();
+        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+            // only CC administrators if we are on a protected branch
+            for (String email : adminEmails) {
+                ccList.add("cc: " + email);
+            }
+        }
+        try {
+            steps.echo bodyText // log out the exception too
+            // send the email
+            steps.emailext(
+                    subject: subject,
+                    to: ccList.join(","),
+                    body: bodyText,
+                    mimeType: "text/html",
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+                                         [$class: 'UpstreamComitterRecipientProvider'],
+                                         [$class: 'CulpritsRecipientProvider'],
+                                         [$class: 'RequesterRecipientProvider']]
+            )
+        }
+        catch (emailException) {
+            steps.echo "Exception encountered while attempting to send email!"
+            steps.echo emailException.toString();
+            steps.echo emailException.getStackTrace().join("\n")
+        }
     }
+
 
     // Shorthand for setting results
     public void setResult(Result result) {
         steps.currentBuild.result = result
     }
 }
+
 
 // @ToString(includeFields = true, includeNames = true)
 class StageArgs {
