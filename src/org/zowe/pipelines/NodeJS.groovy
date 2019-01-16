@@ -12,10 +12,13 @@ public class NodeJS {
     // CI Skip text
     private static final String _CI_SKIP = "[ci skip]"
 
+    private static final String _SETUP_STAGE_NAME = "Setup"
+
     /**
      * Store if the setup method was called
      */
     private boolean _setupCalled = false
+    private boolean _setupStageCalled = false
 
     public String[] adminEmails = []
 
@@ -58,10 +61,11 @@ public class NodeJS {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
         // @TODO Allow for input to override control variables, takes an array of step names define in the current pipeline and allows for enable or disabling the step. There should also be skippable steps for ones that are automatically generated. For steps we might want to echo how it can be disabled as the first line of output in the step.
         // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
+        _setupCalled = true
+
         try {
-            createStage (name: 'Setup', stage: {
+            createStage (name: _SETUP_STAGE_NAME, stage: {
                 steps.echo "Setup was called first"
-                _setupCalled = true
             }, isSkipable: false)
 
             createStage(name: 'Checkout', stage: {
@@ -134,11 +138,16 @@ public class NodeJS {
             steps.stage(args.name) {
                 try {
                     steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
-                        if (!_setupCalled) {
+                        // First check that setup was called first
+                        if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
-                        } else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
+                        } 
+                        // Next check to see if the stage should be skipped
+                        else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             Utils.markStageSkippedForConditional(args.name);
-                        } else {
+                        }
+                        // Run the stage
+                        else {
                             steps.echo "Executing stage ${args.name}"
 
                             stage.wasExecuted = true
