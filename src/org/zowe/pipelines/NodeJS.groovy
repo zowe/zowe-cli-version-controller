@@ -42,6 +42,22 @@ public class NodeJS {
 
     def steps
 
+    /**
+     * The result string for a successful build
+     */
+    def BUILD_SUCCESS = 'SUCCESS'
+
+    /**
+     * The result string for an unstable build
+     */
+    def BUILD_UNSTABLE = 'UNSTABLE'
+
+    /**
+     * The result string for a failed build
+     */
+    def BUILD_FAILURE = 'FAILURE'
+
+
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
@@ -116,7 +132,7 @@ public class NodeJS {
         }
         catch (e) {
             // If there was an exception thrown, the build failed. Save the exception we encountered
-            steps.currentBuild.result = "FAILED"
+            steps.currentBuild.result = BUILD_UNSTABLE
             encounteredException = e
         }
     }
