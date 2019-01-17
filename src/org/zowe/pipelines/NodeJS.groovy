@@ -530,7 +530,11 @@ class Stage {
     Exception encounteredException
 }
 
-class NodeJSException extends Exception {}
+class NodeJSException extends Exception {
+    NodeJSException(String message) {
+        super(message)
+    }
+}
 class StageException extends NodeJSException {
     String stageName
 
