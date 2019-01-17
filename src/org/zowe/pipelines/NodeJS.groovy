@@ -293,7 +293,7 @@ public class NodeJS {
                 allowMissing         : false,
                 alwaysLinkToLastBuild: true,
                 keepAll              : true,
-                reportDir            : args.testResults.dir
+                reportDir            : args.testResults.dir,
                 reportFiles          : args.testResults.files,
                 reportName           : args.testResults.name
             ])
@@ -304,7 +304,7 @@ public class NodeJS {
                     allowMissing         : false,
                     alwaysLinkToLastBuild: true,
                     keepAll              : true,
-                    reportDir            : args.coverageResults.dir
+                    reportDir            : args.coverageResults.dir,
                     reportFiles          : args.coverageResults.files,
                     reportName           : args.coverageResults.name
                 ])
