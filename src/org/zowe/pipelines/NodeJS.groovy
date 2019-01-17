@@ -160,7 +160,7 @@ public class NodeJS {
         stage.execute = {
             steps.stage(args.name) {
                 _closureWrapper(stage) {
-                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) { // @TODO check how a timeout affects email
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -264,6 +264,10 @@ public class NodeJS {
 
     public void end() {
         try {
+            // Add one more stage that echos success when all the build completes
+            steps.stage("Success") {
+                steps.echo "Build Success"
+            }
 
             // First setup the build properties
             def history = defaultBuildHistory;
