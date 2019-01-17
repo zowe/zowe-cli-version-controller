@@ -540,5 +540,13 @@ class StageException extends NodeJSException {
         this.stageName = stageName
     }
 }
-class TestStageException extends StageException {}
-class BuildStageException extends StageException {}
+class TestStageException extends StageException {
+    TestStageException(String message, String stageName) {
+        super(message, stageName)
+    }
+}
+class BuildStageException extends StageException {
+    BuildStageException(String message, String stageName) {
+        super(message, stageName)
+    }
+}
