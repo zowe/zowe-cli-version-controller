@@ -325,64 +325,7 @@ public class NodeJS {
             }
         }
 
-        
-        createStage(arguments + [name: "Test: ${args.name}", stage: {
-            if (!_didBuild) {
-                steps.error "Tests cannot be run before the build has completed"
-            }
-
-            steps.echo "Processing Arguments"
-
-            if (!args.testResults) {
-                steps.error "Test Results HTML Report not provided"
-            } else {
-                _validateReportInfo(args.testResults, "Test Results HTML Report")
-            }
-
-            if (!args.coverageResults) {
-                steps.echo "Code Coverage HTML Report not provided...report ignored"
-            }
-
-            if (!args.junitOutput) {
-                steps.error "JUnit Report not provided"
-            }
-
-            if (args.testOperation) {
-                args.testOperation()
-            } else {
-                steps.sh "npm run test"
-            }
-
-            // Collect junit report
-            steps.junit args.junitOutput
-
-            // Collect Test Results HTML Report
-            steps.publishHTML(target: [
-                allowMissing         : false,
-                alwaysLinkToLastBuild: true,
-                keepAll              : true,
-                reportDir            : args.testResults.dir,
-                reportFiles          : args.testResults.files,
-                reportName           : args.testResults.name
-            ])
-
-            // Collect coverage if applicable
-            if (args.coverageResults) {
-                steps.publishHTML(target: [
-                    allowMissing         : false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll              : true,
-                    reportDir            : args.coverageResults.dir,
-                    reportFiles          : args.coverageResults.files,
-                    reportName           : args.coverageResults.name
-                ])
-            }
-
-            // Collect cobertura coverage if specified
-            if (args.cobertura.coberturaReportFile) {
-                steps.cobertura(args.cobertura)
-            }
-        }])
+        createStage(args)
     }
 
     private void _validateReportInfo(TestReport report, String reportName) {
