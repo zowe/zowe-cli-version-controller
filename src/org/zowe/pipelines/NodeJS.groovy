@@ -274,23 +274,25 @@ public class NodeJS {
         args.name = "Test: ${args.name}"
         args.stage = {
             if (!_didBuild) {
-                steps.error "Tests cannot be run before the build has completed"
+                throw new TestStageException("Tests cannot be run before the build has completed", args.name)
             }
 
             steps.echo "Processing Arguments"
 
             if (!args.testResults) {
-                steps.error "Test Results HTML Report not provided"
+                throw new TestStageException("Test Results HTML Report not provided", args.name)
             } else {
-                _validateReportInfo(args.testResults, "Test Results HTML Report")
+                _validateReportInfo(args.testResults, "Test Results HTML Report", args.name)
             }
 
             if (!args.coverageResults) {
                 steps.echo "Code Coverage HTML Report not provided...report ignored"
+            } else {
+                _validateReportInfo(args.coverageResults, "Code Coverage HTML Report", args.name)
             }
 
             if (!args.junitOutput) {
-                steps.error "JUnit Report not provided"
+                throw new TestStageException("JUnit Report not provided", args.name)
             }
 
             if (args.dbusOperation && args.testOperation) {
@@ -339,17 +341,17 @@ public class NodeJS {
         createStage(args)
     }
 
-    private void _validateReportInfo(TestReport report, String reportName) {
+    private void _validateReportInfo(TestReport report, String reportName, String stageName) {
         if (!report.dir) {
-            steps.error "${reportName} is missing property `dir`"
+            throw new TestStageException("${reportName} is missing property `dir`", stageName)
         }
 
         if (!report.files) {
-            steps.error "${reportName} is missing property `files`"
+            throw new TestStageException("${reportName} is missing property `files`", stageName)
         }
 
         if (!report.name) {
-            steps.error "${reportName} is missing property `name`"
+            throw new TestStageException("${reportName} is missing property `name`", stageName)
         }
     }
 
