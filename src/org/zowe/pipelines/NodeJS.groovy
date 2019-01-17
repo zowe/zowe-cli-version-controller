@@ -267,7 +267,7 @@ public class NodeJS {
             }
 
             if (!args.coverageResults) {
-                steps.echo "Code Coverage HTML Report not provided"
+                steps.echo "Code Coverage HTML Report not provided...report ignored"
             }
 
             if (!args.junitOutput) {
@@ -442,7 +442,7 @@ class TestArgs extends StageArgs {
 class TestReport {
     String dir
     String files
-    String name
+    String name = "Test Report"
 }
 
 class Stage {
