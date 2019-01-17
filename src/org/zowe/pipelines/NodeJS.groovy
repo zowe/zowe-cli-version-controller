@@ -308,6 +308,11 @@ public class NodeJS {
                     reportName           : args.coverageResults.name
                 ])
             }
+
+            // Collect cobertura coverage if specified
+            if (args.cobertura.coberturaReportFile) {
+                steps.cobertura(args.cobertura)
+            }
         })
     }
 
