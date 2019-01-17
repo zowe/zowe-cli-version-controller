@@ -329,7 +329,7 @@ public class NodeJS {
             // Add any details of an exception, if encountered
             if (encounteredException != null) {
                 bodyText += "<p>The following exception was encountered during the build: </p>"
-                bodyText += "<code style=\"max-height: 350px;\">" + encounteredException.toString() + "<br/>";
+                bodyText += "<code style=\"max-height: 350px;overflow:auto\">" + encounteredException.toString() + "<br/>";
                 bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
             }
 
