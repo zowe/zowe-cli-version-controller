@@ -124,11 +124,7 @@ public class NodeJS {
 
     }
 
-    // document later
-    // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
-    public void createStage(Map arguments) {
-        // Parse arguments and initialize the stage
-        StageArgs args = new StageArgs(arguments)
+    public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
         // Add stage to map
@@ -200,6 +196,16 @@ public class NodeJS {
         }
     }
 
+    // document later
+    // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
+    public void createStage(Map arguments) {
+        // Parse arguments and initialize the stage
+        StageArgs args = new StageArgs(arguments)
+
+        // Call the overloaded method
+        createStage(args)
+    }
+
     private void _closureWrapper(Stage stage, Closure closure) {
         try {
             closure()
@@ -227,7 +233,8 @@ public class NodeJS {
         // @TODO must happen before testing
         BuildArgs args = arguments
 
-        createStage(arguments + [name: "Build: ${args.name}", stage: {
+        args.name = "Build: ${args.name}"
+        args.stage = {
             if (_didBuild) {
                 steps.error "Only one build step is allowed per pipeline."
             }
@@ -246,7 +253,9 @@ public class NodeJS {
             // @TODO as it gets archived so that we can keep the git status clean
 
             _didBuild = true
-        }])
+        }
+
+        createStage(args)
     }
 
     public void testStage(Map arguments = [:]) {
@@ -257,6 +266,66 @@ public class NodeJS {
         // @TODO allow custom test command (partially done with closure)
         // @TODO archive test results
         // @TODO allow for sh script or path to sh script
+        args.name = "Test: ${args.name}"
+        args.stage = {
+            if (!_didBuild) {
+                steps.error "Tests cannot be run before the build has completed"
+            }
+
+            steps.echo "Processing Arguments"
+
+            if (!args.testResults) {
+                steps.error "Test Results HTML Report not provided"
+            } else {
+                _validateReportInfo(args.testResults, "Test Results HTML Report")
+            }
+
+            if (!args.coverageResults) {
+                steps.echo "Code Coverage HTML Report not provided...report ignored"
+            }
+
+            if (!args.junitOutput) {
+                steps.error "JUnit Report not provided"
+            }
+
+            if (args.testOperation) {
+                args.testOperation()
+            } else {
+                steps.sh "npm run test"
+            }
+
+            // Collect junit report
+            steps.junit args.junitOutput
+
+            // Collect Test Results HTML Report
+            steps.publishHTML(target: [
+                allowMissing         : false,
+                alwaysLinkToLastBuild: true,
+                keepAll              : true,
+                reportDir            : args.testResults.dir,
+                reportFiles          : args.testResults.files,
+                reportName           : args.testResults.name
+            ])
+
+            // Collect coverage if applicable
+            if (args.coverageResults) {
+                steps.publishHTML(target: [
+                    allowMissing         : false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll              : true,
+                    reportDir            : args.coverageResults.dir,
+                    reportFiles          : args.coverageResults.files,
+                    reportName           : args.coverageResults.name
+                ])
+            }
+
+            // Collect cobertura coverage if specified
+            if (args.cobertura.coberturaReportFile) {
+                steps.cobertura(args.cobertura)
+            }
+        }
+
+        
         createStage(arguments + [name: "Test: ${args.name}", stage: {
             if (!_didBuild) {
                 steps.error "Tests cannot be run before the build has completed"
