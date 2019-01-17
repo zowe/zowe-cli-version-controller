@@ -158,8 +158,8 @@ public class NodeJS {
 
         stage.execute = {
             steps.stage(args.name) {
-                _closureWrapper(stage) {
-                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) { // @TODO check how a timeout affects email
+                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) { // @TODO check how a timeout affects email
+                    _closureWrapper(stage) {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -263,7 +263,7 @@ public class NodeJS {
     public void testStage(Map arguments = [:]) {
         TestArgs args = arguments
 
-        // @TODO must happen before deploy after build
+        // @TODO must happen before deploy
         // @TODO  run in d-bus or not
         // @TODO allow custom test command (partially done with closure)
         // @TODO archive test results
