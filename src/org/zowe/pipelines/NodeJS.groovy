@@ -429,10 +429,6 @@ public class NodeJS {
             bodyText += "<tr><td>Stack:</td><td style=\"color: red\"><code style=\"max-height: 350px;overflow:auto;display: block;" +
                     "white-space: pre-wrap\" >${_firstFailingStage.encounteredException.getStackTrace().join("\n")}</code></td></tr>";
             bodyText += "</table>"
-            bodyText += "<p>The following exception was encountered during the build: </p>"
-            bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
-                    "white-space: pre-wrap\" ><b>" + _firstFailingStage.encounteredException.toString() + "</b>\n";
-            bodyText += _firstFailingStage.encounteredException.getStackTrace().join("\n") + "</code>";
         }
 
         List<String> ccList = new ArrayList<String>();
