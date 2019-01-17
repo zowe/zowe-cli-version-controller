@@ -305,61 +305,61 @@ public class NodeJS {
      */
     public void sendEmailNotification() {
 
-        steps.stage("Email", {
-            steps.echo "Sending email notification..."
-            def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
-            def bodyText = """
+        steps.echo "Sending email notification..."
+        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
                         <p><b>${steps.currentBuild.currentResult}</b></p>
                         <hr>
                         <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
-                steps.env.BUILD_NUMBER
-            }]</a></p>
+            steps.env.BUILD_NUMBER
+        }]</a></p>
                         """
 
-            // add an image reflecting the result
-            if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
-                    notificationImages[steps.currentBuild.currentResult].size() > 0) {
-                def imageList = notificationImages[steps.currentBuild.currentResult];
-                def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
-                bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
-            }
+        // add an image reflecting the result
+        if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
+                notificationImages[steps.currentBuild.currentResult].size() > 0) {
+            def imageList = notificationImages[steps.currentBuild.currentResult];
+            def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
+            bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
+        }
 
-            // Add any details of an exception, if encountered
-            if (encounteredException != null) {
-                bodyText += "<p>The following exception was encountered during the build: </p>"
-                bodyText += "<code style=\"max-height: 350px;overflow:auto\">" + encounteredException.toString() + "\r\n";
-                bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
-            }
+        // Add any details of an exception, if encountered
+        if (encounteredException != null) {
+            bodyText += "<p>The following exception was encountered during the build: </p>"
+            bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
+                    "white-space: pre-wrap\" >" + encounteredException.toString() + "\r\n";
+            bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
+        }
 
-            List<String> ccList = new ArrayList<String>();
-            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                // only CC administrators if we are on a protected branch
-                for (String email : adminEmails) {
-                    ccList.add("cc: " + email);
-                }
+        List<String> ccList = new ArrayList<String>();
+        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+            // only CC administrators if we are on a protected branch
+            for (String email : adminEmails) {
+                ccList.add("cc: " + email);
             }
-            try {
-                steps.echo bodyText // log out the exception too
-                // send the email
-                steps.emailext(
-                        subject: subject,
-                        to: ccList.join(","),
-                        body: bodyText,
-                        mimeType: "text/html",
-                        recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-                                             [$class: 'UpstreamComitterRecipientProvider'],
-                                             [$class: 'CulpritsRecipientProvider'],
-                                             [$class: 'RequesterRecipientProvider']]
-                )
-            }
-            catch (emailException) {
-                steps.echo "Exception encountered while attempting to send email!"
-                steps.echo emailException.toString();
-                steps.echo emailException.getStackTrace().join("\n")
-            }
-        });
+        }
+        try {
+            steps.echo bodyText // log out the exception too
+            // send the email
+            steps.emailext(
+                    subject: subject,
+                    to: ccList.join(","),
+                    body: bodyText,
+                    mimeType: "text/html",
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+                                         [$class: 'UpstreamComitterRecipientProvider'],
+                                         [$class: 'CulpritsRecipientProvider'],
+                                         [$class: 'RequesterRecipientProvider']]
+            )
+        }
+        catch (emailException) {
+            steps.echo "Exception encountered while attempting to send email!"
+            steps.echo emailException.toString();
+            steps.echo emailException.getStackTrace().join("\n")
+        }
+
     }
 
 
