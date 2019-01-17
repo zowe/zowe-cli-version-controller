@@ -279,6 +279,31 @@ public class NodeJS {
             } else {
                 steps.sh "npm run test"
             }
+
+            // Collect junit report
+            steps.junit args.junitOutput
+
+            // Collect Test Results HTML Report
+            steps.publishHTML(target: [
+                allowMissing         : false,
+                alwaysLinkToLastBuild: true,
+                keepAll              : true,
+                reportDir            : args.testResults.dir
+                reportFiles          : args.testResults.files,
+                reportName           : args.testResults.name
+            ])
+
+            // Collect coverage if applicable
+            if (args.coverageResults) {
+                steps.publishHTML(target: [
+                    allowMissing         : false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll              : true,
+                    reportDir            : args.coverageResults.dir
+                    reportFiles          : args.coverageResults.files,
+                    reportName           : args.coverageResults.name
+                ])
+            }
         })
     }
 
