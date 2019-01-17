@@ -247,7 +247,9 @@ public class NodeJS {
         }])
     }
 
-    public void testStage() {
+    public void testStage(Map arguments = [:]) {
+        TestArgs args = arguments
+
         // @TODO skipable
         // @TODO can have multiple
         // @TODO must happen before deploy after build
@@ -385,6 +387,24 @@ class BuildArgs extends StageArgs {
     String output = "./lib/"
     String name = "Source"
     Closure buildOperation
+}
+
+class TestArgs extends StageArgs {
+    Closure testOperation
+    boolean doesRunInDBus = false
+
+    TestReport testResults     // Required
+    TestReport coverageResults // Optional
+
+    String junitOutput // Required
+
+    // Need cobertura stuff as well
+}
+
+class TestReport {
+    String reportDir
+    String reportFiles
+    String reportName
 }
 
 class Stage {
