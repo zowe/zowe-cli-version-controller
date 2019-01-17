@@ -96,11 +96,11 @@ public class NodeJS {
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
-        }, isSkipable: false)
+        }, isSkipable: false, timeout: [time: 10, unit: 'SECONDS'])
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkipable: false)
+        }, isSkipable: false, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
@@ -116,11 +116,11 @@ public class NodeJS {
                 _shouldSkipRemainingSteps = true
                 setResult(Result.NOT_BUILT)
             }
-        })
+        }, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             steps.sh "npm install"
-        }, isSkipable: false)
+        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
 
     }
 
