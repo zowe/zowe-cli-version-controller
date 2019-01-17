@@ -257,7 +257,7 @@ public class NodeJS {
         // @TODO allow custom test command (partially done with closure)
         // @TODO archive test results
         // @TODO allow for sh script or path to sh script
-        createStage(arguments + name: "Test: ${args.name}", stage: {
+        createStage(arguments + [name: "Test: ${args.name}", stage: {
             if (!_didBuild) {
                 steps.error "Tests cannot be run before the build has completed"
             }
@@ -313,7 +313,7 @@ public class NodeJS {
             if (args.cobertura.coberturaReportFile) {
                 steps.cobertura(args.cobertura)
             }
-        })
+        }])
     }
 
     private void _validateReportInfo(TestReport report, String reportName) {
