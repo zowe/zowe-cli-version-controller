@@ -329,7 +329,7 @@ public class NodeJS {
         if (encounteredException != null) {
             bodyText += "<p>The following exception was encountered during the build: </p>"
             bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
-                    "white-space: pre-wrap\" >" + encounteredException.toString() + "\n";
+                    "white-space: pre-wrap\" ><b>" + encounteredException.toString() + "</b>\n";
             bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
         }
 
