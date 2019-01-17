@@ -261,7 +261,7 @@ public class NodeJS {
     }
 
     public void testStage(Map arguments = [:]) {
-        TestArgs args = TestArgs.defaults + arguments
+        TestArgs args = arguments
 
         // @TODO must happen before deploy after build
         // @TODO  run in d-bus or not
@@ -322,8 +322,10 @@ public class NodeJS {
             }
 
             // Collect cobertura coverage if specified
-            if (args.cobertura.coberturaReportFile) {
-                steps.cobertura(args.cobertura)
+            if (args.cobertura) {
+                steps.cobertura(TestArgs.coberturaDefaults + args.cobertura)
+            } else {
+                steps.echo "Cobertura file not detected, skipping"
             }
         }
 
@@ -487,21 +489,19 @@ class TestArgs extends StageArgs {
     // Need cobertura stuff as well
     Map cobertura
 
-    public static final Map defaults = [
-        cobertura: [
-            autoUpdateStability       : true,
-            classCoverageTargets      : '85, 80, 75',
-            conditionalCoverageTargets: '70, 65, 60',
-            failUnhealthy             : false,
-            failUnstable              : false,
-            fileCoverageTargets       : '100, 95, 90',
-            lineCoverageTargets       : '80, 70, 50',
-            maxNumberOfBuilds         : 20,
-            methodCoverageTargets     : '80, 70, 50',
-            onlyStable                : false,
-            sourceEncoding            : 'ASCII',
-            zoomCoverageChart         : false
-        ]
+    public static final Map coberturaDefaults = [
+        autoUpdateStability       : true,
+        classCoverageTargets      : '85, 80, 75',
+        conditionalCoverageTargets: '70, 65, 60',
+        failUnhealthy             : false,
+        failUnstable              : false,
+        fileCoverageTargets       : '100, 95, 90',
+        lineCoverageTargets       : '80, 70, 50',
+        maxNumberOfBuilds         : 20,
+        methodCoverageTargets     : '80, 70, 50',
+        onlyStable                : false,
+        sourceEncoding            : 'ASCII',
+        zoomCoverageChart         : false
     ]
 }
 
