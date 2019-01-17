@@ -248,7 +248,9 @@ public class NodeJS {
         }])
     }
 
-    public void testStage(TestArgs args = [:]) {
+    public void testStage(Map arguments = [:]) {
+        TestArgs args = arguments
+
         // @TODO skipable
         // @TODO can have multiple
         // @TODO must happen before deploy after build
