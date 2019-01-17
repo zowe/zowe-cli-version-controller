@@ -160,7 +160,7 @@ public class NodeJS {
         stage.execute = {
             steps.stage(args.name) {
                 _closureWrapper(stage) {
-                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -224,7 +224,7 @@ public class NodeJS {
     // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
         // @TODO must happen before testing
-        BuildArgs args = new BuildArgs(arguments)
+        BuildArgs args = arguments
 
         createStage(arguments + [name: "Build: ${args.name}", stage: {
             if (_didBuild) {
@@ -378,10 +378,14 @@ class StageArgs {
     String name
     Closure stage
     boolean isSkipable = true
-    int timeoutVal = 10
-    String timeoutUnit = 'MINUTES'
+    StageTimeout timeout = [:]
     Closure shouldSkip = { -> false }
     Map<String, String> environment
+}
+
+class StageTimeout {
+    int time = 10
+    String unit = 'MINUTES'
 }
 
 class BuildArgs extends StageArgs {
