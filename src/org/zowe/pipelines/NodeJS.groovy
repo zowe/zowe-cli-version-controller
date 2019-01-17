@@ -417,10 +417,6 @@ public class NodeJS {
             bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
                     "white-space: pre-wrap\" ><b>" + _firstFailingStage.encounteredException.toString() + "</b>\n";
             bodyText += _firstFailingStage.encounteredException.getStackTrace().join("\n") + "</code>";
-
-            if (steps.manager.build.getAction(InterruptedBuildAction.class)) {
-                bodyText += "Detected aborted build"
-            }
         }
 
         List<String> ccList = new ArrayList<String>();
