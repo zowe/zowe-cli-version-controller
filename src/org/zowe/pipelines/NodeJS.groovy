@@ -207,7 +207,7 @@ public class NodeJS {
                 _firstFailingStage = stage
             }
             setResult(Result.FAILURE)
-            encounteredException = e // @TODO place this as part of the stage class
+            stage.encounteredException = e // @TODO place this as part of the stage class
 
             throw e
         } finally {
@@ -326,11 +326,11 @@ public class NodeJS {
         }
 
         // Add any details of an exception, if encountered
-        if (encounteredException != null) {
+        if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
             bodyText += "<p>The following exception was encountered during the build: </p>"
             bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
-                    "white-space: pre-wrap\" ><b>" + encounteredException.toString() + "</b>\n";
-            bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
+                    "white-space: pre-wrap\" ><b>" + _firstFailingStage.encounteredException.toString() + "</b>\n";
+            bodyText += _firstFailingStage.encounteredException.getStackTrace().join("\n") + "</code>";
         }
 
         List<String> ccList = new ArrayList<String>();
@@ -396,4 +396,8 @@ class Stage {
     Stage next // The next stage
     StageArgs args
     Closure execute // The closure to execute for the stage
+    /**
+     * any exception encountered during the stage
+     */
+    Exception encounteredException
 }
