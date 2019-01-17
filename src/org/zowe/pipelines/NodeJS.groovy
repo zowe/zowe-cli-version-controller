@@ -3,6 +3,7 @@ package org.zowe.pipelines
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+// @TODO enforce some sort of ordering
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
@@ -247,16 +248,14 @@ public class NodeJS {
         }])
     }
 
-    public void testStage(Map arguments = [:]) {
-        TestArgs args = arguments
-
+    public void testStage(TestArgs args = [:]) {
         // @TODO skipable
         // @TODO can have multiple
         // @TODO must happen before deploy after build
         // @TODO  run in d-bus or not
         // @TODO allow custom test command
         // @TODO archive test results
-        createStage(name: "test", stage: {
+        createStage(name: "Test: ${args.name}", stage: {
             steps.echo "FILL THIS OUT"
         })
     }
