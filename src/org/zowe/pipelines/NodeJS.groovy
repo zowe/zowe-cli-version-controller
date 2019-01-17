@@ -250,15 +250,14 @@ public class NodeJS {
     }
 
     public void testStage(Map arguments = [:]) {
-        TestArgs args = arguments
+        TestArgs args = TestArgs.defaults + arguments
 
-        // @TODO can have multiple
         // @TODO must happen before deploy after build
         // @TODO  run in d-bus or not
-        // @TODO allow custom test command
+        // @TODO allow custom test command (partially done with closure)
         // @TODO archive test results
         // @TODO allow for sh script or path to sh script
-        createStage(name: "Test: ${args.name}", stage: {
+        createStage(arguments + name: "Test: ${args.name}", stage: {
             if (!_didBuild) {
                 steps.error "Tests cannot be run before the build has completed"
             }
@@ -467,6 +466,14 @@ class TestArgs extends StageArgs {
     String junitOutput // Required
 
     // Need cobertura stuff as well
+    Map cobertura
+
+    public static final Map defaults = [
+        cobertura: [
+            failUnhealthy: false,
+            failUnstable: false
+        ]
+    ]
 }
 
 class TestReport {
