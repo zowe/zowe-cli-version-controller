@@ -238,7 +238,7 @@ public class NodeJS {
         args.name = "Build: ${args.name}"
         args.stage = {
             if (_didBuild) {
-                steps.error "Only one build step is allowed per pipeline."
+                throw new BuildStageException("Only one build step is allowed per pipeline.")
             }
 
             // Either use a custom build script or the default npm run build
@@ -291,7 +291,7 @@ public class NodeJS {
             }
 
             if (args.dbusOperation && args.testOperation) {
-                throw new Exception("dbusOperation and testOperation are mutually exclusive.")
+                throw new TestStageException("dbusOperation and testOperation are mutually exclusive.")
             }
 
             if (args.testOperation) {
@@ -529,3 +529,8 @@ class Stage {
      */
     Exception encounteredException
 }
+
+class NodeJSException extends Exception {}
+
+class TestStageException extends NodeJSException {}
+class BuildStageException extends NodeJSException {}
