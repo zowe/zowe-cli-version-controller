@@ -291,7 +291,7 @@ public class NodeJS {
             }
 
             if (args.dbusOperation && args.testOperation) {
-                throw new TestStageException("dbusOperation and testOperation are mutually exclusive.")
+                throw new TestStageException("dbusOperation and testOperation are mutually exclusive.", stage)
             }
 
             if (args.testOperation) {
@@ -531,6 +531,14 @@ class Stage {
 }
 
 class NodeJSException extends Exception {}
+class StageException extends NodeJSException {
+    Stage stage
 
-class TestStageException extends NodeJSException {}
-class BuildStageException extends NodeJSException {}
+    StageException(String message, Stage stage) {
+        super("${stage.name}: ${message}")
+
+        this.stage = stage
+    }
+}
+class TestStageException extends StageException {}
+class BuildStageException extends StageException {}
