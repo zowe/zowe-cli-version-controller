@@ -264,11 +264,6 @@ public class NodeJS {
 
     public void end() {
         try {
-            // Add one more stage that echos success when all the build completes
-            steps.stage("Success") {
-                steps.echo "Build Success"
-            }
-
             // First setup the build properties
             def history = defaultBuildHistory;
 
