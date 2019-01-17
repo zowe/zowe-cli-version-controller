@@ -422,6 +422,13 @@ public class NodeJS {
 
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
+            bodyText += "<h3>Failure Details</h3>"
+            bodyText += "<table>"
+            bodyText += "<tr><td>Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
+            bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
+            bodyText += "<tr><td>Stack:</td><td style=\"color: red\"><code style=\"max-height: 350px;overflow:auto;display: block;" +
+                    "white-space: pre-wrap\" >${_firstFailingStage.encounteredException.getStackTrace().join("\n")}</code></td></tr>";
+            bodyText += "</table>"
             bodyText += "<p>The following exception was encountered during the build: </p>"
             bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
                     "white-space: pre-wrap\" ><b>" + _firstFailingStage.encounteredException.toString() + "</b>\n";
