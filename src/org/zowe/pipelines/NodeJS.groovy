@@ -159,8 +159,8 @@ public class NodeJS {
 
         stage.execute = {
             steps.stage(args.name) {
-                try {
-                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
+                    try {
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -191,16 +191,17 @@ public class NodeJS {
                                 args.stage()
                             }
                         }
+
                     }
-                }
-                catch (e) {
-                    // If there was an exception thrown, the build failed. Save the exception we encountered
-                    _firstFailingStage = stage
-                    steps.currentBuild.currentResult = BUILD_FAILURE
-                    encounteredException = e
-                    throw e
-                } finally {
-                    stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+                    catch (e) {
+                        // If there was an exception thrown, the build failed. Save the exception we encountered
+                        _firstFailingStage = stage
+                        steps.currentBuild.currentResult = BUILD_FAILURE
+                        encounteredException = e
+                        throw e
+                    } finally {
+                        stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+                    }
                 }
             }
         }
