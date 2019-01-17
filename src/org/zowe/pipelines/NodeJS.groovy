@@ -158,8 +158,8 @@ public class NodeJS {
 
         stage.execute = {
             steps.stage(args.name) {
-                steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
-                    try {
+                _closureWrapper(stage) {
+                    steps.timeout(time: args.timeoutVal, unit: args.timeoutUnit) {
                         // First check that setup was called first
                         if (!_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME)) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -192,15 +192,6 @@ public class NodeJS {
                                 }
                             }
                         }
-
-                    } catch (e) {
-                        // If there was an exception thrown, the build failed. Save the exception we encountered
-                        _firstFailingStage = stage // @TODO replace this with the closure call below
-                        setResult(Result.FAILURE)
-                        encounteredException = e
-                        throw e
-                    } finally {
-                        stage.endOfStepBuildStatus = steps.currentBuild.currentResult
                     }
                 }
             }
@@ -313,8 +304,9 @@ public class NodeJS {
      * Send an email notification about the result of the build to the appropriate users
      */
     public void sendEmailNotification() {
-        steps.echo "Sending email notification..."
+
         steps.stage("Email", {
+            steps.echo "Sending email notification..."
             def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
             def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
@@ -331,13 +323,13 @@ public class NodeJS {
                     notificationImages[steps.currentBuild.currentResult].size() > 0) {
                 def imageList = notificationImages[steps.currentBuild.currentResult];
                 def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
-                bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"></p>"
+                bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
             }
 
             // Add any details of an exception, if encountered
             if (encounteredException != null) {
                 bodyText += "<p>The following exception was encountered during the build: </p>"
-                bodyText += "<code style=\"max-height: 350px;\">" + encounteredException.toString() + "\n";
+                bodyText += "<code style=\"max-height: 350px;\">" + encounteredException.toString() + "<br/>";
                 bodyText += encounteredException.getStackTrace().join("\n") + "</code>";
             }
 
