@@ -162,7 +162,10 @@ public class NodeJS {
                     _closureWrapper(stage) {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
-                            steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                            throw new StageException(
+                                "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
+                                args.name
+                            )
                         }
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
@@ -238,7 +241,7 @@ public class NodeJS {
         args.name = "Build: ${args.name}"
         args.stage = {
             if (_didBuild) {
-                throw new BuildStageException("Only one build step is allowed per pipeline.")
+                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
             // Either use a custom build script or the default npm run build
@@ -546,7 +549,7 @@ class StageException extends NodeJSException {
     String stageName
 
     StageException(String message, String stageName) {
-        super("${message} (stage = \"${stageName}\"")
+        super("${message} (stage = \"${stageName}\")")
 
         this.stageName = stageName
     }
