@@ -251,15 +251,49 @@ public class NodeJS {
     public void testStage(Map arguments = [:]) {
         TestArgs args = arguments
 
-        // @TODO skipable
         // @TODO can have multiple
         // @TODO must happen before deploy after build
         // @TODO  run in d-bus or not
         // @TODO allow custom test command
         // @TODO archive test results
+        // @TODO allow for sh script or path to sh script
         createStage(name: "Test: ${args.name}", stage: {
-            steps.echo "FILL THIS OUT"
+            steps.echo "Processing Arguments"
+
+            if (!args.testResults) {
+                steps.error "Test Results HTML Report not provided"
+            } else {
+                _validateReportInfo(args.testResults, "Test Results HTML Report")
+            }
+
+            if (!args.coverageResults) {
+                steps.echo "Code Coverage HTML Report not provided"
+            }
+
+            if (!args.junitOutput) {
+                steps.error "JUnit Report not provided"
+            }
+
+            if (args.testOperation) {
+                args.testOperation()
+            } else {
+                steps.sh "npm run test"
+            }
         })
+    }
+
+    private void _validateReportInfo(TestReport report, String reportName) {
+        if (!report.dir) {
+            steps.error "${reportName} is missing property `dir`"
+        }
+
+        if (!report.files) {
+            steps.error "${reportName} is missing property `files`"
+        }
+
+        if (!report.name) {
+            steps.error "${reportName} is missing property `name`"
+        }
     }
 
     public void end() {
@@ -406,9 +440,9 @@ class TestArgs extends StageArgs {
 }
 
 class TestReport {
-    String reportDir
-    String reportFiles
-    String reportName
+    String dir
+    String files
+    String name
 }
 
 class Stage {
