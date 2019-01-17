@@ -290,6 +290,10 @@ public class NodeJS {
                 steps.error "JUnit Report not provided"
             }
 
+            if (args.dbusOperation && args.testOperation) {
+                throw new Exception("dbusOperation and testOperation are mutually exclusive.")
+            }
+
             if (args.testOperation) {
                 args.testOperation()
             } else {
@@ -479,7 +483,7 @@ class BuildArgs extends StageArgs {
 
 class TestArgs extends StageArgs {
     Closure testOperation
-    boolean doesRunInDBus = false
+    String dbusOperation
 
     TestReport testResults     // Required
     TestReport coverageResults // Optional
