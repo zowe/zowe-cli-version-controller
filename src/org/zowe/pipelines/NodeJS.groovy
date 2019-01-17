@@ -90,8 +90,6 @@ public class NodeJS {
 
     public void setup() {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
-        // @TODO Allow for input to override control variables, takes an array of step names define in the current pipeline and allows for enable or disabling the step. There should also be skippable steps for ones that are automatically generated. For steps we might want to echo how it can be disabled as the first line of output in the step.
-        // @TODO Keep each step in maybe a list so that we can see what ran and what didnt as well as the order, also add these to options for skiping
         _setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
@@ -125,6 +123,7 @@ public class NodeJS {
     }
 
     // document later
+    // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
     public void createStage(Map arguments) {
         // Parse arguments and initialize the stage
         StageArgs args = new StageArgs(arguments)
@@ -175,8 +174,8 @@ public class NodeJS {
                             steps.echo "Executing stage ${args.name}"
 
                             stage.wasExecuted = true
-                            if (args.isSkipable) { // @TODO FILL STRING OUT
-                                steps.echo "Inform how to skip the step here"
+                            if (args.isSkipable) {
+                                steps.echo "This step can be skipped by setting the `${getStageSkipOption(args.name)}` option to true"
                             }
 
                             def environment = []
@@ -188,14 +187,15 @@ public class NodeJS {
 
                             // Run the passed stage with the proper environment variables
                             steps.withEnv(environment) {
-                                args.stage()
+                                _closureWrapper(stage) {
+                                    args.stage()
+                                }
                             }
                         }
 
-                    }
-                    catch (e) {
+                    } catch (e) {
                         // If there was an exception thrown, the build failed. Save the exception we encountered
-                        _firstFailingStage = stage
+                        _firstFailingStage = stage // @TODO replace this with the closure call below
                         setResult(Result.FAILURE)
                         encounteredException = e
                         throw e
@@ -204,6 +204,23 @@ public class NodeJS {
                     }
                 }
             }
+        }
+    }
+
+    private void _closureWrapper(Stage stage, Closure closure) {
+        try {
+            closure()
+        } catch (e) {
+            if (!_firstFailingStage) {
+                // If there was an exception thrown, the build failed. Save the exception we encountered
+                _firstFailingStage = stage
+            }
+            setResult(Result.FAILURE)
+            encounteredException = e // @TODO place this as part of the stage class
+
+            throw e
+        } finally {
+            stage.endOfStepBuildStatus = steps.currentBuild.currentResult
         }
     }
 
