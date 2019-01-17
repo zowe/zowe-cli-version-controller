@@ -460,7 +460,9 @@ public class NodeJS {
 }
 
 
-// @ToString(includeFields = true, includeNames = true)
+////////////////////////////////////////////////////////////////////////////////
+////////////////////// DATA FORMATS ////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 class StageArgs {
     String name
     Closure stage
@@ -530,25 +532,32 @@ class Stage {
     Exception encounteredException
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// EXCEPTIONS ////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 class NodeJSException extends Exception {
     NodeJSException(String message) {
         super(message)
     }
 }
+
 class StageException extends NodeJSException {
     String stageName
 
     StageException(String message, String stageName) {
-        super("${stageName}: ${message}")
+        super("${message} (stage = \"${stageName}\"")
 
         this.stageName = stageName
     }
 }
+
 class TestStageException extends StageException {
     TestStageException(String message, String stageName) {
         super(message, stageName)
     }
 }
+
 class BuildStageException extends StageException {
     BuildStageException(String message, String stageName) {
         super(message, stageName)
