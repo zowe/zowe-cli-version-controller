@@ -489,8 +489,18 @@ class TestArgs extends StageArgs {
 
     public static final Map defaults = [
         cobertura: [
-            failUnhealthy: false,
-            failUnstable: false
+            autoUpdateStability       : true,
+            classCoverageTargets      : '85, 80, 75',
+            conditionalCoverageTargets: '70, 65, 60',
+            failUnhealthy             : false,
+            failUnstable              : false,
+            fileCoverageTargets       : '100, 95, 90',
+            lineCoverageTargets       : '80, 70, 50',
+            maxNumberOfBuilds         : 20,
+            methodCoverageTargets     : '80, 70, 50',
+            onlyStable                : false,
+            sourceEncoding            : 'ASCII',
+            zoomCoverageChart         : false
         ]
     ]
 }
