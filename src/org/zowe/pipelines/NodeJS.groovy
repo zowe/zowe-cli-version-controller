@@ -124,9 +124,11 @@ public class NodeJS {
 
     }
 
+    // Takes instantiated args and runs a stage
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
+        // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
         // Add stage to map
         _stages.putAt(args.name, stage)
 
@@ -197,7 +199,7 @@ public class NodeJS {
     }
 
     // document later
-    // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
+    // accept stage as a map to instantiate
     public void createStage(Map arguments) {
         // Parse arguments and initialize the stage
         StageArgs args = new StageArgs(arguments)
