@@ -4,6 +4,7 @@ import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
+// @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
 public class NodeJS {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
@@ -258,6 +259,10 @@ public class NodeJS {
         // @TODO archive test results
         // @TODO allow for sh script or path to sh script
         createStage(name: "Test: ${args.name}", stage: {
+            if (!_didBuild) {
+                steps.error "Tests cannot be run before the build has completed"
+            }
+
             steps.echo "Processing Arguments"
 
             if (!args.testResults) {
