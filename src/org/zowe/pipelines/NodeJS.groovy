@@ -426,7 +426,7 @@ public class NodeJS {
             bodyText += "<table style=\"font-size: 16px\">"
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
             bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
-            bodyText += "<tr><td style=\"vertical-align: top\"">Stack:</td><td style=\"color: red; display: block; max-height: 350px; overflow: auto\">"
+            bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td><td style=\"color: red; display: block; max-height: 350px; overflow: auto\">"
             bodyText += "<code style=\"display: block; white-space: pre; float: left\">"
             bodyText += "at ${_firstFailingStage.encounteredException.getStackTrace().join("\nat ")}</code></td></tr>";
             bodyText += "</table>"
