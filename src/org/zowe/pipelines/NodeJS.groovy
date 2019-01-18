@@ -427,14 +427,14 @@ public class NodeJS {
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
             bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td><td style=\"color: red; display: block; max-height: 350px; overflow: auto\">"
-            bodyText += "<code style=\"display: block; float: left\">"
+            bodyText += "<div style=\"display: block; float: left\">"
             def stackTrace = _firstFailingStage.encounteredException.getStackTrace()
 
             for (int i = 0; i < stackTrace.length; i++) {
                 bodyText += "at ${stackTrace[i]}\n"
             }
 
-            bodyText += "</code></td></tr>";
+            bodyText += "</div></td></tr>";
             bodyText += "</table>"
         }
 
