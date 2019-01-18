@@ -317,10 +317,14 @@ public class NodeJS {
                 steps.sh "echo 'jenkins' | gnome-keyring-daemon --unlock"
             }
 
-            if (args.testOperation) {
-                args.testOperation()
-            } else {
-                steps.sh "npm run test"
+            try {
+                if (args.testOperation) {
+                    args.testOperation()
+                } else {
+                    steps.sh "npm run test"
+                }
+            } catch (e) {
+                steps.echo "Exception: ${e.getMessage()}"
             }
 
             // Collect junit report
