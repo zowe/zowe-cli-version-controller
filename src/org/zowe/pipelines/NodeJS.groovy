@@ -461,6 +461,11 @@ public class NodeJS {
             bodyText += "</table>"
         }
 
+        if (steps.FAILED_TESTS) {
+            bodyText += "<h3>Failing Tests</h3>"
+            bodyText += "<div style=\"max-height: 350px; overflow: auto\">${steps.FAILED_TESTS}</div>"
+        }
+
         List<String> ccList = new ArrayList<String>();
         if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
             // only CC administrators if we are on a protected branch
