@@ -431,7 +431,7 @@ public class NodeJS {
             def stackTrace = _firstFailingStage.encounteredException.getStackTrace()
 
             for (int i = 0; i < stackTrace.length; i++) {
-                bodyText += "at ${stackTrace[i]}\n"
+                bodyText += "at ${stackTrace[i]}<br/>"
             }
 
             bodyText += "</div></td></tr>";
