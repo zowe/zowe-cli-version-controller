@@ -422,13 +422,21 @@ public class NodeJS {
 
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
+            def stackTrace
+
             bodyText += "<h3>Failure Details</h3>"
             bodyText += "<table style=\"font-size: 16px\">"
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
             bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td><td style=\"color: red; display: block; max-height: 350px; overflow: auto\">"
             bodyText += "<code style=\"display: block; white-space: pre; float: left\">"
-            bodyText += "at ${_firstFailingStage.encounteredException.getStackTrace().join("\nat ")}</code></td></tr>";
+            def stackTrace = _firstFailingStage.encounteredException.getStackTrace()
+
+            for (int i = 0; i < stackTrace.length; i++) {
+                bodyText += "<div> at ${stackTrace[i]}</div>"
+            }
+
+            bodyText += "</code></td></tr>";
             bodyText += "</table>"
         }
 
