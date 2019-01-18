@@ -427,7 +427,7 @@ public class NodeJS {
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
             bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
-            bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw overflow: auto\">"
+            bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
             bodyText += "<div style=\"width: max-content\">"
             def stackTrace = _firstFailingStage.encounteredException.getStackTrace()
 
