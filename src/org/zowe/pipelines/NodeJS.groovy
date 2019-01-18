@@ -422,8 +422,6 @@ public class NodeJS {
 
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
-            def stackTrace
-
             bodyText += "<h3>Failure Details</h3>"
             bodyText += "<table style=\"font-size: 16px\">"
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
