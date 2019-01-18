@@ -137,8 +137,6 @@ public class NodeJS {
     // Takes instantiated args and runs a stage
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
-
-        // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
         
         if (_stages.containsKey(stage.name)) {
             if (_firstStage == null) {
@@ -182,7 +180,7 @@ public class NodeJS {
 
         stage.execute = {
             steps.stage(args.name) {
-                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) { // @TODO check how a timeout affects email
+                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
                     _closureWrapper(stage) {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
@@ -259,7 +257,6 @@ public class NodeJS {
     // ) {
     // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
-        // @TODO must happen before testing
         BuildArgs args = arguments
 
         args.name = "Build: ${args.name}"
@@ -290,7 +287,7 @@ public class NodeJS {
     public void testStage(Map arguments = [:]) {
         TestArgs args = arguments
 
-        // @TODO must happen before deploy
+        // @TODO one must happen before deploy
         args.name = "Test: ${args.name}"
         args.stage = {
             if (!_didBuild) {
