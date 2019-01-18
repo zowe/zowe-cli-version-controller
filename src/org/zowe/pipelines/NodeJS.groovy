@@ -269,7 +269,6 @@ public class NodeJS {
         // @TODO must happen before deploy
         // @TODO  run in d-bus or not
         // @TODO allow custom test command (partially done with closure)
-        // @TODO archive test results
         // @TODO allow for sh script or path to sh script
         args.name = "Test: ${args.name}"
         args.stage = {
@@ -295,8 +294,9 @@ public class NodeJS {
                 throw new TestStageException("JUnit Report not provided", args.name)
             }
 
-            if (args.dbusOperation && args.testOperation) {
-                throw new TestStageException("dbusOperation and testOperation are mutually exclusive.", args.name)
+            // Unlock the keyring for dbus
+            if (args.shouldUnlockKeyring) {
+                steps.sh "echo 'jenkins' | gnome-keyring-daemon --unlock"
             }
 
             if (args.testOperation) {
@@ -501,7 +501,8 @@ class BuildArgs extends StageArgs {
 
 class TestArgs extends StageArgs {
     Closure testOperation
-    String dbusOperation
+
+    boolean shouldUnlockKeyring = false // Should the keyring be unlocked for the test
 
     TestReport testResults     // Required
     TestReport coverageResults // Optional
