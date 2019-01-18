@@ -96,6 +96,16 @@ public class NodeJS {
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
+
+            if (_firstFailingStage) {
+                if (_firstFailingStage.exception) {
+                    throw _firstFailingStage.exception
+                } else {
+                    throw new StageException("Setup found a failing stage but there was no associated exception.", _firstFailingStage.name)
+                }
+            } else {
+                steps.echo "No problems with preinitialization of pipeline :)"
+            }
         }, isSkipable: false, timeout: [time: 10, unit: 'SECONDS'])
 
         createStage(name: 'Checkout', stage: {
@@ -129,8 +139,22 @@ public class NodeJS {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
         // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
-        // Add stage to map
-        _stages.putAt(args.name, stage)
+        
+        if (_stages.containsKey(stage.name)) {
+            if (_firstStage == null) {
+                // This is a condition that indicates that our logic is most likely broken
+                throw new StageException("First stage was not set but stages already had values in the map", stage.name)
+            } else if (!_firstFailingStage){
+                // The first stage should be setup, othewise a stage exception will be
+                // thrown before we get into here. So in setup, we should create the exception
+                // to be thrown later.
+                _firstFailingStage = _firstStage
+                _firstFailingStage.exception = new StageException("Duplicate stage name: \"${stage.name}\"", _firstFailingStage.name)
+            }
+        } else {
+            // Add stage to map
+            _stages.putAt(args.name, stage)
+        }
 
         // Set the next stage from the current stage
         if (_currentStage) {
@@ -220,7 +244,7 @@ public class NodeJS {
                 _firstFailingStage = stage
             }
             setResult(Result.FAILURE)
-            stage.encounteredException = e // @TODO place this as part of the stage class
+            stage.exception = e // @TODO place this as part of the stage class
 
             throw e
         } finally {
@@ -267,9 +291,6 @@ public class NodeJS {
         TestArgs args = arguments
 
         // @TODO must happen before deploy
-        // @TODO  run in d-bus or not
-        // @TODO allow custom test command (partially done with closure)
-        // @TODO allow for sh script or path to sh script
         args.name = "Test: ${args.name}"
         args.stage = {
             if (!_didBuild) {
@@ -421,15 +442,15 @@ public class NodeJS {
         }
 
         // Add any details of an exception, if encountered
-        if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
+        if (_firstFailingStage != null && _firstFailingStage.exception != null) {
             bodyText += "<h3>Failure Details</h3>"
             bodyText += "<table style=\"font-size: 16px\">"
             bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
-            bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.encounteredException.toString()}</td></tr>"
+            bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.exception.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
             bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
             bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
-            def stackTrace = _firstFailingStage.encounteredException.getStackTrace()
+            def stackTrace = _firstFailingStage.exception.getStackTrace()
 
             for (int i = 0; i < stackTrace.length; i++) {
                 bodyText += "at ${stackTrace[i]}<br/>"
@@ -546,7 +567,7 @@ class Stage {
     /**
      * any exception encountered during the stage
      */
-    Exception encounteredException
+    Exception exception
 }
 
 ////////////////////////////////////////////////////////////////////////////////
