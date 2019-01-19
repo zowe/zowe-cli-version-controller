@@ -29,23 +29,11 @@ class NodeJsTest {
 
         myNode.createStage(name: "lint", stage: {
             steps.sh "npm run lint"
-        })
+        }, isSkipable: false)
+
+        myNode.end()
     }
 
-    /**
-     * Test creating a new stage in the build without calling setup
-     * (should cause an error)
-     */
-    @Test
-    void createStageWithoutSetupTest() {
-        def steps = new MockSteps()
-        def myNode = new NodeJS(steps)
-        // no call to setup
-        myNode.createStage(name: "lint", stage: {
-            steps.sh "npm run lint"
-        })
-
-    }
 }
 
 /**
@@ -104,7 +92,7 @@ class MockSteps {
 
     }
 
-    public Map params = [build: "hello"]
+    public Map params = ["Skip Stage: lint": "hello"]
     public Map currentBuild = [currentResult: "NOT_STARTED", result: Result.SUCCESS]
 
     public Map env = [BUILD_NUMBER: "1", JOB_NAME: "Zowe Cli Version Controller"]
