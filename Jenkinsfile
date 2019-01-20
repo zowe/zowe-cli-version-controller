@@ -101,7 +101,7 @@ def PRODUCT_NAME = "Zowe CLI"
 
 pipeline {
     agent {
-        label 'maven-agent'
+        label 'ca-jenkins-agent'
     }
 
     environment {
@@ -194,10 +194,10 @@ pipeline {
                     echo 'Unit Test'
 
                     // Run tests but don't fail if the script reports an error
-                    sh "mvn test" // || exit 0 ?
+                    sh "./gradlew test --stacktrace --info" // || exit 0 ?
 
                     // Capture test report
-                    junit "target/surefire-reports/TEST-NodeJsTest.xml"
+                    junit "build/test-results/test/TEST-org.zowe.pipelines.NodeJsTest.xml"
 
                 }
             }
