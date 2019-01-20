@@ -195,7 +195,7 @@ pipeline {
 
                     sh "chmod +x ./gradlew" // mark gradlew executable
                     // Run tests but don't fail if the script reports an error
-                    sh "./gradlew test --stacktrace --info" // || exit 0 ?
+                    sh "./gradlew test --stacktrace || exit 0"
 
                     // Capture test report
                     junit "build/test-results/test/TEST-org.zowe.pipelines.NodeJsTest.xml"
@@ -228,7 +228,6 @@ pipeline {
          ************************************************************************/
         always {
             script {
-                sh 'npm logout || exit 0'
 
                 def buildStatus = currentBuild.currentResult
 
