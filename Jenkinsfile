@@ -193,6 +193,7 @@ pipeline {
                 timeout(time: 10, unit: 'MINUTES') {
                     echo 'Unit Test'
 
+                    sh "chmod +x ./gradlew" // mark gradlew executable
                     // Run tests but don't fail if the script reports an error
                     sh "./gradlew test --stacktrace --info" // || exit 0 ?
 
