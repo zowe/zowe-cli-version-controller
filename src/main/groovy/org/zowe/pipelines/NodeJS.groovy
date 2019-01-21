@@ -1,7 +1,7 @@
-package groovy.org.zowe.pipelines
+package org.zowe.pipelines
 
 import hudson.model.Result
-// import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
 // @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
@@ -96,11 +96,21 @@ public class NodeJS {
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
-        }, isSkipable: false)
+
+            if (_firstFailingStage) {
+                if (_firstFailingStage.exception) {
+                    throw _firstFailingStage.exception
+                } else {
+                    throw new StageException("Setup found a failing stage but there was no associated exception.", _firstFailingStage.name)
+                }
+            } else {
+                steps.echo "No problems with preinitialization of pipeline :)"
+            }
+        }, isSkipable: false, timeout: [time: 10, unit: 'SECONDS'])
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkipable: false)
+        }, isSkipable: false, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
@@ -116,23 +126,33 @@ public class NodeJS {
                 _shouldSkipRemainingSteps = true
                 setResult(Result.NOT_BUILT)
             }
-        })
+        }, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             steps.sh "npm install"
-        }, isSkipable: false)
+        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
 
     }
 
-    // document later
-    // @TODO Enforce that a stage name must be unique or test that it fails on a duplicate name
-    public void createStage(Map arguments) {
-        // Parse arguments and initialize the stage
-        StageArgs args = new StageArgs(arguments)
+    // Takes instantiated args and runs a stage
+    public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
-        // Add stage to map
-        _stages.putAt(args.name, stage)
+        if (_stages.containsKey(stage.name)) {
+            if (_firstStage == null) {
+                // This is a condition that indicates that our logic is most likely broken
+                throw new StageException("First stage was not set but stages already had values in the map", stage.name)
+            } else if (!_firstFailingStage){
+                // The first stage should be setup, othewise a stage exception will be
+                // thrown before we get into here. So in setup, we should create the exception
+                // to be thrown later.
+                _firstFailingStage = _firstStage
+                _firstFailingStage.exception = new StageException("Duplicate stage name: \"${stage.name}\"", _firstFailingStage.name)
+            }
+        } else {
+            // Add stage to map
+            _stages.putAt(args.name, stage)
+        }
 
         // Set the next stage from the current stage
         if (_currentStage) {
@@ -160,17 +180,19 @@ public class NodeJS {
 
         stage.execute = {
             steps.stage(args.name) {
-                _closureWrapper(stage) {
-                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
-                        // @TODO check how a timeout affects email
+                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    _closureWrapper(stage) {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
-                            steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
+                            throw new StageException(
+                                    "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
+                                    args.name
+                            )
                         }
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             // @TODO echo out the condition that caused the skip
-                            //Utils.markStageSkippedForConditional(args.name);
+                            Utils.markStageSkippedForConditional(args.name);
                         }
                         // Run the stage
                         else {
@@ -201,6 +223,16 @@ public class NodeJS {
         }
     }
 
+    // document later
+    // accept stage as a map to instantiate
+    public void createStage(Map arguments) {
+        // Parse arguments and initialize the stage
+        StageArgs args = new StageArgs(arguments)
+
+        // Call the overloaded method
+        createStage(args)
+    }
+
     private void _closureWrapper(Stage stage, Closure closure) {
         try {
             closure()
@@ -210,7 +242,7 @@ public class NodeJS {
                 _firstFailingStage = stage
             }
             setResult(Result.FAILURE)
-            stage.encounteredException = e // @TODO place this as part of the stage class
+            stage.exception = e // @TODO place this as part of the stage class
 
             throw e
         } finally {
@@ -225,12 +257,12 @@ public class NodeJS {
     // ) {
     // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
-        // @TODO must happen before testing
         BuildArgs args = arguments
 
-        createStage(arguments + [name: "Build: ${args.name}", stage: {
+        args.name = "Build: ${args.name}"
+        args.stage = {
             if (_didBuild) {
-                steps.error "Only one build step is allowed per pipeline."
+                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
             // Either use a custom build script or the default npm run build
@@ -247,42 +279,52 @@ public class NodeJS {
             // @TODO as it gets archived so that we can keep the git status clean
 
             _didBuild = true
-        }])
+        }
+
+        createStage(args)
     }
 
     public void testStage(Map arguments = [:]) {
-        TestArgs args = TestArgs.defaults + arguments
+        TestArgs args = arguments
 
-        // @TODO must happen before deploy after build
-        // @TODO  run in d-bus or not
-        // @TODO allow custom test command (partially done with closure)
-        // @TODO archive test results
-        // @TODO allow for sh script or path to sh script
-        def testStageArgs = [name: "Test: ${args.name}", stage: {
+        // @TODO one must happen before deploy
+        args.name = "Test: ${args.name}"
+        args.stage = {
             if (!_didBuild) {
-                steps.error "Tests cannot be run before the build has completed"
+                throw new TestStageException("Tests cannot be run before the build has completed", args.name)
             }
 
             steps.echo "Processing Arguments"
 
             if (!args.testResults) {
-                steps.error "Test Results HTML Report not provided"
+                throw new TestStageException("Test Results HTML Report not provided", args.name)
             } else {
-                _validateReportInfo(args.testResults, "Test Results HTML Report")
+                _validateReportInfo(args.testResults, "Test Results HTML Report", args.name)
             }
 
             if (!args.coverageResults) {
                 steps.echo "Code Coverage HTML Report not provided...report ignored"
+            } else {
+                _validateReportInfo(args.coverageResults, "Code Coverage HTML Report", args.name)
             }
 
             if (!args.junitOutput) {
-                steps.error "JUnit Report not provided"
+                throw new TestStageException("JUnit Report not provided", args.name)
             }
 
-            if (args.testOperation) {
-                args.testOperation()
-            } else {
-                steps.sh "npm run test"
+            // Unlock the keyring for dbus
+            if (args.shouldUnlockKeyring) {
+                steps.sh "echo 'jenkins' | gnome-keyring-daemon --unlock"
+            }
+
+            try {
+                if (args.testOperation) {
+                    args.testOperation()
+                } else {
+                    steps.sh "npm run test"
+                }
+            } catch (e) {
+                steps.echo "Exception: ${e.getMessage()}"
             }
 
             // Collect junit report
@@ -311,24 +353,27 @@ public class NodeJS {
             }
 
             // Collect cobertura coverage if specified
-            if (args.cobertura.coberturaReportFile) {
-                steps.cobertura(args.cobertura)
+            if (args.cobertura) {
+                steps.cobertura(TestArgs.coberturaDefaults + args.cobertura)
+            } else {
+                steps.echo "Cobertura file not detected, skipping"
             }
-        }]
-        createStage(arguments + testStageArgs)
+        }
+
+        createStage(args)
     }
 
-    private void _validateReportInfo(TestReport report, String reportName) {
+    private void _validateReportInfo(TestReport report, String reportName, String stageName) {
         if (!report.dir) {
-            steps.error "${reportName} is missing property `dir`"
+            throw new TestStageException("${reportName} is missing property `dir`", stageName)
         }
 
         if (!report.files) {
-            steps.error "${reportName} is missing property `files`"
+            throw new TestStageException("${reportName} is missing property `files`", stageName)
         }
 
         if (!report.name) {
-            steps.error "${reportName} is missing property `name`"
+            throw new TestStageException("${reportName} is missing property `name`", stageName)
         }
     }
 
@@ -398,11 +443,27 @@ public class NodeJS {
         }
 
         // Add any details of an exception, if encountered
-        if (_firstFailingStage != null && _firstFailingStage.encounteredException != null) {
-            bodyText += "<p>The following exception was encountered during the build: </p>"
-            bodyText += "<code style=\"max-height: 350px;overflow:auto;display: block;" +
-                    "white-space: pre-wrap\" ><b>" + _firstFailingStage.encounteredException.toString() + "</b>\n";
-            bodyText += _firstFailingStage.encounteredException.getStackTrace().join("\n") + "</code>";
+        if (_firstFailingStage != null && _firstFailingStage.exception != null) {
+            bodyText += "<h3>Failure Details</h3>"
+            bodyText += "<table style=\"font-size: 16px\">"
+            bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
+            bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.exception.toString()}</td></tr>"
+            bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
+            bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
+            bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
+            def stackTrace = _firstFailingStage.exception.getStackTrace()
+
+            for (int i = 0; i < stackTrace.length; i++) {
+                bodyText += "at ${stackTrace[i]}<br/>"
+            }
+
+            bodyText += "</div></td></tr>";
+            bodyText += "</table>"
+        }
+
+        if (steps.FAILED_TESTS) {
+            bodyText += "<h3>Failing Tests</h3>"
+            bodyText += "<div style=\"max-height: 350px; overflow: auto\">${steps.FAILED_TESTS}</div>"
         }
 
         List<String> ccList = new ArrayList<String>();
@@ -442,8 +503,10 @@ public class NodeJS {
 }
 
 
-// @ToString(includeFields = true, includeNames = true)
-class StageArgs {
+////////////////////////////////////////////////////////////////////////////////
+////////////////////// DATA FORMATS ////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
     String name
     Closure stage
     boolean isSkipable = true
@@ -465,7 +528,8 @@ class BuildArgs extends StageArgs {
 
 class TestArgs extends StageArgs {
     Closure testOperation
-    boolean doesRunInDBus = false
+
+    boolean shouldUnlockKeyring = false // Should the keyring be unlocked for the test
 
     TestReport testResults     // Required
     TestReport coverageResults // Optional
@@ -475,11 +539,19 @@ class TestArgs extends StageArgs {
     // Need cobertura stuff as well
     Map cobertura
 
-    public static final Map defaults = [
-            cobertura: [
-                    failUnhealthy: false,
-                    failUnstable : false
-            ]
+    public static final Map coberturaDefaults = [
+            autoUpdateStability       : true,
+            classCoverageTargets      : '85, 80, 75',
+            conditionalCoverageTargets: '70, 65, 60',
+            failUnhealthy             : false,
+            failUnstable              : false,
+            fileCoverageTargets       : '100, 95, 90',
+            lineCoverageTargets       : '80, 70, 50',
+            maxNumberOfBuilds         : 20,
+            methodCoverageTargets     : '80, 70, 50',
+            onlyStable                : false,
+            sourceEncoding            : 'ASCII',
+            zoomCoverageChart         : false
     ]
 }
 
@@ -501,5 +573,37 @@ class Stage {
     /**
      * any exception encountered during the stage
      */
-    Exception encounteredException
+    Exception exception
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// EXCEPTIONS ////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class NodeJSException extends Exception {
+    NodeJSException(String message) {
+        super(message)
+    }
+}
+
+class StageException extends NodeJSException {
+    String stageName
+
+    StageException(String message, String stageName) {
+        super("${message} (stage = \"${stageName}\")")
+
+        this.stageName = stageName
+    }
+}
+
+class TestStageException extends StageException {
+    TestStageException(String message, String stageName) {
+        super(message, stageName)
+    }
+}
+
+class BuildStageException extends StageException {
+    BuildStageException(String message, String stageName) {
+        super(message, stageName)
+    }
 }

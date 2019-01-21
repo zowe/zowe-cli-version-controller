@@ -13,19 +13,9 @@
 //System.setProperty("hudson.model.DirectoryBrowserSupport.CSP", "")
 
 /**
- * The root results folder for items configurable by environmental variables
- */
-def TEST_RESULTS_FOLDER = "__tests__/__results__/ci"
-
-/**
  * The location of the unit test results
  */
-def UNIT_RESULTS = "${TEST_RESULTS_FOLDER}/unit"
-
-/**
- * The location of the integration test results
- */
-def INTEGRATION_RESULTS = "${TEST_RESULTS_FOLDER}/integration"
+def UNIT_RESULTS = "build/reports/tests/test"
 
 /**
  * The name of the master branch
@@ -195,7 +185,7 @@ pipeline {
 
                     sh "chmod +x ./gradlew" // mark gradlew executable
                     // Run tests but don't fail if the script reports an error
-                    sh "./gradlew test --stacktrace || exit 0"
+                    sh "./gradlew test || exit 0"
 
                     // Capture test report
                     junit "build/test-results/test/TEST-org.zowe.pipelines.NodeJsTest.xml"
