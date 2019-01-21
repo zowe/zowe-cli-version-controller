@@ -260,11 +260,7 @@ pipeline {
                             details = "<p>Build returned to normal.</p>"
                         }
 
-                        // Issue #53 - Previously if the first build for a branch failed, logs would not be captured.
-                        //             Now they do!
                         if (currentBuild.resultIsWorseOrEqualTo(BUILD_UNSTABLE)) {
-                            // Archives any test artifacts for logging and debugging purposes
-                            archiveArtifacts allowEmptyArchive: true, artifacts: '__tests__/__results__/**/*.log'
                             details = "${details}<p>Build Failure.</p>"
                         }
 
