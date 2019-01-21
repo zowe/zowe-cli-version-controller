@@ -22,10 +22,11 @@ Use the following guidelines to maintain your versioning scheme:
   - Take the previously published `@beta` version number, remove the pre-release string and tag it with `@latest`.
   - Take a snapshot of the master branch (or the last version tagged `@daily`) and publish an `@beta` version with a pre-release string of `-beta.<timestamp>`.
 - When your PM/PO decides to port features and fixes to LTS branches, complete the following tasks:
-  - Port the specified code into the corresponding LTS branch. For example, port features to only `lts-incremental` and fixes to only `lts-incremental` and `lts-stable`).
-  - Increase the version number accordingly.
-    - When you merge features into the `lts-incremental` branch, the `minor` version increases by one.
-    - When you merge fixes into the `lts-stable` or `lts-incremental` branch, increment only the `patch` number by one.
-  - Publish the new version of the product with the corresponding tag. For example, `@lts-incremental`, `@lts-stable`.
+  
+  1. Port the specified code into the corresponding LTS branch. For example, port features to only `lts-incremental` and fixes to only `lts-incremental` and `lts-stable`).
+  2. Increase the version number accordingly.
+        - When you merge features into the `lts-incremental` branch, the `minor` version increases by one.
+        - When you merge fixes into the `lts-stable` or `lts-incremental` branch, increment only the `patch` number by one.
+  3. Publish the new version of the product with the corresponding tag. For example, `@lts-incremental`, `@lts-stable`.
 
-    **Note:** You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
+        **Note:** You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
