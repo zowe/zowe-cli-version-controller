@@ -96,7 +96,7 @@ def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
  * This is the product name used by the build machine to store information about
  * the builds
  */
-def PRODUCT_NAME = "Zowe CLI"
+def PRODUCT_NAME = "Zowe CLI Shared Pipeline"
 
 
 pipeline {
@@ -200,6 +200,16 @@ pipeline {
                     // Capture test report
                     junit "build/test-results/test/TEST-org.zowe.pipelines.NodeJsTest.xml"
 
+
+                    // Publish HTML report
+                    publishHTML(target: [
+                            allowMissing         : false,
+                            alwaysLinkToLastBuild: true,
+                            keepAll              : true,
+                            reportDir            : "build/reports/tests/test",
+                            reportFiles          : "index.html",
+                            reportName           : "${PRODUCT_NAME} - Unit Test Report"
+                    ])
                 }
             }
         }

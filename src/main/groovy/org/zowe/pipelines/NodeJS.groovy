@@ -161,7 +161,8 @@ public class NodeJS {
         stage.execute = {
             steps.stage(args.name) {
                 _closureWrapper(stage) {
-                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) { // @TODO check how a timeout affects email
+                    steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                        // @TODO check how a timeout affects email
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
                             steps.error("Pipeline setup not complete, please execute setup() on the instantiated NodeJS class")
@@ -475,10 +476,10 @@ class TestArgs extends StageArgs {
     Map cobertura
 
     public static final Map defaults = [
-        cobertura: [
-            failUnhealthy: false,
-            failUnstable: false
-        ]
+            cobertura: [
+                    failUnhealthy: false,
+                    failUnstable : false
+            ]
     ]
 }
 
