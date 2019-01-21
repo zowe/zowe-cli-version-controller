@@ -28,4 +28,4 @@ Use the following guidelines to maintain your versioning scheme:
     - When you merge fixes into the `lts-stable` or `lts-incremental` branch, increment only the `patch` number by one.
   - Publish the new version of the product with the corresponding tag. For example, `@lts-incremental`, `@lts-stable`.
 
-    Note: You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
+    **Note:** You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
