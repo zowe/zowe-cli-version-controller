@@ -1,7 +1,7 @@
 package org.zowe.pipelines
 
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+// import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
 // @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
@@ -192,7 +192,7 @@ public class NodeJS {
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             // @TODO echo out the condition that caused the skip
-                            Utils.markStageSkippedForConditional(args.name);
+                            // Utils.markStageSkippedForConditional(args.name);
                         }
                         // Run the stage
                         else {
