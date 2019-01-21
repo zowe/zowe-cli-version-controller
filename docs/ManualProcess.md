@@ -10,7 +10,7 @@ Complete the following tasks before you release a GA version of your product:
     - `lts-incremental`
     - `latest`
     - `beta`
-- Manaully publish the package that is located in the corresponding Artifactory and add the required distribution tags to the corresponding version numbers. Use the guidelines for packages that are described in the following document: [Versions numbers](https://docs.google.com/spreadsheets/d/1PsSn1Yvs6L-uh8Y86D9_P5JMbj_2Lv-AOr5BtjXR3H8/edit?usp=sharing).
+- Manaully publish the package that is located in the corresponding Artifactory. Add the required distribution tags to the corresponding version numbers. Use the guidelines for packages that are described in the following document: [Versions numbers](https://docs.google.com/spreadsheets/d/1PsSn1Yvs6L-uh8Y86D9_P5JMbj_2Lv-AOr5BtjXR3H8/edit?usp=sharing).
 - Verify the compatibility at each NPM tag level. For example, core: `lts-stable` with plug-in *XYZ*: `lts-stable`.
 
 ## Maintain Versioning Schemes
@@ -26,5 +26,6 @@ Use the following guidelines to maintain your versioning scheme:
   - Increase the version number accordingly.
     - When you merge features into the `lts-incremental` branch, the `minor` version increases by one.
     - When you merge fixes into the `lts-stable` or `lts-incremental` branch, increment only the `patch` number by one.
-  - Publish the new version of the product with the corresponding tag (for example, `@lts-incremental`, `@lts-stable`).
-    - You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
+  - Publish the new version of the product with the corresponding tag. For example, `@lts-incremental`, `@lts-stable`.
+
+    Note: You might encounter situations where the package version was published previously. When this situation occurs, you need to only update or move the tags around.
