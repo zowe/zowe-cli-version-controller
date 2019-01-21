@@ -106,7 +106,7 @@ Also, we will implement a containerization system based on Docker. This allows p
 
 ## Protected Branches
 
-This section explains in details the purpose of each branch and their corresponding build strategy. The following branches are considered protected as only administrators and robots can and will have the authority to push changes directly to them in order to guarantee a successful Continuous Integration / Continuous Delivery (CI/CD) cycle. Please refer to the [tag names](https://github.com/zowe/zowe-cli/blob/master/docs/MaintainerVersioning.md#npm-tag-names) for more information about the specific NPM tags that will be mentioned in this section.
+This section explains in details the purpose of each branch and their corresponding build strategy. The following branches are considered protected as only administrators and robots can and will have the authority to push changes directly to them in order to guarantee a successful Continuous Integration / Continuous Delivery (CI/CD) cycle. Please refer to the [tag names](https://github.com/zowe/zowe-cli/blob/master/docs/MaintainerVersioning.md#npm-tag-names) for more information about the specific NPM tags that will be mentioned in this section. Please note that the release number `[3(major).5(minor).1(patch)]` used in the example are just for illustration purposes.
 
 ### master
 
@@ -134,17 +134,17 @@ The build is triggered any time code gets merged into the branch and since it's 
 
 The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a no-changing version that guarantees that no new features are applied but only patches. For example, the version could be `3.5.1` which corresponds to the NPM tag `lts-stable` and should only increment the `patch` level.
 
-Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minor versions of the package are compared againstthe most recent `@lts-stable` release and fail the PR if the major or minor versions have changed. This will ensure that the major nor minor version never increase, thus ensuring no features are introduced into the branch.
+Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minor versions of the package are compared against the most recent `@lts-stable` release and fail the PR if the major or minor versions have changed. This will ensure that the major and minor version never increase, thus ensuring no features are introduced into the branch.
 
 Since this branch only accepts bug fixes (or patch increments), PRs will also fail if the patch version is changed manually. The version will automatically bump after a successful build.
 
 ## Tag Migration
 
-This section covers how the tags corresponding to each protected branch gets moved into the next level of delivery. There will be an email mechanism that will notify and ask users for action on what version number to publish. The email may contain various options as described in the `beta` branch section. After the user replies or clicks a link/button, the controller receives the action and the CD process begins.
+This section covers how the tags corresponding to each protected branch get moved into the next level of delivery. There will be an email mechanism that will notify and ask users for action on what version number to publish. The email may contain various options as described in the `beta` branch section. After the user replies or clicks a link/button, the controller receives the action and the CD process begins.
 
 First, we take the most current snapshot contained on the `beta` branch (which is tagged `@beta`) and move the code to the `latest` branch, which then triggers a build generating a new `latest` release (also known as CE). Then we move the most current snapshot of `master` and move it to `beta`, triggering the beta deployment as well.
 
-In terms of LTS branches, the tag migration works a little different given that the release cycle is at Product Management discretion and they decide when should the next incremental or stable version be available. There will be a build button in the jenkins machine to facilitate the release effort once the decision is made. The build process executes the following steps:
+In terms of LTS branches, the tag migration works a little different given that the release cycle is at Product Management discretion and they decide when the next incremental or stable version will be available. There will be a build button in the jenkins machine to facilitate the release effort once the decision is made. The build process executes the following steps:
   1. Rename the `lts-stable` branch to `lts-stable-v<major>.<minor>.<patch>` in case we need to go back to that specific stable release. It can be deleted later if needed.
   2. Rename the `lts-incremental` branch to `lts-stable`. This will trigger CI/CD on the lts-stable branch. The CD build will be skipped if the version already exists.
   3. Move the `@lts-stable` NPM tag to `@lts-incremental` tag version. This is needed because the version that `@lts-incremental` is pointing to, has already been published to the registry and cannot be republished.
