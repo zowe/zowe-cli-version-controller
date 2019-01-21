@@ -92,6 +92,7 @@ class MockSteps {
 
     }
 
+    public String FAILED_TESTS = "These are the failed tests"
     public Map params = ["Skip Stage: lint": "hello"]
     public Map currentBuild = [currentResult: "NOT_STARTED", result: Result.SUCCESS]
 
