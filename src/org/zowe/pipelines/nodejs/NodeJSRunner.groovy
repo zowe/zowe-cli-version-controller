@@ -442,17 +442,19 @@ public class NodeJSRunner {
             }
             text += "</p>"
 
+            // Now output failing results
             if (failed > 0) {
+                // If there are more failures than this value, then we will only output
+                // this number of failures to save on email size.
                 def maxTestOutput = 20
 
                 text += "<h4>Failing Tests</h4>"
 
-                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: text-top; margin-left: 10px; color: red\">"
-
+                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: top; margin-left: 10px; color: red\">"
                 def failedTests = testResultAction.getFailedTests()
                 def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
 
-                // Loop through all tests or the first 20, whichever is smallest
+                // Loop through all tests or the first maxTestOutput, whichever is smallest
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
@@ -464,10 +466,12 @@ public class NodeJSRunner {
                     
                     text += "\"><b>Failed:</b> ${test.fullDisplayName}"
                     
+                    // Add error details
                     if (test.errorDetails) {
                         text += "<br/><b>Details:</b>${codeStart}${escapeHtml4(test.errorDetails)}</code>"
                     }
 
+                    // Add stack trace
                     if (test.errorStackTrace) {
                         text += "<br/><b>Stacktrace:</b>${codeStart}${escapeHtml4(test.errorStackTrace)}</code>"
                     }
@@ -479,10 +483,7 @@ public class NodeJSRunner {
                 if (maxTestOutput < failedTestsListCount) {
                     text += "<p>...For the remaining failures, view the build output</p>"
                 }
-
             }
-
-            // Now output the failing results if there are any, truncate after 20
         } else {
             text += "<p>No test results were found for this run.</p>"
         }
@@ -494,7 +495,6 @@ public class NodeJSRunner {
      * Send an email notification about the result of the build to the appropriate users
      */
     public void sendEmailNotification() {
-
         steps.echo "Sending email notification..."
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
