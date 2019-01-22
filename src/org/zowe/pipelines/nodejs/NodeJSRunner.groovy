@@ -1,11 +1,15 @@
-package org.zowe.pipelines
+package org.zowe.pipelines.nodejs
+
+@Grab('org.apache.commons:commons-text:1.6')
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
 import hudson.model.Result
+import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
 // @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
-public class NodeJS {
+public class NodeJSRunner {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
     // Look up the git version
@@ -88,7 +92,7 @@ public class NodeJS {
     def BUILD_FAILURE = 'FAILURE'
 
 
-    NodeJS(steps) { this.steps = steps }
+    NodeJSRunner(steps) { this.steps = steps }
 
     public void setup() {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
@@ -117,12 +121,12 @@ public class NodeJS {
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
             // code which would already be ahead of this build.
-            _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP
 
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {
-                steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
                 _shouldSkipRemainingSteps = true
                 setResult(Result.NOT_BUILT)
             }
@@ -272,8 +276,8 @@ public class NodeJS {
                 steps.sh 'npm run build'
             }
 
-            steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
-            steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
+            steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
+            steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
 
             // @TODO should probably delete the archive from the workspace as soon
             // @TODO as it gets archived so that we can keep the git status clean
@@ -417,6 +421,68 @@ public class NodeJS {
         return "Skip Stage: ${name}"
     }
 
+    // NonCPS informs jenkins to not save variable state that would resolve in a
+    // java.io.NotSerializableException on the TestResults class
+    @NonCPS
+    private String _getTestSummary() {
+        def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+        def text = "<h3>Test Results</h3>"
+
+        if (testResultAction != null) {
+            def total = testResultAction.getTotalCount()
+            def failed = testResultAction.getFailCount()
+            def skipped = testResultAction.getSkipCount()
+
+            // Create an overall summary
+            text += "<p>Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
+            text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
+
+            if (skipped > 0) {
+                text += ", Skipped: <span style=\"font-weight: bold; color: #027b77\">${skipped}</span>"
+            }
+            text += "</p>"
+
+            if (failed > 0) {
+                def maxTestOutput = 20
+
+                text += "<h4>Failing Tests</h4>"
+
+                def failedTests = testResultAction.getFailedTests()
+                def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
+
+                // Loop through all tests or the first 20, whichever is smallest
+                for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
+                    def test = failedTests.get(i)
+
+                    text += "<p style=\"border-top: solid 1px black\"><b>Failed:</b> ${test.fullDisplayName}"
+
+                    if (test.errorDetails) {
+                        text += "<br/><b>Details:</b><pre>${test.errorDetails}</pre>"
+                    }
+
+                    if (test.errorStackTrace) {
+                        text += "<br/><b>Stacktrace:</b><pre>${escapeHtml4(test.errorStackTrace)}</pre>"
+                    }
+
+                    text += "</p>"
+                }
+
+                // Todo add elipsis if the total is greater than the max
+                if (maxTestOutput < failedTestsListCount) {
+                    text += "<p>...</p>"
+                    text += "<p>For the remaining failures, view the build output</p>"
+                }
+
+            }
+
+            // Now output the failing results if there are any, truncate after 20
+        } else {
+            text += "<p>No test results were found for this run.</p>"
+        }
+
+        return text
+    }
+
     /**
      * Send an email notification about the result of the build to the appropriate users
      */
@@ -442,6 +508,8 @@ public class NodeJS {
             bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
         }
 
+        bodyText += _getTestSummary()
+
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.exception != null) {
             bodyText += "<h3>Failure Details</h3>"
@@ -459,11 +527,6 @@ public class NodeJS {
 
             bodyText += "</div></td></tr>";
             bodyText += "</table>"
-        }
-
-        if (steps.FAILED_TESTS) {
-            bodyText += "<h3>Failing Tests</h3>"
-            bodyText += "<div style=\"max-height: 350px; overflow: auto\">${steps.FAILED_TESTS}</div>"
         }
 
         List<String> ccList = new ArrayList<String>();
@@ -502,6 +565,7 @@ public class NodeJS {
     }
 }
 
+// @TODO split out classes
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////// DATA FORMATS ////////////////////////////////////////////
@@ -580,13 +644,13 @@ class Stage {
 //////////////////////////// EXCEPTIONS ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class NodeJSException extends Exception {
-    NodeJSException(String message) {
+class NodeJSRunnerException extends Exception {
+    NodeJSRunnerException(String message) {
         super(message)
     }
 }
 
-class StageException extends NodeJSException {
+class StageException extends NodeJSRunnerException {
     String stageName
 
     StageException(String message, String stageName) {
