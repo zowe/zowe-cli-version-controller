@@ -456,7 +456,7 @@ public class NodeJSRunner {
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p style=\"border-bottom: solid 1px black; padding-bottom: 5px;" 
+                    text += "<p style=\"margin-top: 5px; margin-bottom: 0px; border-bottom: solid 1px black; padding-bottom: 5px;" 
                     
                     if (i == 0) {
                         text += "border-top: solid 1px black; padding-top: 5px;"
