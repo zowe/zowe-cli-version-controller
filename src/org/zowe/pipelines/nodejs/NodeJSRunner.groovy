@@ -457,17 +457,17 @@ public class NodeJSRunner {
                     text += "<p style=\"border-bottom: solid 1px black; padding-bottom: 5px;" 
                     
                     if (i == 0) {
-                        text += "border-top: solid 1px black; padding-top: 5px"
+                        text += "border-top: solid 1px black; padding-top: 5px;"
                     }
                     
                     text += "\"><b>Failed:</b> ${test.fullDisplayName}"
                     
                     if (test.errorDetails) {
-                        text += "<br/><b>Details:</b><pre>${test.errorDetails}</pre>"
+                        text += "<br/><b>Details:</b><code style=\"white-space: pre-wrap\">${test.errorDetails}</code>"
                     }
 
                     if (test.errorStackTrace) {
-                        text += "<br/><b>Stacktrace:</b><pre>${escapeHtml4(test.errorStackTrace)}</pre>"
+                        text += "<br/><b>Stacktrace:</b><code style=\"white-space: pre-wrap\">${escapeHtml4(test.errorStackTrace)}</code>"
                     }
 
                     text += "</p>"
