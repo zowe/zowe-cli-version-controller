@@ -426,7 +426,11 @@ public class NodeJSRunner {
         def text = "<h3>Test Results</h3>"
 
         if (testResultAction != null) {
-            text += "<p>Test results were found for this run.</p>"
+            def total = testResultAction.getTotalCount()
+            def failed = testResultAction.getFailCount()
+            def skipped = testResultAction.getSkipCount()
+
+            text += "<p>Passed: ${total - failed - skipped}, Failed: ${failed}, Skipped: ${skipped}</p>"
         } else {
             text += "<p>No test results were found for this run.</p>"
         }
