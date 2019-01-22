@@ -454,7 +454,7 @@ public class NodeJSRunner {
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p><b>Failed:</b> ${test.fullDisplayName}"
+                    text += "<p style=\"border-top: solid 1px black\"><b>Failed:</b> ${test.fullDisplayName}"
                     
                     if (test.errorDetails) {
                         text += "<br/><b>Details:</b><pre>${test.errorDetails}</pre>"
