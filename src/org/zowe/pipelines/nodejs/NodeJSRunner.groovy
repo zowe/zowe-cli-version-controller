@@ -446,7 +446,7 @@ public class NodeJSRunner {
             if (failed > 0) {
                 // If there are more failures than this value, then we will only output
                 // this number of failures to save on email size.
-                def maxTestOutput = 20
+                def maxTestOutput = 5
 
                 text += "<h4>Failing Tests</h4>"
 
@@ -475,6 +475,9 @@ public class NodeJSRunner {
                     if (test.errorStackTrace) {
                         text += "<br/><b>Stacktrace:</b>${codeStart}${escapeHtml4(test.errorStackTrace)}</code>"
                     }
+
+                    text += "Stdout: ${test.stdout}"
+                    text += "Stderr: ${test.stderr}"
 
                     text += "</p>"
                 }
