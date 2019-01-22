@@ -1,11 +1,13 @@
-
+@Library('shared-pipelines@automated_Tests')
+import org.zowe.pipelines.NodeJS
 // use the shared library with the current branch name (dynamic load)
-def lib = library("shared-pipelines@$BRANCH_NAME").org.zowe.pipelines
+// TODO: can't get dynamic load to work
+//def lib = library("shared-pipelines@$BRANCH_NAME").org.zowe.pipelines
 
 def MOCK_PROJECT_DIR = "mock_project"
 
 node('ca-jenkins-agent') {
-    def nodejs = new lib.NodeJS.new(this)
+    def nodejs = new NodeJS(this)
 
     nodejs.adminEmails = [
         "christopher.wright@broadcom.com",
