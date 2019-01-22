@@ -8,7 +8,9 @@ build
 .vscode
 target
 
+
 # ignored files for the inner mocked project used for testing the shared pipeline
-mock_project/node_modules
+mock_project
 node_modules
 mock_project/package-lock.json
+lib

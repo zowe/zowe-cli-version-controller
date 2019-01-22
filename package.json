@@ -4,7 +4,7 @@
   "description": "A mock project to use when testing the shared Node JS pipeline ",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --pretty",
+    "build": "tsc --pretty -p mock_project/tsconfig.json",
     "lint": "tslint --format stylish -c mock_project/tslint-packages.json \"mock_project/packages/**/*.ts\"",
     "test:unit": "jest \".*__tests__.*\\.unit\\.(spec|test)\\.ts\" --coverage"
   },
