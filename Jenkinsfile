@@ -63,7 +63,7 @@ node('ca-jenkins-agent') {
         shouldUnlockKeyring: true,
         testResults: [dir: "${UNIT_TEST_ROOT}/html", files: "index.html", name: "Mock Project: Unit Test Report"],
         coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "Mock Project: Code Coverage Report"],
-        junitOutput: "${UNIT_TEST_ROOT}/junit/junit.xml",
+        junitOutput: "${UNIT_TEST_ROOT}/junit.xml",
         cobertura: [
             coberturaReportFile: "${UNIT_TEST_ROOT}/coverage/cobertura-coverage.xml"
         ]

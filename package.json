@@ -79,6 +79,6 @@
     "coverageLink": "../unit/coverage/lcov-report/index.html"
   },
   "jest-junit": {
-    "output": "__tests__/__results__/junit.xml"
+    "output": "__tests__/__results__/unit/junit.xml"
   }
 }
