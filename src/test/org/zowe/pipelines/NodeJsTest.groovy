@@ -1,6 +1,6 @@
 package org.zowe.pipelines
 
-import groovy.org.zowe.pipelines.NodeJS
+import org.zowe.pipelines.NodeJS
 import hudson.model.Result
 import org.junit.Test
 

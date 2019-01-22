@@ -1,4 +1,4 @@
-package groovy.org.zowe.pipelines
+package org.zowe.pipelines
 
 import hudson.model.Result
 

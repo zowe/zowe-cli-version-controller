@@ -30,9 +30,14 @@ dependencies {
 }
 
 sourceSets {
+    main {
+        groovy {
+            srcDirs = ["src/main/org/zowe/pipelines"]
+        }
+    }
     test {
-        java {
-            srcDirs = ["src/test/groovy/org/zowe/pipelines"]
+        groovy {
+            srcDirs = ["src/test/org/zowe/pipelines"]
         }
     }
 }
