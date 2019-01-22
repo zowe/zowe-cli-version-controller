@@ -1,11 +1,11 @@
-package org.zowe.pipelines
+package org.zowe.pipelines.nodejs
 
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
 // @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
-public class NodeJS {
+public class NodeJSRunner {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
     // Look up the git version
@@ -88,7 +88,7 @@ public class NodeJS {
     def BUILD_FAILURE = 'FAILURE'
 
 
-    NodeJS(steps) { this.steps = steps }
+    NodeJSRunner(steps) { this.steps = steps }
 
     public void setup() {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
@@ -502,6 +502,7 @@ public class NodeJS {
     }
 }
 
+// @TODO split out classes
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////// DATA FORMATS ////////////////////////////////////////////
