@@ -447,6 +447,8 @@ public class NodeJSRunner {
 
                 text += "<h4>Failing Tests</h4>"
 
+                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: text-top; margin-left: 10px;\">"
+
                 def failedTests = testResultAction.getFailedTests()
                 def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
 
@@ -463,11 +465,11 @@ public class NodeJSRunner {
                     text += "\"><b>Failed:</b> ${test.fullDisplayName}"
                     
                     if (test.errorDetails) {
-                        text += "<br/><b>Details:</b><code style=\"white-space: pre-wrap\">${test.errorDetails}</code>"
+                        text += "<br/><b>Details:</b>${codeStart}${escapeHtml4(test.errorDetails)}</code>"
                     }
 
                     if (test.errorStackTrace) {
-                        text += "<br/><b>Stacktrace:</b><code style=\"white-space: pre-wrap\">${escapeHtml4(test.errorStackTrace)}</code>"
+                        text += "<br/><b>Stacktrace:</b>${codeStart}${escapeHtml4(test.errorStackTrace)}</code>"
                     }
 
                     text += "</p>"
