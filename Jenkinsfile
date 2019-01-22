@@ -33,10 +33,11 @@ node('ca-jenkins-agent') {
     ]
 
     dir (MOCK_PROJECT_DIR){
-        sh "ls"
+
 
         nodejs.setup()
 
+        sh "ls"
         nodejs.createStage(
             name: "Lint",
             stage: {
