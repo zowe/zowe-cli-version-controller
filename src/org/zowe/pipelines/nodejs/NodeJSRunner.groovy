@@ -418,6 +418,22 @@ public class NodeJSRunner {
         return "Skip Stage: ${name}"
     }
 
+    // NonCPS informs jenkins to not save variable state that would resolve in a 
+    // java.io.NotSerializableException on the TestResults class
+    @NonCPS
+    private String _getTestSummary() {
+        def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+        def text = "<h3>Test Results</h3>"
+
+        if (testResultAction != null) {
+            text += "<p>Test results were found for this run.</p>"
+        } else {
+            text += "<p>No test results were found for this run.</p>"
+        }
+
+        return text
+    }
+
     /**
      * Send an email notification about the result of the build to the appropriate users
      */
@@ -443,15 +459,7 @@ public class NodeJSRunner {
             bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
         }
 
-        def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
-
-        bodyText += "<h3>Test Results</h3>"
-
-        if (testResultAction != null) {
-            bodyText += "<p>Test results were found for this run.</p>"
-        } else {
-            bodyText += "<p>No test results were found for this run.</p>"
-        }
+        bodyText += _getTestSummary()
 
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.exception != null) {
