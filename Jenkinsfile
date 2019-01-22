@@ -31,48 +31,43 @@ node('ca-jenkins-agent') {
         email: nodejs.gitConfig.email,
         credentialId: 'GizaArtifactory'
     ]
-        sh "cd ./mock_project"
-        nodejs.setup()
 
-        nodejs.createStage(
-            name: "Lint",
-            stage: {
-               dir (MOCK_PROJECT_DIR){
-                    sh "ls"
-                    sh "npm run lint"
-               }
-            },
-            timeout: [
-                time: 2,
-                unit: 'MINUTES'
-            ]
-        )
+    nodejs.setup()
 
-        nodejs.buildStage(timeout: [
-            time: 5,
-            unit: 'MINUTES',
-        ],  buildOperation:
-           {
-                dir (MOCK_PROJECT_DIR){
-                           sh "npm run build"
-                 }
-           })
+    nodejs.createStage(
+        name: "Lint",
+        stage: {
+                sh "npm run lint"
+        },
+        timeout: [
+            time: 2,
+            unit: 'MINUTES'
+        ]
+    )
 
-        def UNIT_TEST_ROOT = "__tests__/__results__/unit"
+    nodejs.buildStage(timeout: [
+        time: 5,
+        unit: 'MINUTES',
+    ],  buildOperation:
+       {
+             sh "npm run build"
+       })
 
-        nodejs.testStage(
-            name: "Unit",
-            testOperation: {
-                sh "npm run test:unit"
-            },
-            shouldUnlockKeyring: true,
-            testResults: [dir: "${UNIT_TEST_ROOT}/html", files: "index.html", name: "Mock Project: Unit Test Report"],
-            coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "Mock Project: Code Coverage Report"],
-            junitOutput: "${UNIT_TEST_ROOT}/junit/junit.xml",
-            cobertura: [
-                coberturaReportFile: "${UNIT_TEST_ROOT}/coverage/cobertura-coverage.xml"
-            ]
-        )
-        nodejs.end()
+    def UNIT_TEST_ROOT = "__tests__/__results__/unit"
+
+    nodejs.testStage(
+        name: "Unit",
+        testOperation: {
+            sh "npm run test:unit"
+        },
+        shouldUnlockKeyring: true,
+        testResults: [dir: "${UNIT_TEST_ROOT}/html", files: "index.html", name: "Mock Project: Unit Test Report"],
+        coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "Mock Project: Code Coverage Report"],
+        junitOutput: "${UNIT_TEST_ROOT}/junit/junit.xml",
+        cobertura: [
+            coberturaReportFile: "${UNIT_TEST_ROOT}/coverage/cobertura-coverage.xml"
+        ]
+    )
+    nodejs.end()
 
 }

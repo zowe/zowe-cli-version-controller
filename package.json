@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc --pretty",
-    "lint": "tslint --format stylish -c tslint-packages.json \"packages/**/*.ts\"",
+    "lint": "tslint --format stylish -c mock_project/tslint-packages.json \"mock_project/packages/**/*.ts\"",
     "test:unit": "jest \".*__tests__.*\\.unit\\.(spec|test)\\.ts\" --coverage"
   },
   "author": "Broadcom",
