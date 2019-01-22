@@ -430,7 +430,16 @@ public class NodeJSRunner {
             def failed = testResultAction.getFailCount()
             def skipped = testResultAction.getSkipCount()
 
-            text += "<p>Passed: ${total - failed - skipped}, Failed: ${failed}, Skipped: ${skipped}</p>"
+            // Create an overall summary
+            text += "<p>Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span><br/>"
+            text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
+            
+            if (skipped == 0) {
+                text += "<br/>Skipped: <span style=\"font-weight: bold; color: yellow\">${skipped}</span>"
+            }
+            text += "</p>"
+
+            // Now output the failing results if there are any, truncate after 20
         } else {
             text += "<p>No test results were found for this run.</p>"
         }
