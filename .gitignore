@@ -3,6 +3,12 @@
 
 # Ignore Gradle build output directory
 build
+
 .idea
 .vscode
 target
+
+# ignored files for the inner mocked project used for testing the shared pipeline
+mock_project/node_modules
+node_modules
+mock_project/package-lock.json

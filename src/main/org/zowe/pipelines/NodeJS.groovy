@@ -1,8 +1,7 @@
 package org.zowe.pipelines
 
 import hudson.model.Result
-
-// import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
 // @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
@@ -73,6 +72,22 @@ public class NodeJS {
 
     def steps
 
+    /**
+     * The result string for a successful build
+     */
+    def BUILD_SUCCESS = 'SUCCESS'
+
+    /**
+     * The result string for an unstable build
+     */
+    def BUILD_UNSTABLE = 'UNSTABLE'
+
+    /**
+     * The result string for a failed build
+     */
+    def BUILD_FAILURE = 'FAILURE'
+
+
     NodeJS(steps) { this.steps = steps }
 
     public void setup() {
@@ -127,7 +142,7 @@ public class NodeJS {
             if (_firstStage == null) {
                 // This is a condition that indicates that our logic is most likely broken
                 throw new StageException("First stage was not set but stages already had values in the map", stage.name)
-            } else if (!_firstFailingStage) {
+            } else if (!_firstFailingStage){
                 // The first stage should be setup, othewise a stage exception will be
                 // thrown before we get into here. So in setup, we should create the exception
                 // to be thrown later.
@@ -177,7 +192,7 @@ public class NodeJS {
                         // Next check to see if the stage should be skipped
                         else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
                             // @TODO echo out the condition that caused the skip
-                            // Utils.markStageSkippedForConditional(args.name);
+                            Utils.markStageSkippedForConditional(args.name);
                         }
                         // Run the stage
                         else {
@@ -491,8 +506,7 @@ public class NodeJS {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////// DATA FORMATS ////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-class StageArgs {
-    // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
+class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
     String name
     Closure stage
     boolean isSkipable = true
