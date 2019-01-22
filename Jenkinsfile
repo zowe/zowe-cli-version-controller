@@ -49,10 +49,9 @@ node('ca-jenkins-agent') {
         nodejs.buildStage(timeout: [
             time: 5,
             unit: 'MINUTES',
-            buildOperation: {
-                sh "npm run build"
-            }
-        ])
+        ],  buildOperation: {
+                           sh "npm run build"
+                       })
 
         def UNIT_TEST_ROOT = "__tests__/__results__/unit"
 
