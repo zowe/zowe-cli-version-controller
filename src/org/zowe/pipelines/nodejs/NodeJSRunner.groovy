@@ -434,13 +434,29 @@ public class NodeJSRunner {
             text += "<p>Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
             text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
             
-            if (skipped == 0) {
+            if (skipped > 0) {
                 text += ", Skipped: <span style=\"font-weight: bold; color: #027b77\">${skipped}</span>"
             }
             text += "</p>"
 
             if (failed > 0) {
+                def maxTestOutput = 20
+
                 text += "<h4>Failing Tests</h4>"
+
+                def failedTests = testResultAction.getFailedTests()
+                def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
+
+                // Loop through all tests or the first 20, whichever is smallest
+                for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
+                    def test = failedTests.get(i)
+
+                    text += "<p><b>Failed:</b> ${test.fullDisplayName}<br/><b>Details:</b> <div style=\"display: inline-block\">${test.errorDetails}</div>"
+                }
+
+                // Todo add elipsis if the total is greater than the max
+
+
             }
 
             // Now output the failing results if there are any, truncate after 20
