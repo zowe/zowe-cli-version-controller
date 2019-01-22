@@ -1,7 +1,7 @@
 package org.zowe.pipelines.nodejs
 
 @Grab('org.apache.commons:commons-lang3:3.8.1')
-import static org.apache.commons.lang.StringEscapeUtils
+import static org.apache.commons.lang3.StringEscapeUtils
 
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
