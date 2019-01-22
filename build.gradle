@@ -32,7 +32,7 @@ dependencies {
 sourceSets {
     main {
         groovy {
-            srcDirs = ["src/main/org/zowe/pipelines"]
+            srcDirs = ["src/org/zowe/pipelines"]
         }
     }
     test {
