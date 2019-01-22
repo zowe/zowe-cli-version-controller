@@ -434,7 +434,7 @@ public class NodeJSRunner {
             def skipped = testResultAction.getSkipCount()
 
             // Create an overall summary
-            text += "<p>Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
+            text += "<p style=\"font-size: 16px;\">Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
             text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
             
             if (skipped > 0) {
@@ -454,7 +454,13 @@ public class NodeJSRunner {
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p style=\"border-top: solid 1px black\"><b>Failed:</b> ${test.fullDisplayName}"
+                    text += "<p style=\"border-bottom: solid 1px black; padding-bottom: 5px;" 
+                    
+                    if (i == 0) {
+                        text += "border-top: solid 1px black; padding-top: 5px"
+                    }
+                    
+                    text += "\"><b>Failed:</b> ${test.fullDisplayName}"
                     
                     if (test.errorDetails) {
                         text += "<br/><b>Details:</b><pre>${test.errorDetails}</pre>"
