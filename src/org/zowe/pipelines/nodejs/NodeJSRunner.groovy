@@ -1,6 +1,7 @@
 package org.zowe.pipelines.nodejs
 
 import hudson.model.Result
+import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
@@ -442,6 +443,16 @@ public class NodeJSRunner {
             bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
         }
 
+        def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+
+        bodyText += "<h3>Test Results</h3>"
+
+        if (testResultAction != null) {
+            bodyText += "<p>Test results were found for this run.</p>"
+        } else {
+            bodyText += "<p>No test results were found for this run.</p>"
+        }
+
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.exception != null) {
             bodyText += "<h3>Failure Details</h3>"
@@ -459,11 +470,6 @@ public class NodeJSRunner {
 
             bodyText += "</div></td></tr>";
             bodyText += "</table>"
-        }
-
-        if (steps.FAILED_TESTS) {
-            bodyText += "<h3>Failing Tests</h3>"
-            bodyText += "<div style=\"max-height: 350px; overflow: auto\">${steps.FAILED_TESTS}</div>"
         }
 
         List<String> ccList = new ArrayList<String>();
