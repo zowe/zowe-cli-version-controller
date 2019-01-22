@@ -31,18 +31,16 @@ node('ca-jenkins-agent') {
         email: nodejs.gitConfig.email,
         credentialId: 'GizaArtifactory'
     ]
-
-    dir (MOCK_PROJECT_DIR){
-
-
-        nodejs.setup()
-
-
+        dir (MOCK_PROJECT_DIR){
+            nodejs.setup()
+        }
         nodejs.createStage(
             name: "Lint",
             stage: {
-                sh "ls"
-                sh "npm run lint"
+               dir (MOCK_PROJECT_DIR){
+                    sh "ls"
+                    sh "npm run lint"
+               }
             },
             timeout: [
                 time: 2,
@@ -53,9 +51,12 @@ node('ca-jenkins-agent') {
         nodejs.buildStage(timeout: [
             time: 5,
             unit: 'MINUTES',
-        ],  buildOperation: {
+        ],  buildOperation:
+           {
+                dir (MOCK_PROJECT_DIR){
                            sh "npm run build"
-                       })
+                 }
+           })
 
         def UNIT_TEST_ROOT = "__tests__/__results__/unit"
 
@@ -74,5 +75,4 @@ node('ca-jenkins-agent') {
         )
         nodejs.end()
 
-    } // end dir() block
 }
