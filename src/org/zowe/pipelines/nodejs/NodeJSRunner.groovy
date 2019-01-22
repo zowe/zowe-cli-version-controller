@@ -476,9 +476,6 @@ public class NodeJSRunner {
                         text += "<br/><b>Stacktrace:</b>${codeStart}${escapeHtml4(test.errorStackTrace)}</code>"
                     }
 
-                    text += "Stdout: ${test.stdout}"
-                    text += "Stderr: ${test.stderr}"
-
                     text += "</p>"
                 }
 
