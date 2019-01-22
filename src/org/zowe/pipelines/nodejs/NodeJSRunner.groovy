@@ -443,7 +443,7 @@ public class NodeJSRunner {
             text += "</p>"
 
             if (failed > 0) {
-                def maxTestOutput = 1
+                def maxTestOutput = 20
 
                 text += "<h4>Failing Tests</h4>"
 
@@ -475,8 +475,7 @@ public class NodeJSRunner {
 
                 // Todo add elipsis if the total is greater than the max
                 if (maxTestOutput < failedTestsListCount) {
-                    text += "<p>...</p>"
-                    text += "<p>For the remaining failures, view the build output</p>"
+                    text += "<p>...For the remaining failures, view the build output</p>"
                 }
 
             }
