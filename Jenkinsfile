@@ -1,8 +1,8 @@
 @Library('shared-pipelines@automated_Tests')
-import org.zowe.pipelines.NodeJSRunner
+import org.zowe.pipelines.nodejs.NodeJSRunner
 // use the shared library with the current branch name (dynamic load)
 // TODO: can't get dynamic load to work
-//def lib = library("shared-pipelines@$BRANCH_NAME").org.zowe.pipelines
+//def lib = library("shared-pipelines@$BRANCH_NAME").org.zowe.pipelines.nodejs
 
 def MOCK_PROJECT_DIR = "./mock_project"
 
