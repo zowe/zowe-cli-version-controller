@@ -117,12 +117,12 @@ public class NodeJSRunner {
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
             // code which would already be ahead of this build.
-            _buildRevision = steps.sh returnStatus: true, script: NodeJS._GIT_REVISION_LOOKUP
+            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP
 
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {
-                steps.echo "\"${NodeJS._CI_SKIP}\" spotted in the git commit. Aborting."
+                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
                 _shouldSkipRemainingSteps = true
                 setResult(Result.NOT_BUILT)
             }
@@ -272,8 +272,8 @@ public class NodeJSRunner {
                 steps.sh 'npm run build'
             }
 
-            steps.sh "tar -czvf ${NodeJS.BUILD_ARCHIVE_NAME} \"${args.output}\""
-            steps.archiveArtifacts "${NodeJS.BUILD_ARCHIVE_NAME}"
+            steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
+            steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
 
             // @TODO should probably delete the archive from the workspace as soon
             // @TODO as it gets archived so that we can keep the git status clean
@@ -581,13 +581,13 @@ class Stage {
 //////////////////////////// EXCEPTIONS ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-class NodeJSException extends Exception {
-    NodeJSException(String message) {
+class NodeJSRunnerException extends Exception {
+    NodeJSRunnerException(String message) {
         super(message)
     }
 }
 
-class StageException extends NodeJSException {
+class StageException extends NodeJSRunnerException {
     String stageName
 
     StageException(String message, String stageName) {
