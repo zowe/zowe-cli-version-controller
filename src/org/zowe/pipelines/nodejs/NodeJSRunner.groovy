@@ -451,11 +451,24 @@ public class NodeJSRunner {
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p><b>Failed:</b> ${test.fullDisplayName}<br/><b>Details:</b> <div style=\"display: inline-block\">${test.errorDetails}</div>"
+                    text += "<p><b>Failed:</b> ${test.fullDisplayName}"
+                    
+                    if (test.errorDetails) {
+                        text += "<br/><b>Details:</b> <div style=\"display: inline-block\">${test.errorDetails}</div>"
+                    }
+
+                    if (test.errorStackTrace) {
+                        text += "<br/><b>Stacktrace:</b> <div style=\"display: inline-block\">${test.errorStackTrace}</div>"
+                    }
+
+                    text += "</p>"
                 }
 
                 // Todo add elipsis if the total is greater than the max
-
+                if (maxTestOutput < failedTestsListCount) {
+                    text += "<p>...</p>"
+                    text += "<p>For the remaining failures, view the build output</p>"
+                }
 
             }
 
