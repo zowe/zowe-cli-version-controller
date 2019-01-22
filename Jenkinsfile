@@ -1,6 +1,7 @@
 
 // use the shared library with the current branch name (dynamic load)
-library "shared-pipelines@$BRANCH_NAME" import org.zowe.pipelines.NodeJS
+library "shared-pipelines@$BRANCH_NAME"
+import org.zowe.pipelines.NodeJS
 
 def MOCK_PROJECT_DIR = "mock_project"
 
