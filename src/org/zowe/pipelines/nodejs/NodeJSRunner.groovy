@@ -443,7 +443,7 @@ public class NodeJSRunner {
             text += "</p>"
 
             if (failed > 0) {
-                def maxTestOutput = 20
+                def maxTestOutput = 1
 
                 text += "<h4>Failing Tests</h4>"
 
