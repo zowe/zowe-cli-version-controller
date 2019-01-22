@@ -1,7 +1,7 @@
 package org.zowe.pipelines.nodejs
 
 @Grab('org.apache.commons:commons-lang3:3.8.1')
-import org.apache.commons.lang3.StringEscapeUtils
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml
 
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
@@ -461,7 +461,7 @@ public class NodeJSRunner {
                     }
 
                     if (test.errorStackTrace) {
-                        text += "<br/><b>Stacktrace:</b><pre>${StringEscapeUtils.escapeHtml(test.errorStackTrace)}</pre>"
+                        text += "<br/><b>Stacktrace:</b><pre>${escapeHtml(test.errorStackTrace)}</pre>"
                     }
 
                     text += "</p>"
