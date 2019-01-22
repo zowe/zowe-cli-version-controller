@@ -31,9 +31,9 @@ node('ca-jenkins-agent') {
         email: nodejs.gitConfig.email,
         credentialId: 'GizaArtifactory'
     ]
-        dir (MOCK_PROJECT_DIR){
-            nodejs.setup()
-        }
+        sh "cd ./mock_project"
+        nodejs.setup()
+
         nodejs.createStage(
             name: "Lint",
             stage: {
