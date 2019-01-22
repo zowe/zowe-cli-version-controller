@@ -4,7 +4,7 @@ import org.zowe.pipelines.NodeJS
 // TODO: can't get dynamic load to work
 //def lib = library("shared-pipelines@$BRANCH_NAME").org.zowe.pipelines
 
-def MOCK_PROJECT_DIR = "mock_project"
+def MOCK_PROJECT_DIR = "./mock_project"
 
 node('ca-jenkins-agent') {
     def nodejs = new NodeJS(this)
@@ -33,6 +33,8 @@ node('ca-jenkins-agent') {
     ]
 
     dir (MOCK_PROJECT_DIR){
+        sh "ls"
+
         nodejs.setup()
 
         nodejs.createStage(
