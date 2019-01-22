@@ -447,7 +447,7 @@ public class NodeJSRunner {
 
                 text += "<h4>Failing Tests</h4>"
 
-                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: text-top; margin-left: 10px;\">"
+                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: text-top; margin-left: 10px; color: red\">"
 
                 def failedTests = testResultAction.getFailedTests()
                 def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
