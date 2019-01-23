@@ -172,7 +172,7 @@ public class NodeJSRunner {
                 steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
                     // Skips the stage when called with a reason code
                     Closure skipStage = { reason -> 
-                        steps.echo "Stage Skipped Reason: ${reason}"
+                        steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
                         Utils.markStageSkippedForConditional(args.name)
                     }
 
@@ -183,8 +183,8 @@ public class NodeJSRunner {
                                 "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
                                 args.name
                             )
-                        } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.executionThreshold.getValue())) {
-                            skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.executionThreshold.getValue()}")
+                        } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
+                            skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.resultThreshold.value}")
                         } else if (stage.isSkippedByParam) {
                             skipStage("Skipped by build parameter")
                         } else if (_shouldSkipRemainingSteps) {
@@ -254,6 +254,9 @@ public class NodeJSRunner {
     }
 
     public void buildStage(Map arguments = [:]) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
         BuildArgs args = arguments
 
         args.name = "Build: ${args.name}"
@@ -282,6 +285,12 @@ public class NodeJSRunner {
     }
 
     public void testStage(Map arguments = [:]) {
+        // Default the resultThreshold to unstable for tests,
+        // if a custom value is passed then that will be used instead
+        if (!arguments.resultThreshold) {
+            arguments.resultThreshold = ResultEnum.UNSTABLE
+        }
+
         TestArgs args = arguments
 
         // @TODO one must happen before deploy
@@ -597,7 +606,7 @@ class StageArgs { // @TODO Stage minimum build health (if build health is >= to 
     Map<String, String> environment
 
     // The current health of the build must be this or better for the step to execute
-    ResultEnum executionThreshold = ResultEnum.SUCCESS
+    ResultEnum resultThreshold = ResultEnum.SUCCESS
 }
 
 class StageTimeout {
