@@ -522,8 +522,8 @@ public class NodeJSRunner {
         // Add any details of an exception, if encountered
         if (_firstFailingStage != null && _firstFailingStage.exception != null) {
             bodyText += "<h3>Failure Details</h3>"
-            bodyText += "<table style=\"font-size: 16px\">"
-            bodyText += "<tr><td style=\"width: 150px\">Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
+            bodyText += "<table>"
+            bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
             bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.exception.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
             bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
