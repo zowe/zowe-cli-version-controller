@@ -56,7 +56,7 @@ node('ca-jenkins-agent') {
             sh "npm run test:unit"
         },
         shouldUnlockKeyring: true,
-        testResults: [dir: "${UNIT_TEST_ROOT}/glarble", files: "results.html", name: "Mock Project: Unit Test Report"],
+        testResults: [dir: "${UNIT_TEST_ROOT}", files: "results.html", name: "Mock Project: Unit Test Report"],
         coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "Mock Project: Code Coverage Report"],
         junitOutput: "${UNIT_TEST_ROOT}/junit.xml",
         cobertura: [
