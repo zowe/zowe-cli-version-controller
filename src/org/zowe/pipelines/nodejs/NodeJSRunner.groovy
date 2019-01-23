@@ -156,6 +156,10 @@ public class NodeJSRunner {
                 // Always try to logout regardless of errors
                 if (registryConfig) {
                     steps.echo "Logout of registries"
+
+                    for (int i = 0; i < registryConfig.length; i++) {
+                        _logoutOfRegistry(registryConfig[i])
+                    } 
                 }
             }
         }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES']) // @TODO all timeouts should be configurable
@@ -200,7 +204,15 @@ expect {
         steps.echo expectCommand
     }
 
-    // private void _logoutOfRegistry(RegistryConfig registry)
+    private void _logoutOfRegistry(RegistryConfig registry) {
+        if (!registry.url) {
+            steps.echo "Attempting to logout of the default registry"
+        } else {
+            steps.echo "Attempting to logout of the ${registry.url} registry"
+        }
+
+        steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+    }
 
     // Takes instantiated args and runs a stage
     public void createStage(StageArgs args) {
