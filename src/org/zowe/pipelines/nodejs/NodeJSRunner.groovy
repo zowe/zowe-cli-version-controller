@@ -252,7 +252,7 @@ public class NodeJSRunner {
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
-            if (!_firstFailingStage && steps.resultIsWorseOrEqualTo('UNSTABLE')) {
+            if (!_firstFailingStage && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
                 _firstFailingStage = stage
                 _firstFailingStage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
             }
