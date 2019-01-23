@@ -54,7 +54,7 @@ public class NodeJSRunner {
     public String protectedBranchBuildHistory = '20'
 
     private boolean _isProtectedBranch = false
-    private boolean _shouldSkipRemainingSteps = false
+    private boolean _shouldSkipRemainingSages = false
     private boolean _didBuild = false
 
     def buildOptions = []
@@ -123,7 +123,7 @@ public class NodeJSRunner {
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {
                 steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
-                _shouldSkipRemainingSteps = true
+                _shouldSkipRemainingStages = true
                 setResult(Result.NOT_BUILT)
             }
         }, timeout: [time: 1, unit: 'MINUTES'])
@@ -298,7 +298,8 @@ expect {
                             skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.resultThreshold.value}")
                         } else if (stage.isSkippedByParam) {
                             skipStage("Skipped by build parameter")
-                        } else if (_shouldSkipRemainingSteps) {
+                        } else if (!args.doesIgnoreSkipAll && _shouldSkipRemainingStages) {
+                            // If doesIgnoreSkipAll is true then this check is ignored, all others are not though
                             skipStage("All remaining steps are skipped")
                         } else if (args.shouldSkip()) {
                             skipStage("Should skip function evaluated to true")
@@ -496,6 +497,33 @@ expect {
 
     // Npm logs will always be archived
     public void end(String[] archiveFolders = []) {
+        _createStage(name: "Log Archive", stage: {
+            def archiveLocation = "postBuildArchive"
+
+            String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
+
+            steps.sh "mkdir $archiveLocation"
+
+            for (int i = 0; i < archiveDirectories.length; i++) {
+                def directory = archiveDirectories[i]
+
+                try {
+                    if (directory.startsWith("/")) {
+                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
+
+                        // It is an absolute path so try to copy everything into our work directory
+                        steps.sh "cp -r $directory ./${archiveLocation}${directory}"
+                    } else if (directory.startsWith("..")) {
+                        throw new NodeJSRunnerException("Relative archives are not supported")
+                    }
+                } catch (e) {
+                    steps.echo "Unable to archive $directory, reason: ${e.message}"
+                }
+            }
+
+            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
+        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true)
+
         try {
             // First setup the build properties
             def history = defaultBuildHistory;
@@ -527,31 +555,6 @@ expect {
                 stage = stage.next
             }
         } finally {
-            def archiveLocation = "postBuildArchive"
-
-            String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
-
-            steps.sh "mkdir $archiveLocation"
-
-            for (int i = 0; i < archiveDirectories.length; i++) {
-                def directory = archiveDirectories[i]
-
-                try {
-                    if (directory.startsWith("/")) {
-                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
-
-                        // It is an absolute path so try to copy everything into our work directory
-                        steps.sh "cp -r $directory ./${archiveLocation}${directory}"
-                    } else if (directory.startsWith("..")) {
-                        throw new NodeJSRunnerException("Relative archives are not supported")
-                    }
-                } catch (e) {
-                    steps.echo "Unable to archive $directory, reason: ${e.message}"
-                }
-            }
-
-            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
-
             sendEmailNotification();
         }
     }
@@ -751,6 +754,9 @@ class StageArgs { // @TODO Stage minimum build health (if build health is >= to 
     String name
     Closure stage
     boolean isSkipable = true
+
+    // Setting this to true will cause the stage to ignore the value of _shouldSkipRemainingStages
+    boolean doesIgnoreSkipAll = false
     StageTimeout timeout = [:]
     Closure shouldSkip = { -> false }
     Map<String, String> environment
