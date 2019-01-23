@@ -170,7 +170,7 @@ public class NodeJSRunner {
         if (!registry.email) {
             throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
         }
-        if (!registry.credentialId) {
+        if (!registry.credentialsId) {
             throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
         }
 
