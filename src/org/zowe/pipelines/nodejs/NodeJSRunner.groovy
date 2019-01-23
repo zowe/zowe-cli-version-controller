@@ -530,8 +530,12 @@ send "\$NPM_EMAIL\\r"
 
                 try {
                     if (directory.startsWith("/")) {
+                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
+
                         // It is an absolute path so try to copy everything into our work directory
-                        steps.sh "cp -r $directory ./$archiveLocation/$directory"
+                        steps.sh "cp -r $directory ./${archiveLocation}${directory}"
+                    } else if (directory.startsWith("..")) {
+                        throw new NodeJSRunnerException("Relative archives are not supported")
                     }
                 } catch (e) {
                     steps.echo "Unable to archive $directory, reason: ${e.message}"
