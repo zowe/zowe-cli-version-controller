@@ -188,20 +188,25 @@ spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
 match_max 100000
 
 expect "Username"
-send "\$USERNAME\\r"
+send "\$NPM_USERNAME\\r"
 
 expect "Password"
-send "\$PASSWORD\\r"
+send "\$NPM_PASSWORD\\r"
 
 expect "Email"
-send "\$EMAIL\\r"
-
-expect {
-   timeout      exit 1
-   eof
-}"""
-
-        steps.sh expectCommand
+send "\$NPM_EMAIL\\r"
+"""
+        steps.withCredentials([
+            steps.usernamePassword(
+                credentialsId: registry.credentialsId,
+                usernameVariable: 'NPM_USERNAME',
+                passwordVariable: 'NPM_PASSWORD'
+            )
+        ]) {
+            steps.withEnv(["NPM_EMAIL=${registry.email}"]) {
+                steps.sh expectCommand
+            }
+        }
     }
 
     private void _logoutOfRegistry(RegistryConfig registry) {
