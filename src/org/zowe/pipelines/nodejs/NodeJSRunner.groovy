@@ -517,7 +517,7 @@ expect {
                         throw new NodeJSRunnerException("Relative archives are not supported")
                     }
                 } catch (e) {
-                    steps.echo "Unable to archive $directory, reason: ${e.message}"
+                    steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
                 }
             }
 
