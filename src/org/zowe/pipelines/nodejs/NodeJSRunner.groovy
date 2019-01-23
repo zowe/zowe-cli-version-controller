@@ -178,22 +178,19 @@ public class NodeJSRunner {
 
         // Bad formatting but this is probably the cleanest way to do the expect script
         def expectCommand = """/usr/bin/expect <<EOD
-# set our args into variables
-set i 0; foreach n \$argv {set "p[incr i]" \$n}
-
 set timeout 60
 #npm login command, add whatever command-line args are necessary
 spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
 match_max 100000
 
 expect "Username"
-send "\$USERNAME\r"
+send "\$USERNAME\\r"
 
 expect "Password"
-send "\$PASSWORD\r"
+send "\$PASSWORD\\r"
 
 expect "Email"
-send "\$EMAIL\r"
+send "\$EMAIL\\r"
 
 expect {
    timeout      exit 1
