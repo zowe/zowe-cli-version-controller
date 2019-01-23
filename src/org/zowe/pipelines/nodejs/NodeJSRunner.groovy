@@ -486,7 +486,8 @@ send "\$NPM_EMAIL\\r"
         }
     }
 
-    public void end() {
+    // Npm logs will always be archived
+    public void end(String[] archiveFolders = []) {
         try {
             // First setup the build properties
             def history = defaultBuildHistory;
@@ -518,6 +519,27 @@ send "\$NPM_EMAIL\\r"
                 stage = stage.next
             }
         } finally {
+            def archiveLocation = "postBuildArchive"
+
+            String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
+
+            steps.sh "mkdir $archiveLocation"
+
+            for (int i = 0; i < archiveDirectories.length; i++) {
+                def directory = archiveDirectories[i]
+
+                try {
+                    if (archive.startsWith("/")) {
+                        // It is an absolute path so try to copy everything into our work directory
+                        steps.sh "cp -r $directory ./$archiveLocation/$directory"
+                    }
+                } catch {
+                    steps.echo "Unable to archive $directory"
+                }
+            }
+
+            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
+
             sendEmailNotification();
         }
     }
