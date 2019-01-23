@@ -46,8 +46,9 @@ public class NodeJSRunner {
                                                            FAILURE : ['https://i.imgur.com/iQ4DuYL.png' /* this is fine fire */
                                                            ]]
 
-    public Map gitConfig
-    public Map publishConfig
+    public GitConfig gitConfig
+    public LoginRegistry publishConfig    // Credentials for publish
+    public LoginRegistry[] registryConfig // Credentials for download packages
 
     public String defaultBuildHistory = '5'
     public String protectedBranchBuildHistory = '20'
@@ -128,7 +129,15 @@ public class NodeJSRunner {
         }, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Install Node Package Dependencies', stage: {
+            if (registryConfig) {
+                steps.echo "Login to registries"
+            }
+
             steps.sh "npm install"
+
+            if (registryConfig) {
+                steps.echo "Logout of registries"
+            }
         }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
 
     }
@@ -605,6 +614,19 @@ public enum ResultEnum {
     public String getValue() {
         return value
     }
+}
+
+// Specifies a registry to login to
+class LoginRegistry {
+    String registry
+    String email
+    String credentialId
+}
+
+class GitConfig {
+    String user
+    String email
+    String credentialId
 }
 
 class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
