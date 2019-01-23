@@ -201,7 +201,7 @@ expect {
    eof
 }"""
 
-        steps.echo expectCommand
+        steps.sh expectCommand
     }
 
     private void _logoutOfRegistry(RegistryConfig registry) {
