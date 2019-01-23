@@ -129,16 +129,39 @@ public class NodeJSRunner {
         }, timeout: [time: 1, unit: 'MINUTES'])
 
         createStage(name: 'Install Node Package Dependencies', stage: {
-            if (registryConfig) {
-                steps.echo "Login to registries"
-            }
+            try {
+                if (registryConfig) {
+                    // Only one is allowed to use the default registry
+                    // This will keep track of that
+                    def didUseDefaultRegistry = false
 
-            steps.sh "npm install"
+                    steps.echo "Login to registries"
 
-            if (registryConfig) {
-                steps.echo "Logout of registries"
+                    for (int i = 0; i < registryConfig.length; i++) {
+                        def registry = registryConfig[i]
+
+                        if (!registry.url) {
+                            steps.echo "Attempting to login to the default registry"
+
+                            if (didUseDefaultRegistry) {
+                                throw new NodeJSRunnerException("No registry specified for registryConfig[${i}] and was already logged into the default")
+                            } else {
+                                didUseDefaultRegistry = true
+                            }
+                        } else {
+                            steps.echo "Attempting to login to the ${registry.url} registry"
+                        }
+                    }
+                }
+
+                steps.sh "npm install"
+            } finally {
+                // Always try to logout regardless of errors
+                if (registryConfig) {
+                    steps.echo "Logout of registries"
+                }
             }
-        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
+        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES']) // @TODO all timeouts should be configurable
 
     }
 
@@ -618,7 +641,7 @@ public enum ResultEnum {
 
 // Specifies a registry to login to
 class LoginRegistry {
-    String registry
+    String url
     String email
     String credentialId
 }
