@@ -141,7 +141,7 @@ public class NodeJSRunner {
     // Takes instantiated args and runs a stage
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
-
+        
         if (_stages.containsKey(stage.name)) {
             if (_firstStage == null) {
                 // This is a condition that indicates that our logic is most likely broken
@@ -189,8 +189,8 @@ public class NodeJSRunner {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
                             throw new StageException(
-                                    "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
-                                    args.name
+                                "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
+                                args.name
                             )
                         }
                         // Next check to see if the stage should be skipped
@@ -336,23 +336,23 @@ public class NodeJSRunner {
 
             // Collect Test Results HTML Report
             steps.publishHTML(target: [
-                    allowMissing         : false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll              : true,
-                    reportDir            : args.testResults.dir,
-                    reportFiles          : args.testResults.files,
-                    reportName           : args.testResults.name
+                allowMissing         : false,
+                alwaysLinkToLastBuild: true,
+                keepAll              : true,
+                reportDir            : args.testResults.dir,
+                reportFiles          : args.testResults.files,
+                reportName           : args.testResults.name
             ])
 
             // Collect coverage if applicable
             if (args.coverageResults) {
                 steps.publishHTML(target: [
-                        allowMissing         : false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll              : true,
-                        reportDir            : args.coverageResults.dir,
-                        reportFiles          : args.coverageResults.files,
-                        reportName           : args.coverageResults.name
+                    allowMissing         : false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll              : true,
+                    reportDir            : args.coverageResults.dir,
+                    reportFiles          : args.coverageResults.files,
+                    reportName           : args.coverageResults.name
                 ])
             }
 
@@ -421,7 +421,7 @@ public class NodeJSRunner {
         return "Skip Stage: ${name}"
     }
 
-    // NonCPS informs jenkins to not save variable state that would resolve in a
+    // NonCPS informs jenkins to not save variable state that would resolve in a 
     // java.io.NotSerializableException on the TestResults class
     @NonCPS
     private String _getTestSummary() {
@@ -434,34 +434,46 @@ public class NodeJSRunner {
             def skipped = testResultAction.getSkipCount()
 
             // Create an overall summary
-            text += "<p>Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
+            text += "<p style=\"font-size: 16px;\">Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
             text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
-
+            
             if (skipped > 0) {
                 text += ", Skipped: <span style=\"font-weight: bold; color: #027b77\">${skipped}</span>"
             }
             text += "</p>"
 
+            // Now output failing results
             if (failed > 0) {
-                def maxTestOutput = 20
+                // If there are more failures than this value, then we will only output
+                // this number of failures to save on email size.
+                def maxTestOutput = 5
 
                 text += "<h4>Failing Tests</h4>"
 
+                def codeStart = "<code style=\"white-space: pre-wrap; display: inline-block; vertical-align: top; margin-left: 10px; color: red\">"
                 def failedTests = testResultAction.getFailedTests()
                 def failedTestsListCount = failedTests.size() // Don't trust that failed == failedTests.size()
 
-                // Loop through all tests or the first 20, whichever is smallest
+                // Loop through all tests or the first maxTestOutput, whichever is smallest
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p style=\"border-top: solid 1px black\"><b>Failed:</b> ${test.fullDisplayName}"
-
+                    text += "<p style=\"margin-top: 5px; margin-bottom: 0px; border-bottom: solid 1px black; padding-bottom: 5px;" 
+                    
+                    if (i == 0) {
+                        text += "border-top: solid 1px black; padding-top: 5px;"
+                    }
+                    
+                    text += "\"><b>Failed:</b> ${test.fullDisplayName}"
+                    
+                    // Add error details
                     if (test.errorDetails) {
-                        text += "<br/><b>Details:</b><pre>${test.errorDetails}</pre>"
+                        text += "<br/><b>Details:</b>${codeStart}${escapeHtml4(test.errorDetails)}</code>"
                     }
 
+                    // Add stack trace
                     if (test.errorStackTrace) {
-                        text += "<br/><b>Stacktrace:</b><pre>${escapeHtml4(test.errorStackTrace)}</pre>"
+                        text += "<br/><b>Stacktrace:</b>${codeStart}${escapeHtml4(test.errorStackTrace)}</code>"
                     }
 
                     text += "</p>"
@@ -469,13 +481,9 @@ public class NodeJSRunner {
 
                 // Todo add elipsis if the total is greater than the max
                 if (maxTestOutput < failedTestsListCount) {
-                    text += "<p>...</p>"
-                    text += "<p>For the remaining failures, view the build output</p>"
+                    text += "<p>...For the remaining failures, view the build output</p>"
                 }
-
             }
-
-            // Now output the failing results if there are any, truncate after 20
         } else {
             text += "<p>No test results were found for this run.</p>"
         }
@@ -487,7 +495,6 @@ public class NodeJSRunner {
      * Send an email notification about the result of the build to the appropriate users
      */
     public void sendEmailNotification() {
-
         steps.echo "Sending email notification..."
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
@@ -604,18 +611,18 @@ class TestArgs extends StageArgs {
     Map cobertura
 
     public static final Map coberturaDefaults = [
-            autoUpdateStability       : true,
-            classCoverageTargets      : '85, 80, 75',
-            conditionalCoverageTargets: '70, 65, 60',
-            failUnhealthy             : false,
-            failUnstable              : false,
-            fileCoverageTargets       : '100, 95, 90',
-            lineCoverageTargets       : '80, 70, 50',
-            maxNumberOfBuilds         : 20,
-            methodCoverageTargets     : '80, 70, 50',
-            onlyStable                : false,
-            sourceEncoding            : 'ASCII',
-            zoomCoverageChart         : false
+        autoUpdateStability       : true,
+        classCoverageTargets      : '85, 80, 75',
+        conditionalCoverageTargets: '70, 65, 60',
+        failUnhealthy             : false,
+        failUnstable              : false,
+        fileCoverageTargets       : '100, 95, 90',
+        lineCoverageTargets       : '80, 70, 50',
+        maxNumberOfBuilds         : 20,
+        methodCoverageTargets     : '80, 70, 50',
+        onlyStable                : false,
+        sourceEncoding            : 'ASCII',
+        zoomCoverageChart         : false
     ]
 }
 
