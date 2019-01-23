@@ -704,13 +704,13 @@ public enum ResultEnum {
 class RegistryConfig {
     String url
     String email
-    String credentialId
+    String credentialsId
 }
 
 class GitConfig {
     String user
     String email
-    String credentialId
+    String credentialsId
 }
 
 class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
