@@ -502,6 +502,10 @@ expect {
 
             String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
 
+            steps.echo "NOTE: If a log was not able to be archived, the build will result in a success."
+            steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
+            steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
+            steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
             steps.sh "mkdir $archiveLocation"
 
             for (int i = 0; i < archiveDirectories.length; i++) {
