@@ -211,7 +211,12 @@ expect {
             steps.echo "Attempting to logout of the ${registry.url} registry"
         }
 
-        steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+        try {
+            // If the logout fails, don't blow up. Coded this way because a failed
+            // logout doesn't mean we've failed. It also doesn't stop any other
+            // logouts that might need to be done.
+            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+        }
     }
 
     // Takes instantiated args and runs a stage
