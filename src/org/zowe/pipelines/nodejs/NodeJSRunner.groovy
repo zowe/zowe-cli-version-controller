@@ -163,6 +163,29 @@ public class NodeJSRunner {
 
     // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
     private void _loginToRegistry(RegistryConfig registry) {
+        def expectCommand = """/usr/bin/expect <<EOD
+# set our args into variables
+set i 0; foreach n \$argv {set "p[incr i]" \$n}
+
+set timeout 60
+#npm login command, add whatever command-line args are necessary
+spawn npm login
+match_max 100000
+
+expect "Username"
+send "\$USERNAME\r"
+
+expect "Password"
+send "\$PASSWORD\r"
+
+expect "Email"
+send "\$EMAIL\r"
+
+expect {
+   timeout      exit 1
+   eof
+}"""
+
         if (!registry.email) {
             throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
         }
@@ -175,6 +198,8 @@ public class NodeJSRunner {
         } else {
             steps.echo "Attempting to login to the ${registry.url} registry"
         }
+
+        steps.echo expectCommand
     }
 
     // private void _logoutOfRegistry(RegistryConfig registry)
