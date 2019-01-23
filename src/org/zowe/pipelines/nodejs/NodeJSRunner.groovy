@@ -54,7 +54,7 @@ public class NodeJSRunner {
     public String protectedBranchBuildHistory = '20'
 
     private boolean _isProtectedBranch = false
-    private boolean _shouldSkipRemainingSages = false
+    private boolean _shouldSkipRemainingStages = false
     private boolean _didBuild = false
 
     def buildOptions = []
