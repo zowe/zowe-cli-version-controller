@@ -76,6 +76,16 @@ public class NodeJSRunner {
 
     def steps
 
+    // Used to get the first failing stage
+    public Stage getFirstFailingStage() {
+        return _firstFailingStage
+    }
+
+    // Used to get information about stage execution to external users
+    public Stage getStageInformation(String stageName) {
+        return _stages.get(stageName)
+    }
+
 
     NodeJSRunner(steps) { this.steps = steps }
 
