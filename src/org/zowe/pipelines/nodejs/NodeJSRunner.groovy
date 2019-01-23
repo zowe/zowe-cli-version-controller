@@ -183,7 +183,7 @@ public class NodeJSRunner {
                                 "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
                                 args.name
                             )
-                        } else if (steps.currentBuild.resultIsBetterOrEqualTo(args.executionThreshold.getValue())) {
+                        } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.executionThreshold.getValue())) {
                             skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.executionThreshold.getValue()}")
                         } else if (stage.isSkippedByParam) {
                             skipStage("Skipped by build parameter")
