@@ -181,7 +181,7 @@ public class NodeJSRunner {
         }
 
         // Bad formatting but this is probably the cleanest way to do the expect script
-        def expectCommand = """/usr/bin/expect -f <<EOD
+        def expectCommand = """/usr/bin/expect <<EOD
 set timeout 60
 #npm login command, add whatever command-line args are necessary
 spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
@@ -195,6 +195,11 @@ send "\$EXPECT_PASSWORD\\r"
 
 expect "Email"
 send "\$EXPECT_EMAIL\\r"
+
+expect {
+   timeout      exit 1
+   eof
+}
 """
         // Echo the command that was run
         steps.echo expectCommand
