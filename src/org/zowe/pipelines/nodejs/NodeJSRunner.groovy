@@ -522,7 +522,7 @@ expect {
             }
 
             steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
-        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true)
+        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
 
         try {
             // First setup the build properties
