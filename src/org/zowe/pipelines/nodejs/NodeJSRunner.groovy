@@ -47,8 +47,8 @@ public class NodeJSRunner {
                                                            ]]
 
     public GitConfig gitConfig
-    public LoginRegistry publishConfig    // Credentials for publish
-    public LoginRegistry[] registryConfig // Credentials for download packages
+    public RegistryConfig publishConfig    // Credentials for publish
+    public RegistryConfig[] registryConfig // Credentials for download packages
 
     public String defaultBuildHistory = '5'
     public String protectedBranchBuildHistory = '20'
@@ -141,16 +141,13 @@ public class NodeJSRunner {
                         def registry = registryConfig[i]
 
                         if (!registry.url) {
-                            steps.echo "Attempting to login to the default registry"
-
                             if (didUseDefaultRegistry) {
                                 throw new NodeJSRunnerException("No registry specified for registryConfig[${i}] and was already logged into the default")
-                            } else {
-                                didUseDefaultRegistry = true
-                            }
-                        } else {
-                            steps.echo "Attempting to login to the ${registry.url} registry"
+                            }   
+                            didUseDefaultRegistry = true
                         }
+
+                        _loginToRegistry(registry)
                     }
                 }
 
@@ -162,8 +159,18 @@ public class NodeJSRunner {
                 }
             }
         }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES']) // @TODO all timeouts should be configurable
-
     }
+
+    // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
+    private void _loginToRegistry(RegistryConfig registry) {
+        if (!registry.url) {
+            steps.echo "Attempting to login to the default registry"
+        } else {
+            steps.echo "Attempting to login to the ${registry.url} registry"
+        }
+    }
+
+    // private void _logoutOfRegistry(RegistryConfig registry)
 
     // Takes instantiated args and runs a stage
     public void createStage(StageArgs args) {
@@ -640,7 +647,7 @@ public enum ResultEnum {
 }
 
 // Specifies a registry to login to
-class LoginRegistry {
+class RegistryConfig {
     String url
     String email
     String credentialId
