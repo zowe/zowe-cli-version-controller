@@ -14,3 +14,4 @@ mock_project
 node_modules
 mock_project/package-lock.json
 lib
+__tests__/__results__
