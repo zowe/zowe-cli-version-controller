@@ -529,12 +529,12 @@ send "\$NPM_EMAIL\\r"
                 def directory = archiveDirectories[i]
 
                 try {
-                    if (archive.startsWith("/")) {
+                    if (directory.startsWith("/")) {
                         // It is an absolute path so try to copy everything into our work directory
                         steps.sh "cp -r $directory ./$archiveLocation/$directory"
                     }
                 } catch (e) {
-                    steps.echo "Unable to archive $directory"
+                    steps.echo "Unable to archive $directory, reason: ${e.message}"
                 }
             }
 
