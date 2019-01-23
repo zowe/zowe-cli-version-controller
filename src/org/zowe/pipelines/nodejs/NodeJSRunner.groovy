@@ -533,7 +533,7 @@ send "\$NPM_EMAIL\\r"
                         // It is an absolute path so try to copy everything into our work directory
                         steps.sh "cp -r $directory ./$archiveLocation/$directory"
                     }
-                } catch {
+                } catch (e) {
                     steps.echo "Unable to archive $directory"
                 }
             }
