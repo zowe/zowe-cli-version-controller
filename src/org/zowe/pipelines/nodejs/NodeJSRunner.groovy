@@ -163,6 +163,13 @@ public class NodeJSRunner {
 
     // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
     private void _loginToRegistry(RegistryConfig registry) {
+        if (!registry.email) {
+            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
+        }
+        if (!registry.credentialId) {
+            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
+        }
+
         if (!registry.url) {
             steps.echo "Attempting to login to the default registry"
         } else {
