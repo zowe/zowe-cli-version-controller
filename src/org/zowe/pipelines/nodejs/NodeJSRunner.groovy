@@ -573,11 +573,11 @@ public class NodeJSRunner {
 
 // Enumeration for the result
 public enum ResultEnum {
-    SUCCESS("SUCCESS")
-    NOT_BUILT("NOT_BUILT")
-    UNSTABLE("UNSTABLE")
-    FAILURE("FAILURE")
-    ABORTED("ABORTED")
+    SUCCESS("SUCCESS"),
+    NOT_BUILT("NOT_BUILT"),
+    UNSTABLE("UNSTABLE"),
+    FAILURE("FAILURE"),
+    ABORTED("ABORTED");
 
     ResultEnum(String v) {
         value = v
