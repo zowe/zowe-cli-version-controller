@@ -642,8 +642,8 @@ public enum ResultEnum {
 // Specifies a registry to login to
 class LoginRegistry {
     String url
-    final String email
-    final String credentialId
+    String email
+    String credentialId
 }
 
 class GitConfig {
