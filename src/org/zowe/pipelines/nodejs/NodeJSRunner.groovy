@@ -497,7 +497,7 @@ expect {
 
     // Npm logs will always be archived
     public void end(String[] archiveFolders = []) {
-        _createStage(name: "Log Archive", stage: {
+        createStage(name: "Log Archive", stage: {
             def archiveLocation = "postBuildArchive"
 
             String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
