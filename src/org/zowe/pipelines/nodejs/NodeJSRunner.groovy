@@ -76,21 +76,6 @@ public class NodeJSRunner {
 
     def steps
 
-    /**
-     * The result string for a successful build
-     */
-    def BUILD_SUCCESS = 'SUCCESS'
-
-    /**
-     * The result string for an unstable build
-     */
-    def BUILD_UNSTABLE = 'UNSTABLE'
-
-    /**
-     * The result string for a failed build
-     */
-    def BUILD_FAILURE = 'FAILURE'
-
 
     NodeJSRunner(steps) { this.steps = steps }
 
@@ -185,6 +170,12 @@ public class NodeJSRunner {
         stage.execute = {
             steps.stage(args.name) {
                 steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    // Skips the stage when called with a reason code
+                    Closure skipStage = { reason -> 
+                        steps.echo "Stage Skipped Reason: ${reason}"
+                        Utils.markStageSkippedForConditional(args.name)
+                    }
+
                     _closureWrapper(stage) {
                         // First check that setup was called first
                         if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
@@ -192,11 +183,14 @@ public class NodeJSRunner {
                                 "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
                                 args.name
                             )
-                        }
-                        // Next check to see if the stage should be skipped
-                        else if (stage.isSkippedByParam || _shouldSkipRemainingSteps || args.shouldSkip()) {
-                            // @TODO echo out the condition that caused the skip
-                            Utils.markStageSkippedForConditional(args.name);
+                        } else if (steps.currentBuild.resultIsBetterOrEqualTo(args.executionThreshold.getValue())) {
+                            skipStage("${steps.currentResult} does not meet required threshold ${args.executionThreshold.getValue()}")
+                        } else if (stage.isSkippedByParam) {
+                            skipStage("Skipped by build parameter")
+                        } else if (_shouldSkipRemainingSteps) {
+                            skipStage("All remaining steps are skipped")
+                        } else if (args.shouldSkip()) {
+                            skipStage("Should skip function evaluated to true")
                         }
                         // Run the stage
                         else {
@@ -259,12 +253,6 @@ public class NodeJSRunner {
         }
     }
 
-    // @NamedVariant
-    // public void buildStage(
-    //     @NamedParam(required = true) String name,
-    //     @NamedParam String test = "Hello"
-    // ) {
-    // Above doesn't work cause of groovy version
     public void buildStage(Map arguments = [:]) {
         BuildArgs args = arguments
 
@@ -582,6 +570,24 @@ public class NodeJSRunner {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////// DATA FORMATS ////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+// Enumeration for the result
+public enum ResultEnum {
+    SUCCESS("SUCCESS")
+    NOT_BUILT("NOT_BUILT")
+    UNSTABLE("UNSTABLE")
+    FAILURE("FAILURE")
+    ABORTED("ABORTED")
+
+    ResultEnum(String v) {
+        value = v
+    }
+    private String value
+    public String getValue() {
+        return value
+    }
+}
+
 class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
     String name
     Closure stage
@@ -589,6 +595,9 @@ class StageArgs { // @TODO Stage minimum build health (if build health is >= to 
     StageTimeout timeout = [:]
     Closure shouldSkip = { -> false }
     Map<String, String> environment
+
+    // The current health of the build must be this or better for the step to execute
+    ResultEnum executionThreshold = ResultEnum.SUCCESS
 }
 
 class StageTimeout {
