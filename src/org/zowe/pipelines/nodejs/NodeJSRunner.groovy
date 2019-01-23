@@ -163,13 +163,27 @@ public class NodeJSRunner {
 
     // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
     private void _loginToRegistry(RegistryConfig registry) {
+        if (!registry.email) {
+            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
+        }
+        if (!registry.credentialId) {
+            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
+        }
+
+        if (!registry.url) {
+            steps.echo "Attempting to login to the default registry"
+        } else {
+            steps.echo "Attempting to login to the ${registry.url} registry"
+        }
+
+        // Bad formatting but this is probably the cleanest way to do the expect script
         def expectCommand = """/usr/bin/expect <<EOD
 # set our args into variables
 set i 0; foreach n \$argv {set "p[incr i]" \$n}
 
 set timeout 60
 #npm login command, add whatever command-line args are necessary
-spawn npm login
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
 match_max 100000
 
 expect "Username"
@@ -185,19 +199,6 @@ expect {
    timeout      exit 1
    eof
 }"""
-
-        if (!registry.email) {
-            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
-        }
-        if (!registry.credentialId) {
-            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
-        }
-
-        if (!registry.url) {
-            steps.echo "Attempting to login to the default registry"
-        } else {
-            steps.echo "Attempting to login to the ${registry.url} registry"
-        }
 
         steps.echo expectCommand
     }
