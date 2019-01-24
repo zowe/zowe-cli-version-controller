@@ -1,4 +1,4 @@
-package org.zowe.pipelines.nodejs.model
+package org.zowe.pipelines.nodejs.models
 
 // Specifies a registry to login to
 class RegistryConfig {
