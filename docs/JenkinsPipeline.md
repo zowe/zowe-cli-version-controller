@@ -29,7 +29,7 @@ Jenkins will also need to know when there is a code change so it can trigger the
 
 ## Variables
 
-This sections describes the special variables contained in most Jenkinsfiles on our repositories. Some variables will have a start (**`*`**) next to them indicating it should be parameterized.
+This section describes the special variables contained in most Jenkinsfiles on our repositories. Some variables will have a star (**`*`**) next to them indicating it should be parameterized.
 
 * **MASTER_BRANCH`*`**: Contains the branch name that should be treated as the "master" branch of the entire source. This variable could be changed to a development branch in case someone wanted to test specific tasks that Jenkins performs only when it builds the real `master` branch.
 
@@ -43,7 +43,7 @@ This sections describes the special variables contained in most Jenkinsfiles on 
 
   * **SYSTEM_RESULTS**
 
-* **Pipeline Control variables`*`:** The purpose of this set of variables is to manage whether or not the specified step should run. There are two ways of specifying these variables, either one by one with their specific name and value or with special Linux-like options (similar to the [*tar* command](http://man7.org/linux/man-pages/man1/tar.1.html)) passed to a variable called `PIPELINE_CONTROL`. Each variable below has a **generic representation** which is the value used required to be passed in to `PIPELINE_CONTROL`.
+* **Pipeline Control variables`*`:** The purpose of this set of variables is to manage whether or not the specified step should run. There are two ways of specifying these variables, either one by one with their specific name and value or with special Linux-like options (similar to the [*tar* command](http://man7.org/linux/man-pages/man1/tar.1.html)) passed to a variable called `PIPELINE_CONTROL`. Each variable below has a **generic representation** which is the value required to be passed in to `PIPELINE_CONTROL`.
 
   * **PIPELINE_CONTROL_CI_SKIP`*`** 
     * Default: **true**
@@ -98,11 +98,11 @@ This sections describes the special variables contained in most Jenkinsfiles on 
 
 ## Environment Setup
 
-This section cover the basic aspects of how the pipeline environment should be structured. First and foremost, Almost all variables should be parameterized to allow flexibility on each step for all pipelines using this scheme and all default should be provided by the pipelines themselves.
+This section cover the basic aspects of how the pipeline environment should be structured. First and foremost, almost all variables should be parameterized to allow flexibility on each step for all pipelines using this scheme and all defaults should be provided by the pipelines themselves.
 
-Since memory could become an issue given that we plan to release beta version frequently, we want to limit the number of builds kept in memory for the release branches as well as any other branch on a given repository. For release branches, e.g. `master`, `beta`, `latest`, we will keep only twenty (20) builds and will disable concurrent builds to avoid any issues and complications that can arise because of this. For regular branches, such as fixes or enhancements/features, we will keep only five (5) builds and concurrent builds should be allowed to provide a smooth developing experience in terms of Continuous Integration (CI).
+Since memory could become an issue given that we plan to release the beta version frequently, we want to limit the number of builds kept in memory for the release branches as well as any other branch on a given repository. For release branches, e.g. `master`, `beta`, `latest`, we will keep only twenty (20) builds and will disable concurrent builds to avoid any issues and complications that can arise because of this. For regular branches, such as fixes or enhancements/features, we will keep only five (5) builds and concurrent builds should be allowed to provide a smooth developing experience in terms of Continuous Integration (CI).
 
-Also, we will implement a containerization system based on Docker. This allows pipelines to run in a controlled environments and possibly perform destructive operations without harming the host machine.
+Also, we will implement a containerization system based on Docker. This allows pipelines to run in controlled environments and possibly perform destructive operations without harming the host machine.
 
 ## Protected Branches
 
@@ -132,9 +132,9 @@ The build is triggered any time code gets merged into the branch and since it's 
 
 #### lts-stable
 
-The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a no-changing version that guarantees that no new features are applied but only patches. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-stable-v3.5` and should only increment the `patch` level.
+The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a non-changing version that guarantees that no new features are applied but only patches. For example, the version `3.5.1` corresponds to the NPM tag `lts-stable-v3.5` and should only increment the `patch` level.
 
-Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minot versions of the package are compared against `<major>` and `<minor>` in the most recent `@lts-stable-v<major>.<minor>` NPM tag and fail the PR if the major or minor versions have changed. This will ensure that the major nor minor version never increase, thus ensuring no features are introduced into the branch.
+Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minor versions of the package are compared against `<major>` and `<minor>` in the most recent `@lts-stable-v<major>.<minor>` NPM tag and fail the PR if the major or minor versions have changed. This will ensure that the major or minor version never increase, thus ensuring no features are introduced into the branch.
 
 Since this branch only accepts bug fixes (or patch increments), PRs will also fail if the patch version is changed manually. The version will automatically bump after a successful build.
 
@@ -167,7 +167,7 @@ TODO: This section will be modified as we work on [issue 139 of Zowe CLI](https:
   - This allows the template steps to call well-structured scripts on the project.
 
 - Handle Zowe CLI/imperative builds
-  - Zowe requires npm tag `@<imperative-git-branch-name>` so builds of the protected branches should always install and save to the package json this version.
+  - Zowe requires npm tag `@<imperative-git-branch-name>` so builds of the protected branches should always install and save to the package json of this version.
   - We need to do npm install then npm install imperative@tag --save and commit that before publishing when in protected branches.
   - This implies that the biweekly builds have knowledge about both builds and first builds imperative then Zowe CLI.
   
