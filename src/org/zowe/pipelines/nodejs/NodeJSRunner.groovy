@@ -3,6 +3,7 @@ package org.zowe.pipelines.nodejs
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
+import org.zowe.pipelines.nodejs.model.RegistryConfig
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -741,12 +742,7 @@ public enum ResultEnum {
     }
 }
 
-// Specifies a registry to login to
-class RegistryConfig {
-    String url
-    String email
-    String credentialsId
-}
+
 
 class GitConfig {
     String user
