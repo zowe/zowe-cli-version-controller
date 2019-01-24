@@ -1,4 +1,4 @@
-
+package org.zowe.pipelines.nodejs.models
 class StageArgs { // @TODO Stage minimum build health (if build health is >= to this minimum, continue with the stage else skip)
     String name
     Closure stage

@@ -3,7 +3,7 @@ package org.zowe.pipelines.nodejs
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
-import org.zowe.pipelines.nodejs.model.RegistryConfig
+import org.zowe.pipelines.nodejs.models.*
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils

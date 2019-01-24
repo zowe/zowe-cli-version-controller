@@ -1,3 +1,4 @@
+package org.zowe.pipelines.nodejs.models
 /**
  * Class representing configuring for a test stage of a jenkins pipeline
  */

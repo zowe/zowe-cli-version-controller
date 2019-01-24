@@ -1,4 +1,4 @@
-
+package org.zowe.pipelines.nodejs.models
 
 class TestReport {
     String dir

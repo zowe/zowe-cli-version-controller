@@ -1,3 +1,4 @@
+package org.zowe.pipelines.nodejs.models
 // Enumeration for the result
 public enum ResultEnum {
     SUCCESS("SUCCESS"),

@@ -1,4 +1,4 @@
-
+package org.zowe.pipelines.nodejs.models
 class Stage {
     String name
     int order // The order of stage execution
