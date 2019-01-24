@@ -1,4 +1,4 @@
-@Library('shared-pipelines@automated_Tests')
+@Library('shared-pipelines@zowe/zowe-cli/139_declarative-to-scripted')
 import org.zowe.pipelines.nodejs.NodeJSRunner
 
 node('ca-jenkins-agent') {
