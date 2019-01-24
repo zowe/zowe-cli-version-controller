@@ -4,6 +4,8 @@ package org.zowe.pipelines.nodejs
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
 import org.zowe.pipelines.nodejs.models.*
+import org.zowe.pipelines.nodejs.exceptions.*
+
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -719,36 +721,3 @@ expect {
     }
 }
 
-// @TODO split out classes
-
-////////////////////////////////////////////////////////////////////////////////
-//////////////////////////// EXCEPTIONS ////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-class NodeJSRunnerException extends Exception {
-    NodeJSRunnerException(String message) {
-        super(message)
-    }
-}
-
-class StageException extends NodeJSRunnerException {
-    String stageName
-
-    StageException(String message, String stageName) {
-        super("${message} (stage = \"${stageName}\")")
-
-        this.stageName = stageName
-    }
-}
-
-class TestStageException extends StageException {
-    TestStageException(String message, String stageName) {
-        super(message, stageName)
-    }
-}
-
-class BuildStageException extends StageException {
-    BuildStageException(String message, String stageName) {
-        super(message, stageName)
-    }
-}
