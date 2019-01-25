@@ -2,7 +2,7 @@ import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
 public class PipelineStages {
-    private Map<String, Stage> _stages = new Map()
+    private HashMap<String, Stage> _stages = new HashMap()
 
     private Stage _lastAddedStage
     private Stage _firstStageToExecute
