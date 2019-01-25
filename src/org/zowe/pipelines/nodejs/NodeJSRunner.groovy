@@ -93,6 +93,9 @@ public class NodeJSRunner {
      */
     private String _buildRevision
 
+    /**
+     * A boolean that tracks if the build step 
+     */
     private boolean _didBuild = false
 
     private boolean _isProtectedBranch = false
@@ -270,6 +273,8 @@ expect {
     }
 
     // Takes instantiated args and runs a stage
+    // @FUTURE NEED TO MAKE THIS A STANDALONE CLASS THAT NODE JS EXTENDS
+    // @FUTURE TO REDUCE FILE SIZE
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
         
@@ -372,7 +377,7 @@ expect {
 
             if (steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
                 stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
-                stages.firstFailingStage = stage
+                _stages.firstFailingStage = stage
             }
         }
     }
