@@ -5,22 +5,97 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
+import org.zowe.pipelines.nodejs.PipelineStages
 
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-// @TODO enforce some sort of ordering
+// @TODO still needs to be documented
 public class NodeJSRunner {
+    /**
+     * The name of the library output archived from the {@link #buildStage(Map) buildStage} method.
+     */
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
-    // Look up the git version
-    private static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
-
-    // CI Skip text
+    /**
+     * Text used for the CI SKIP commit.
+     */
     private static final String _CI_SKIP = "[ci skip]"
 
+    /**
+     * Shell command that gets the current git revision.
+     */
+    private static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
+
+    /**
+     * The name of the root setup stage.
+     */
     private static final String _SETUP_STAGE_NAME = "Setup"
+
+    /**
+     * This is a list of administrator emails addresses that will receive emails when a build
+     * happens on a protected branch.
+     */
+    public String[] adminEmails = []
+
+    /**
+     * The number of historical builds kept for a non-protected branch.
+     */
+    public String defaultBuildHistory = '5'
+
+    // @FUTURE Only relevant for CD story
+    /**
+     * Git user configuration, add more documentation in future story
+     */
+    public GitConfig gitConfig
+
+    /**
+     * Images embedded in notification emails depending on the status of the build.
+     */
+    public Map<String, List<String>> notificationImages = [
+        SUCCESS : [
+            'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
+            'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
+        ],
+        UNSTABLE: [
+            'https://i.imgur.com/fV89ZD8.png'  /*not sure if*/
+        ],
+        FAILURE : [
+            'https://i.imgur.com/iQ4DuYL.png'  /*this is fine fire */
+        ]
+    ]
+
+    /**
+     * The number of historical builds kept for a protected branch.
+     */
+    public String protectedBranchBuildHistory = '20'
+
+    // Key is branch name and value is npm tag name
+    public Map protectedBranches = [master: 'latest']
+
+    // @FUTURE part of the deploy story
+    /**
+     * This is the connection information for the registry where code is published
+     * to.
+     */
+    public RegistryConfig publishConfig
+
+    /**
+     * An array of registry connection information information for each registry. These
+     * logins will happen before the npm install in setup.
+     */
+    public RegistryConfig[] registryConfig
+
+    /**
+     * The git commit revision of the build. This is determined at the beginning of
+     * the build.
+     */
+    private String _buildRevision
+
+    private boolean _didBuild = false
+
+    private boolean _isProtectedBranch = false
 
     /**
      * Store if the setup method was called
@@ -28,69 +103,27 @@ public class NodeJSRunner {
     private boolean _setupCalled = false
     private boolean _setupStageCalled = false
 
-    /**
-     * Any exception that has been encountered during the execution of the pipeline
-     *
-     */
-    private Exception encounteredException = null
-
-    public String[] adminEmails = []
-
-    // Key is branch name and value is npm tag name
-    public Map protectedBranches = [master: 'latest']
-
-    /**
-     * Images embedded in notification emails depending on the status of the build
-     */
-    public Map<String, List<String>> notificationImages = [SUCCESS : ['https://i.imgur.com/ixx5WSq.png', /*happy seal*/
-                                                                      'https://i.imgur.com/jiCQkYj.png' /* happy puppy*/],
-                                                           UNSTABLE: ['https://i.imgur.com/fV89ZD8.png' /* not sure if*/],
-                                                           FAILURE : ['https://i.imgur.com/iQ4DuYL.png' /* this is fine fire */
-                                                           ]]
-
-    public GitConfig gitConfig
-    public RegistryConfig publishConfig    // Credentials for publish
-    public RegistryConfig[] registryConfig // Credentials for download packages
-
-    public String defaultBuildHistory = '5'
-    public String protectedBranchBuildHistory = '20'
-
-    private boolean _isProtectedBranch = false
     private boolean _shouldSkipRemainingStages = false
-    private boolean _didBuild = false
+
+    // Map of all stages run
+    private PipelineStages _stages = new PipelineStages()
+
+    def steps
 
     def buildOptions = []
     def buildParameters = [] // Build parameter definitions
 
-    // Map of all stages run
-    private Map<String, Stage> _stages = [:]
-
-    // Keeps track of the current stage
-    private Stage _currentStage
-
-    // The first stage to execute
-    private Stage _firstStage
-
-    // Keeps track of the first failing stage
-    private Stage _firstFailingStage
-
-    // The build revision at the start of the build
-    private String _buildRevision
-
-    def steps
+    NodeJSRunner(steps) { this.steps = steps }
 
     // Used to get the first failing stage
     public Stage getFirstFailingStage() {
-        return _firstFailingStage
+        return _stages.firstFailingStage
     }
 
     // Used to get information about stage execution to external users
-    public Stage getStageInformation(String stageName) {
-        return _stages.get(stageName)
+    public Stage getStage(String stageName) {
+        return _stages.getStage(stageName)
     }
-
-
-    NodeJSRunner(steps) { this.steps = steps }
 
     public void setup() {
         // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
@@ -99,11 +132,11 @@ public class NodeJSRunner {
         createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
 
-            if (_firstFailingStage) {
-                if (_firstFailingStage.exception) {
-                    throw _firstFailingStage.exception
+            if (_stages.firstFailingStage) {
+                if (_stages.firstFailingStage.exception) {
+                    throw _stages.firstFailingStage.exception
                 } else {
-                    throw new StageException("Setup found a failing stage but there was no associated exception.", _firstFailingStage.name)
+                    throw new StageException("Setup found a failing stage but there was no associated exception.", _stages.firstFailingStage.name)
                 }
             } else {
                 steps.echo "No problems with preinitialization of pipeline :)"
@@ -240,34 +273,7 @@ expect {
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
         
-        if (_stages.containsKey(stage.name)) {
-            if (_firstStage == null) {
-                // This is a condition that indicates that our logic is most likely broken
-                throw new StageException("First stage was not set but stages already had values in the map", stage.name)
-            } else if (!_firstFailingStage){
-                // The first stage should be setup, othewise a stage exception will be
-                // thrown before we get into here. So in setup, we should create the exception
-                // to be thrown later.
-                _firstFailingStage = _firstStage
-                _firstFailingStage.exception = new StageException("Duplicate stage name: \"${stage.name}\"", _firstFailingStage.name)
-            }
-        } else {
-            // Add stage to map
-            _stages.putAt(args.name, stage)
-        }
-
-        // Set the next stage from the current stage
-        if (_currentStage) {
-            _currentStage.next = stage
-        }
-
-        // If the first stage hasn't been created yet, set it here
-        if (!_firstStage) {
-            _firstStage = stage
-        }
-
-        // Set the new current stage to this stage
-        _currentStage = stage
+        _stages.add(stage)
 
         if (args.isSkipable) {
             // Add the option to the build, this will be called in setup
@@ -289,9 +295,15 @@ expect {
                         Utils.markStageSkippedForConditional(args.name)
                     }
 
+                    // If the stage is skippable
+                    if (stage.args.isSkipable) {
+                        // Check if the stage was skipped by the build parameter
+                        stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+                    }
+
                     _closureWrapper(stage) {
                         // First check that setup was called first
-                        if (!(_setupCalled && _firstStage.name.equals(_SETUP_STAGE_NAME))) {
+                        if (!(_setupCalled && _stages.firstStageToExecute.name.equals(_SETUP_STAGE_NAME))) {
                             throw new StageException(
                                 "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
                                 args.name
@@ -349,20 +361,18 @@ expect {
         try {
             closure()
         } catch (e) {
-            if (!_firstFailingStage) {
-                // If there was an exception thrown, the build failed. Save the exception we encountered
-                _firstFailingStage = stage
-            }
+            _stages.firstFailingStage = stage
+
             setResult(Result.FAILURE)
-            stage.exception = e // @TODO place this as part of the stage class
+            stage.exception = e
 
             throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
-            if (!_firstFailingStage && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
-                _firstFailingStage = stage
-                _firstFailingStage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
+            if (steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
+                stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
+                stages.firstFailingStage = stage
             }
         }
     }
@@ -385,6 +395,8 @@ expect {
             } else {
                 steps.sh 'npm run build'
             }
+
+            // @FUTURE In the deploy story, we should npm pack the build artifacts and archive that bundle instead for all builds.
 
             steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
             steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
@@ -547,19 +559,10 @@ expect {
 
             steps.properties(buildOptions)
 
-            Stage stage = _firstStage
-
-            while (stage) {
-                // Get the parameters for the stage
-                if (stage.args.isSkipable) {
-                    stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
-                }
-
-                stage.execute()
-                stage = stage.next
-            }
+            // Execute the pipeline
+            _stages.execute()
         } finally {
-            sendEmailNotification();
+            sendEmailNotification(); // @FUTURE As part of the deploy story, extract email stuff into separate class
         }
     }
 
@@ -664,15 +667,15 @@ expect {
         bodyText += _getTestSummary()
 
         // Add any details of an exception, if encountered
-        if (_firstFailingStage != null && _firstFailingStage.exception != null) {
+        if (_stages.firstFailingStage?.exception) { // Safe navigation is where the question mark comes from
             bodyText += "<h3>Failure Details</h3>"
             bodyText += "<table>"
-            bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_firstFailingStage.name}</b></td></tr>"
-            bodyText += "<tr><td>Exception:</td><td>${_firstFailingStage.exception.toString()}</td></tr>"
+            bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_stages.firstFailingStage.name}</b></td></tr>"
+            bodyText += "<tr><td>Exception:</td><td>${_stages.firstFailingStage.exception.toString()}</td></tr>"
             bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
             bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
             bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
-            def stackTrace = _firstFailingStage.exception.getStackTrace()
+            def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
 
             for (int i = 0; i < stackTrace.length; i++) {
                 bodyText += "at ${stackTrace[i]}<br/>"
@@ -683,7 +686,7 @@ expect {
         }
 
         List<String> ccList = new ArrayList<String>();
-        if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+        if (_isProtectedBranch) {
             // only CC administrators if we are on a protected branch
             for (String email : adminEmails) {
                 ccList.add("cc: " + email);
@@ -717,4 +720,3 @@ expect {
         steps.currentBuild.result = result
     }
 }
-
