@@ -82,4 +82,8 @@ public class PipelineStages {
             stage = stage.next
         }
     }
+
+    public int size() {
+        return _stages.size()
+    }
 }
