@@ -11,7 +11,6 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO enforce some sort of ordering
-// @TODO add way to archive logs in a folder, probably need to copy to workspace then archive
 public class NodeJSRunner {
     public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
@@ -389,9 +388,7 @@ expect {
 
             steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
             steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
-
-            // @TODO should probably delete the archive from the workspace as soon
-            // @TODO as it gets archived so that we can keep the git status clean
+            steps.sh "rm -f ${BUILD_ARCHIVE_NAME}"
 
             _didBuild = true
         }
