@@ -12,16 +12,17 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // @TODO still needs to be documented
-public class NodeJSRunner {
+// @TODO include that the image to run on is controlled by the outer pipeline
+class NodeJSRunner {
     /**
-     * The name of the library output archived from the {@link #buildStage(Map) buildStage} method.
+     * The name of the library output archived from the {@link #buildStage()} method.
      */
-    public static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
+    static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
     /**
      * Text used for the CI SKIP commit.
      */
-    private static final String _CI_SKIP = "[ci skip]"
+    static final String _CI_SKIP = "[ci skip]"
 
     /**
      * Shell command that gets the current git revision.
@@ -37,23 +38,23 @@ public class NodeJSRunner {
      * This is a list of administrator emails addresses that will receive emails when a build
      * happens on a protected branch.
      */
-    public String[] adminEmails = []
+    String[] adminEmails = []
 
     /**
      * The number of historical builds kept for a non-protected branch.
      */
-    public String defaultBuildHistory = '5'
+    String defaultBuildHistory = '5'
 
     // @FUTURE Only relevant for CD story
     /**
      * Git user configuration, add more documentation in future story
      */
-    public GitConfig gitConfig
+    GitConfig gitConfig
 
     /**
      * Images embedded in notification emails depending on the status of the build.
      */
-    public Map<String, List<String>> notificationImages = [
+    Map<String, List<String>> notificationImages = [
         SUCCESS : [
             'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
             'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
@@ -69,23 +70,29 @@ public class NodeJSRunner {
     /**
      * The number of historical builds kept for a protected branch.
      */
-    public String protectedBranchBuildHistory = '20'
+    String protectedBranchBuildHistory = '20'
 
-    // Key is branch name and value is npm tag name
-    public Map protectedBranches = [master: 'latest']
+    // @FUTURE will be use heavily in the deploy story
+    /*
+     * A map of protected branches.
+     *
+     * The keys in the map represent the name of a protected branch.
+     * The values represent the corresponding npm tag the branch is published to.
+     */
+    Map protectedBranches = [master: 'latest']
 
     // @FUTURE part of the deploy story
     /**
      * This is the connection information for the registry where code is published
      * to.
      */
-    public RegistryConfig publishConfig
+    RegistryConfig publishConfig
 
     /**
      * An array of registry connection information information for each registry. These
      * logins will happen before the npm install in setup.
      */
-    public RegistryConfig[] registryConfig
+    RegistryConfig[] registryConfig
 
     /**
      * The git commit revision of the build. This is determined at the beginning of
@@ -94,42 +101,122 @@ public class NodeJSRunner {
     private String _buildRevision
 
     /**
-     * A boolean that tracks if the build step 
+     * A boolean that tracks if the build step was run. When false, the build still hasn't completed
      */
     private boolean _didBuild = false
 
+    /**
+     * Tracks if the current branch is protected.
+     */
     private boolean _isProtectedBranch = false
 
     /**
-     * Store if the setup method was called
+     * Tracks if the setup method was called.
      */
     private boolean _setupCalled = false
-    private boolean _setupStageCalled = false
 
+    /**
+     * Tracks if the remaining stages should be skipped.
+     */
     private boolean _shouldSkipRemainingStages = false
 
-    // Map of all stages run
+    /**
+     * The stages of the pipeline to execute. As stages are created, they are
+     * added into this control class.
+     */
     private PipelineStages _stages = new PipelineStages()
 
+    /**
+     * Reference to the groovy pipeline variable.
+     *
+     * @see #NodeJSRunner()
+     */
     def steps
 
+    /**
+     * Options that are to be added to the build.
+     */
     def buildOptions = []
-    def buildParameters = [] // Build parameter definitions
 
+    /**
+     * Build parameters that will be defined to the build
+     */
+    def buildParameters = []
+
+    /**
+     * Constructs the class.
+     *
+     * When invoking from a Jenkins pipeline script, the NodeJSRunner must be passed
+     * the current environment of the Jenkinsfile to have access to the steps.
+     *
+     * <h3>Example Setup:</h3>
+     * def nodejs = new NodeJSRunner(this)
+     *
+     * @param steps The workflow steps object provided by the Jenkins pipeline
+     */
     NodeJSRunner(steps) { this.steps = steps }
 
-    // Used to get the first failing stage
-    public Stage getFirstFailingStage() {
+    /**
+     * Gets the first failing stage within {@link #_stages}
+     *
+     * @return The first failing stage if one exists, null otherwise
+     */
+    Stage getFirstFailingStage() {
         return _stages.firstFailingStage
     }
 
-    // Used to get information about stage execution to external users
-    public Stage getStage(String stageName) {
+    /**
+     * Get a stage from the available stages by name.
+     *
+     * @param stageName The name of the stage object to get.
+     *
+     * @return The stage object for the requested stage.
+     */
+    Stage getStage(String stageName) {
         return _stages.getStage(stageName)
     }
 
-    public void setup() {
-        // @TODO Fail if version was manually changed (allow for an override if we need to for some reason)
+    // @FUTURE a super class could define this method for setup and checkout and the nodejs
+    // @FUTURE class can extend it to add the npm install stuff
+    /**
+     * Creates the pipeline setup stages.
+     *
+     * This method MUST be called before any other stages are created. If not called, your Jenkins
+     * pipeline will fail. It is also recommended that any public properties of this class are set
+     * prior to calling setup.
+     *
+     * The setup method creates 4 stages in your Jenkins pipeline.
+     *
+     * Setup:
+     * ---------------------------------------------------------------------------------------------
+     * Which is used internally to indicate that the NodeJSRunner properly set the pipeline up.
+     * ---------------------------------------------------------------------------------------------
+     *
+     * Checkout:
+     * ---------------------------------------------------------------------------------------------
+     * Checks the git source out for the pipeline.
+     * ---------------------------------------------------------------------------------------------
+     *
+     * Check for CI Skip:
+     * ---------------------------------------------------------------------------------------------
+     * Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
+     * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
+     * will also be skipped. The build will also be marked as not built in this scenario.
+     * ---------------------------------------------------------------------------------------------
+     *
+     * Install Node Package Dependencies:
+     * ---------------------------------------------------------------------------------------------
+     * This step will install all your package dependencies via `npm install`. Prior to install
+     * the stage will login to any registries specified in the {@link #registryConfig} array. On
+     * exit, the step will try to logout of the registries specified in {@link #registryConfig}.
+     *
+     * - Failure to login to a registry or install dependencies will result in a failed build.
+     * - Failure to logout of a registry will not fail the build.
+     * ---------------------------------------------------------------------------------------------
+     */
+    void setup() {
+        // @TODO all timeouts should be configurable do as part of next story
+        // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         _setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
@@ -181,7 +268,7 @@ public class NodeJSRunner {
                         if (!registry.url) {
                             if (didUseDefaultRegistry) {
                                 throw new NodeJSRunnerException("No registry specified for registryConfig[${i}] and was already logged into the default")
-                            }   
+                            }
                             didUseDefaultRegistry = true
                         }
 
@@ -197,10 +284,10 @@ public class NodeJSRunner {
 
                     for (int i = 0; i < registryConfig.length; i++) {
                         _logoutOfRegistry(registryConfig[i])
-                    } 
+                    }
                 }
             }
-        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES']) // @TODO all timeouts should be configurable
+        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
     }
 
     // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
@@ -277,7 +364,7 @@ expect {
     // @FUTURE TO REDUCE FILE SIZE
     public void createStage(StageArgs args) {
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
-        
+
         _stages.add(stage)
 
         if (args.isSkipable) {
@@ -295,7 +382,7 @@ expect {
             steps.stage(args.name) {
                 steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
                     // Skips the stage when called with a reason code
-                    Closure skipStage = { reason -> 
+                    Closure skipStage = { reason ->
                         steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
                         Utils.markStageSkippedForConditional(args.name)
                     }
@@ -577,7 +664,7 @@ expect {
         return "Skip Stage: ${name}"
     }
 
-    // NonCPS informs jenkins to not save variable state that would resolve in a 
+    // NonCPS informs jenkins to not save variable state that would resolve in a
     // java.io.NotSerializableException on the TestResults class
     @NonCPS
     private String _getTestSummary() {
@@ -592,7 +679,7 @@ expect {
             // Create an overall summary
             text += "<p style=\"font-size: 16px;\">Passed: <span style=\"font-weight: bold; color: green\">${total - failed - skipped}</span>, "
             text += "Failed: <span style=\"font-weight: bold; color: ${failed == 0 ? "green" : "red"}\">${failed}</span>"
-            
+
             if (skipped > 0) {
                 text += ", Skipped: <span style=\"font-weight: bold; color: #027b77\">${skipped}</span>"
             }
@@ -614,14 +701,14 @@ expect {
                 for (int i = 0; i < maxTestOutput && i < failedTestsListCount; i++) {
                     def test = failedTests.get(i)
 
-                    text += "<p style=\"margin-top: 5px; margin-bottom: 0px; border-bottom: solid 1px black; padding-bottom: 5px;" 
-                    
+                    text += "<p style=\"margin-top: 5px; margin-bottom: 0px; border-bottom: solid 1px black; padding-bottom: 5px;"
+
                     if (i == 0) {
                         text += "border-top: solid 1px black; padding-top: 5px;"
                     }
-                    
+
                     text += "\"><b>Failed:</b> ${test.fullDisplayName}"
-                    
+
                     // Add error details
                     if (test.errorDetails) {
                         text += "<br/><b>Details:</b>${codeStart}${escapeHtml4(test.errorDetails)}</code>"
