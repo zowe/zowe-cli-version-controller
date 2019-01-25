@@ -375,7 +375,9 @@ expect {
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
-            if (steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
+            // Don't alert of the build status if the stage already has an exception
+            if (!stage.exception && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
+                // Add the exception of the bad build status
                 stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
                 _stages.firstFailingStage = stage
             }
