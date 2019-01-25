@@ -1,3 +1,5 @@
+package org.zowe.pipelines.nodejs
+
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
