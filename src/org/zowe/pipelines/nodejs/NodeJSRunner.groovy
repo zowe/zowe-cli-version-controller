@@ -189,7 +189,7 @@ class NodeJSRunner {
      *
      * Setup:
      * ---------------------------------------------------------------------------------------------
-     * Which is used internally to indicate that the NodeJSRunner properly set the pipeline up.
+     * Used internally to indicate that the NodeJSRunner properly set the pipeline up.
      * ---------------------------------------------------------------------------------------------
      *
      * Checkout:
