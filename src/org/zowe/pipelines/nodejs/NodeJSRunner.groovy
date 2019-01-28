@@ -72,11 +72,14 @@ class NodeJSRunner {
     String protectedBranchBuildHistory = '20'
 
     // @FUTURE will be use heavily in the deploy story
-    /*
+    /**
      * A map of protected branches.
      *
      * The keys in the map represent the name of a protected branch.
      * The values represent the corresponding npm tag the branch is published to.
+     *
+     * Any branches that are specified as protected will also have concurrent builds disabled. This
+     * is to prevent issues with publishing.
      */
     Map protectedBranches = [master: 'latest']
 
@@ -212,6 +215,8 @@ class NodeJSRunner {
 
     // @FUTURE NEED TO MAKE THIS A STANDALONE CLASS THAT NODE JS EXTENDS
     // @FUTURE TO REDUCE FILE SIZE
+    //
+    // @FUTURE allow easy way for create stage to specify build parameters
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
@@ -310,6 +315,112 @@ class NodeJSRunner {
 
         // Call the overloaded method
         createStage(args)
+    }
+
+    // Npm logs will always be archived
+    /**
+     * The end method MUST be the last method called as part of your pipeline. The end method is
+     * responsible for executing all the stages previously created after setting the required build
+     * options and possible stage parameters. Failure to call this method will prevent your pipeline
+     * stages from executing.
+     *
+     * Prior to executing the stages, various build options are set. Some of these options include
+     * the build history and stage skip parameters. After this is done, the method will execute
+     * all of the created stages in the order they were defined.
+     *
+     * After stage execution, an email will be sent out to those that made the commit. If the build
+     * failed or returned to normal, all committers since the last successful build will also
+     * receive the email. Finally if this build is on a protected branch, all emails listed in the
+     * {@link #adminEmails} list will also receive a status email.
+     *
+     * The end method adds the following stage to the pipeline:
+     *
+     * Log Archive:
+     * ---------------------------------------------------------------------------------------------
+     * This stage will attempt to archive any folders specified. The purpose is to capture any
+     * relevant logging information to help debug a pipeline build. The stage will execute as long
+     * as the current result is greater than or equal to {@link ResultEnum#FAILURE}
+     *
+     * Any folders specified in archiveFolders will be archived. If a folder is not available, the
+     * archive will fail. In this scenario, the build will note the copy step as failed but will
+     * not modify the current build result. This allows you to list directories to archive that only
+     * appear under certain scenarios without the worry that they will affect the result of your
+     * build when missing.
+     *
+     * The following locations are always archived:
+     *
+     * - /home/jenkins/.npm/_logs
+     *
+     * ---------------------------------------------------------------------------------------------
+     *
+     *
+     * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
+     *                       build will ignore it and will not modify the current build result. See
+     *                       the notes in the log for the reasoning. If a folder in this array
+     *                       starts with a `/`, the stage will copy the folder into a temp directory
+     *                       inside the project (retaining the folder structure). This is due to
+     *                       the fact that folders outside the workspace cannot be archived by
+     *                       Jenkins. The leading `/` should be used for any logs that you wish to
+     *                       capture that are outside the workspace. Also if the directory starts
+     *                       with a ../, the stage will abort access to that folder. This is because
+     *                       Jenkins cannot archive files outside the workspace.
+     */
+    void end(String[] archiveFolders = []) {
+        createStage(name: "Log Archive", stage: {
+            def archiveLocation = "postBuildArchive"
+
+            String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
+
+            steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
+            steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
+            steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
+            steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
+            steps.sh "mkdir $archiveLocation"
+
+            for (int i = 0; i < archiveDirectories.length; i++) {
+                def directory = archiveDirectories[i]
+
+                try {
+                    if (directory.startsWith("/")) {
+                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
+
+                        // It is an absolute path so try to copy everything into our work directory
+                        steps.sh "cp -r $directory ./${archiveLocation}${directory}"
+                    } else if (directory.startsWith("..")) {
+                        throw new NodeJSRunnerException("Relative archives are not supported")
+                    }
+                } catch (e) {
+                    steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
+                }
+            }
+
+            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
+        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
+
+        try {
+            // First setup the build properties
+            def history = defaultBuildHistory
+
+            // Add protected branch to build options
+            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true;
+                history = protectedBranchBuildHistory
+                buildOptions.push(steps.disableConcurrentBuilds())
+            }
+
+            // Add log rotator to build options
+            buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+
+            // Add any parameters to the build here
+            buildOptions.push(steps.parameters(buildParameters))
+
+            steps.properties(buildOptions)
+
+            // Execute the pipeline
+            _stages.execute()
+        } finally {
+            _sendEmailNotification() // @FUTURE As part of the deploy story, extract email stuff into separate class
+        }
     }
 
     /**
@@ -453,47 +564,69 @@ class NodeJSRunner {
      * Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
      * to this function will map to the {@link TestArgs} class.
      *
-     * Test: {arguments.name}
+     * Test: {@link TestArgs#name}
      * ---------------------------------------------------------------------------------------------
-     * Runs one of your application tests. If testOperation, the stage will execute `npm run test`
-     * as the default operation. If the test operation throws an error, that error is ignored and
-     * will be assumed to be caught in the junit processing. Some test functions may exit with a
-     * non-zero return code on a test failure but may still capture junit output. In this scenario,
-     * it is assumed that the junit report is either missing or contains failing tests. In the case
-     * that it is missing, the build will fail on this report and relevant exceptions are printed.
-     * If the junit report contains failing tests, the build will be marked as unstable and a report
-     * of failing tests can be viewed.
+     * Runs one of your application tests. If {@link TestArgs#testOperation}, the stage will execute
+     * `npm run test` as the default operation. If the test operation throws an error, that error is
+     * ignored and  will be assumed to be caught in the junit processing. Some test functions may
+     * exit with a non-zero return code on a test failure but may still capture junit output. In
+     * this scenario, it is assumed that the junit report is either missing or contains failing
+     * tests. In the case that it is missing, the build will fail on this report and relevant
+     * exceptions are printed. If the junit report contains failing tests, the build will be marked
+     * as unstable and a report of failing tests can be viewed.
      *
      * The following reports can be captured:
      *
-     * -----------------------------------
-     * Test Results HTML Report
+     *
+     * Test Results HTML Report (REQUIRED)
      * -----------------------------------
      * This is an html report that contains the result of the build. The report must be defined to
      * the method in the {@link TestArgs#testResults} variable.
-     *
      * -----------------------------------
+     *
      * Code Coverage HTML Report
      * -----------------------------------
      * This is an HTML report generated from code coverage output from your build. The report can
      * be omitted by omitting {@link TestArgs#coverageResults}
+     * -----------------------------------
      *
+     * JUnit report (REQUIRED)
+     * -----------------------------------
+     * This report feeds Jenkins the data about the current test run. It can be used to mark a build
+     * as failed or unstable. The report location must be present in {@link TestArgs#junitOutput}
+     * -----------------------------------
      *
+     * Cobertura Report
+     * -----------------------------------
+     * This report feeds Jenkins the data about the coverage results for the current test run. If
+     * no Cobertura options are passed, then no coverage data will be collected. For more
+     * information, see {@link TestArgs#cobertura}
+     * -----------------------------------
      *
+     * The test stage will execute by default if the current build result is greater than or
+     * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
+     * precedent.
      *
+     * After the test is complete, the stage will continue to collect the JUnit Report and the Test
+     * Results HTML Report. The stage will fail if either of those are missing. If specified, the
+     * Code Coverage HTML Report and the Cobertura Report are then captured. The build will fail if
+     * these reports are to be collected and were missing.
      *
+     * Some tests may also require the use of the gnome-keyring. The stage can be configured to
+     * unlock the keyring prior to the tests by passing {@link TestArgs#shouldUnlockKeyring} as true
      *
+     * Stage Exceptions
+     * -----------------------------------
      *
+     * The test stage can throw a {@link TestStageException} under any of the following
+     * circumstances:
      *
+     * - A test stage was created before a call to {@link #buildStage(Map)}
+     * - {@link TestArgs#testResults} was missing
+     * - Invalid options specified for {@link TestArgs#testResults}
+     * - {@link TestArgs#coverageResults} was provided but had an invalid format
+     * - {@link TestArgs#junitOutput} is missing
      *
-     * The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
-     * on {@link ResultEnum#SUCCESS}.
-     *
-     * After the buildOperation is complete, the stage will continue to archive the contents of the
-     * build into a tar file. The folder to archive is specified by arguments.output. In the future,
-     * this function will run the npm pack command and archive that tar file instead.
-     *
-     * This stage will throw a {@link BuildStageException} if called more than once in your pipeline.
      * ---------------------------------------------------------------------------------------------
      *
      * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
@@ -620,65 +753,6 @@ class NodeJSRunner {
         }
     }
 
-    // Npm logs will always be archived
-    public void end(String[] archiveFolders = []) {
-        createStage(name: "Log Archive", stage: {
-            def archiveLocation = "postBuildArchive"
-
-            String[] archiveDirectories = ["/home/jenkins/.npm/_logs"] + archiveFolders
-
-            steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
-            steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
-            steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
-            steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
-            steps.sh "mkdir $archiveLocation"
-
-            for (int i = 0; i < archiveDirectories.length; i++) {
-                def directory = archiveDirectories[i]
-
-                try {
-                    if (directory.startsWith("/")) {
-                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
-
-                        // It is an absolute path so try to copy everything into our work directory
-                        steps.sh "cp -r $directory ./${archiveLocation}${directory}"
-                    } else if (directory.startsWith("..")) {
-                        throw new NodeJSRunnerException("Relative archives are not supported")
-                    }
-                } catch (e) {
-                    steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
-                }
-            }
-
-            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
-        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
-
-        try {
-            // First setup the build properties
-            def history = defaultBuildHistory;
-
-            // Add protected branch to build options
-            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                _isProtectedBranch = true;
-                history = protectedBranchBuildHistory
-                buildOptions.push(steps.disableConcurrentBuilds())
-            }
-
-            // Add log rotator to build options
-            buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-
-            // Add any parameters to the build here
-            buildOptions.push(steps.parameters(buildParameters))
-
-            steps.properties(buildOptions)
-
-            // Execute the pipeline
-            _stages.execute()
-        } finally {
-            sendEmailNotification(); // @FUTURE As part of the deploy story, extract email stuff into separate class
-        }
-    }
-
     private String getStageSkipOption(String name) {
         return "Skip Stage: ${name}"
     }
@@ -756,7 +830,7 @@ class NodeJSRunner {
     /**
      * Send an email notification about the result of the build to the appropriate users
      */
-    public void sendEmailNotification() {
+    private void _sendEmailNotification() {
         steps.echo "Sending email notification..."
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
