@@ -236,7 +236,7 @@ class NodeJSRunner {
                     steps.booleanParam(
                             defaultValue: false,
                             description: "Setting this to true will skip the stage \"${args.name}\"",
-                            name: getStageSkipOption(args.name)
+                            name: _getStageSkipOption(args.name)
                     )
             )
         }
@@ -253,7 +253,7 @@ class NodeJSRunner {
                     // If the stage is skippable
                     if (stage.args.isSkipable) {
                         // Check if the stage was skipped by the build parameter
-                        stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+                        stage.isSkippedByParam = steps.params[_getStageSkipOption(stage.name)]
                     }
 
                     _closureWrapper(stage) {
@@ -279,7 +279,7 @@ class NodeJSRunner {
 
                             stage.wasExecuted = true
                             if (args.isSkipable) {
-                                steps.echo "This step can be skipped by setting the `${getStageSkipOption(args.name)}` option to true"
+                                steps.echo "This step can be skipped by setting the `${_getStageSkipOption(args.name)}` option to true"
                             }
 
                             def environment = []
@@ -441,6 +441,14 @@ class NodeJSRunner {
      */
     Stage getStage(String stageName) {
         return _stages.getStage(stageName)
+    }
+
+    /**
+     * Set the build result
+     * @param result The new result for the build.
+     */
+    void setResult(Result result) {
+        steps.currentBuild.result = result
     }
 
     // @FUTURE a super class could define this method for setup and checkout and the nodejs
@@ -717,6 +725,15 @@ class NodeJSRunner {
         createStage(args)
     }
 
+    /**
+     * Wraps a closure function in a try catch.
+     *
+     * Used internally by {@link #createStage(StageArgs)} to handle errors thrown by timeouts and
+     * stage executions.
+     *
+     * @param stage The stage that is currently executing
+     * @param closure The closure function to execute
+     */
     private void _closureWrapper(Stage stage, Closure closure) {
         try {
             closure()
@@ -739,26 +756,108 @@ class NodeJSRunner {
         }
     }
 
-    private void _validateReportInfo(TestReport report, String reportName, String stageName) {
-        if (!report.dir) {
-            throw new TestStageException("${reportName} is missing property `dir`", stageName)
+    /**
+     * Login to the specified registry.
+     *
+     * @param registry The registry to login to
+     * @throws NodeJSRunnerException when either the email address or credentials property is missing
+     *                               from the specified registry.
+     */
+    private void _loginToRegistry(RegistryConfig registry) throws NodeJSRunnerException {
+        if (!registry.email) {
+            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
+        }
+        if (!registry.credentialsId) {
+            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
         }
 
-        if (!report.files) {
-            throw new TestStageException("${reportName} is missing property `files`", stageName)
+        if (!registry.url) {
+            steps.echo "Attempting to login to the default registry"
+        } else {
+            steps.echo "Attempting to login to the ${registry.url} registry"
         }
 
-        if (!report.name) {
-            throw new TestStageException("${reportName} is missing property `name`", stageName)
+        // Bad formatting but this is probably the cleanest way to do the expect script
+        def expectCommand = """/usr/bin/expect <<EOD
+set timeout 60
+#npm login command, add whatever command-line args are necessary
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
+match_max 100000
+
+expect "Username"
+send "\$EXPECT_USERNAME\\r"
+
+expect "Password"
+send "\$EXPECT_PASSWORD\\r"
+
+expect "Email"
+send "\$EXPECT_EMAIL\\r"
+
+expect {
+   timeout      exit 1
+   eof
+}
+"""
+        // Echo the command that was run
+        steps.echo expectCommand
+
+        steps.withCredentials([
+                steps.usernamePassword(
+                        credentialsId: registry.credentialsId,
+                        usernameVariable: 'EXPECT_USERNAME',
+                        passwordVariable: 'EXPECT_PASSWORD'
+                )
+        ]) {
+            steps.withEnv(["EXPECT_EMAIL=${registry.email}"]) {
+                steps.sh expectCommand
+            }
         }
     }
 
-    private String getStageSkipOption(String name) {
+    /**
+     * Logout of the specified registry.
+     *
+     * @param registry The registry to logout of.
+     */
+    private void _logoutOfRegistry(RegistryConfig registry) {
+        if (!registry.url) {
+            steps.echo "Attempting to logout of the default registry"
+        } else {
+            steps.echo "Attempting to logout of the ${registry.url} registry"
+        }
+
+        try {
+            // If the logout fails, don't blow up. Coded this way because a failed
+            // logout doesn't mean we've failed. It also doesn't stop any other
+            // logouts that might need to be done.
+            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+        } catch (e) {
+            steps.echo "Failed logout but will continue"
+        }
+    }
+
+    /**
+     * Gets the stage skip parameter name.
+     *
+     * @param name The name of the stage to be skipped.
+     * @return The name of the skip stage parameter.
+     */
+    private String _getStageSkipOption(String name) { // @TODO convert to static
         return "Skip Stage: ${name}"
     }
 
     // NonCPS informs jenkins to not save variable state that would resolve in a
     // java.io.NotSerializableException on the TestResults class
+    /**
+     * Gets a test summary string.
+     *
+     * This method was created using @NonCPS because some of the operations performed cannot be
+     * serialized. The @NonCPS annotation tells jenkins to not save the variable state of this
+     * function on shutdown. Failure to run in this mode causes a java.io.NotSerializableException
+     * in this method.
+     *
+     * @return An HTML string of test results to add to the email.
+     */
     @NonCPS
     private String _getTestSummary() {
         def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
@@ -901,82 +1000,26 @@ class NodeJSRunner {
 
     }
 
-
-    // Shorthand for setting results
-    public void setResult(Result result) {
-        steps.currentBuild.result = result
-    }
-
     /**
+     * Validates that a test report has the required options.
      *
-     * @param registry
-     * @throws NodeJSRunnerException
+     * @param report The report to validate
+     * @param reportName The name of the report being validated
+     * @param stageName The name of the stage that is executing.
+     *
+     * @throws TestStageException when any of the report properties are invalid.
      */
-    private void _loginToRegistry(RegistryConfig registry) throws NodeJSRunnerException {
-        if (!registry.email) {
-            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
-        }
-        if (!registry.credentialsId) {
-            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
+    private void _validateReportInfo(TestReport report, String reportName, String stageName) { // @TODO convert to static
+        if (!report.dir) {
+            throw new TestStageException("${reportName} is missing property `dir`", stageName)
         }
 
-        if (!registry.url) {
-            steps.echo "Attempting to login to the default registry"
-        } else {
-            steps.echo "Attempting to login to the ${registry.url} registry"
+        if (!report.files) {
+            throw new TestStageException("${reportName} is missing property `files`", stageName)
         }
 
-        // Bad formatting but this is probably the cleanest way to do the expect script
-        def expectCommand = """/usr/bin/expect <<EOD
-set timeout 60
-#npm login command, add whatever command-line args are necessary
-spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
-match_max 100000
-
-expect "Username"
-send "\$EXPECT_USERNAME\\r"
-
-expect "Password"
-send "\$EXPECT_PASSWORD\\r"
-
-expect "Email"
-send "\$EXPECT_EMAIL\\r"
-
-expect {
-   timeout      exit 1
-   eof
-}
-"""
-        // Echo the command that was run
-        steps.echo expectCommand
-
-        steps.withCredentials([
-                steps.usernamePassword(
-                        credentialsId: registry.credentialsId,
-                        usernameVariable: 'EXPECT_USERNAME',
-                        passwordVariable: 'EXPECT_PASSWORD'
-                )
-        ]) {
-            steps.withEnv(["EXPECT_EMAIL=${registry.email}"]) {
-                steps.sh expectCommand
-            }
-        }
-    }
-
-    private void _logoutOfRegistry(RegistryConfig registry) {
-        if (!registry.url) {
-            steps.echo "Attempting to logout of the default registry"
-        } else {
-            steps.echo "Attempting to logout of the ${registry.url} registry"
-        }
-
-        try {
-            // If the logout fails, don't blow up. Coded this way because a failed
-            // logout doesn't mean we've failed. It also doesn't stop any other
-            // logouts that might need to be done.
-            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
-        } catch (e) {
-            steps.echo "Failed logout but will continue"
+        if (!report.name) {
+            throw new TestStageException("${reportName} is missing property `name`", stageName)
         }
     }
 }
