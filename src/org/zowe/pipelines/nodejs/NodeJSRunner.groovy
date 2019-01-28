@@ -5,7 +5,6 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
-import org.zowe.pipelines.nodejs.PipelineStages
 
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
@@ -157,6 +156,163 @@ class NodeJSRunner {
     NodeJSRunner(steps) { this.steps = steps }
 
     /**
+     * Creates a stage that will build a NodeJS package.
+     *
+     * Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link BuildArgs} class.
+     *
+     * Build: {@link BuildArgs#name}
+     * ---------------------------------------------------------------------------------------------
+     * Runs the build of your application. If {@link BuildArgs#buildOperation} is not provided, the
+     * stage will default to executing `npm run build`.
+     *
+     * The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
+     * on {@link ResultEnum#SUCCESS}.
+     *
+     * After the buildOperation is complete, the stage will continue to archive the contents of the
+     * build into a tar file. The folder to archive is specified by arguments.output. In the future,
+     * this function will run the npm pack command and archive that tar file instead.
+     *
+     * This stage will throw a {@link BuildStageException} if called more than once in your pipeline.
+     * ---------------------------------------------------------------------------------------------
+     *
+     * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
+     *                  the stage.
+     */
+    void buildStage(Map arguments = [:]) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        BuildArgs args = arguments
+
+        args.name = "Build: ${args.name}"
+        args.stage = {
+            if (_didBuild) {
+                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
+            }
+
+            // Either use a custom build script or the default npm run build
+            if (args.buildOperation) {
+                args.buildOperation()
+            } else {
+                steps.sh 'npm run build'
+            }
+
+            // @FUTURE In the deploy story, we should npm pack the build artifacts and archive that bundle instead for all builds.
+
+            steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
+            steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
+            steps.sh "rm -f ${BUILD_ARCHIVE_NAME}"
+
+            _didBuild = true
+        }
+
+        createStage(args)
+    }
+
+    // @FUTURE NEED TO MAKE THIS A STANDALONE CLASS THAT NODE JS EXTENDS
+    // @FUTURE TO REDUCE FILE SIZE
+    /**
+     * Creates a new stage to be run in the Jenkins pipeline.
+     *
+     * Stages are executed in the order that they are created. For more details on what arguments
+     * can be sent into a stage, see the {@link StageArgs} class.
+     *
+     * @param args The arguments that define the stage.
+     */
+    void createStage(StageArgs args) {
+        Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
+
+        _stages.add(stage)
+
+        if (args.isSkipable) {
+            // Add the option to the build, this will be called in setup
+            buildParameters.push(
+                    steps.booleanParam(
+                            defaultValue: false,
+                            description: "Setting this to true will skip the stage \"${args.name}\"",
+                            name: getStageSkipOption(args.name)
+                    )
+            )
+        }
+
+        stage.execute = {
+            steps.stage(args.name) {
+                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    // Skips the stage when called with a reason code
+                    Closure skipStage = { reason ->
+                        steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
+                        Utils.markStageSkippedForConditional(args.name)
+                    }
+
+                    // If the stage is skippable
+                    if (stage.args.isSkipable) {
+                        // Check if the stage was skipped by the build parameter
+                        stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
+                    }
+
+                    _closureWrapper(stage) {
+                        // First check that setup was called first
+                        if (!(_setupCalled && _stages.firstStageToExecute.name.equals(_SETUP_STAGE_NAME))) {
+                            throw new StageException(
+                                    "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
+                                    args.name
+                            )
+                        } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
+                            skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.resultThreshold.value}")
+                        } else if (stage.isSkippedByParam) {
+                            skipStage("Skipped by build parameter")
+                        } else if (!args.doesIgnoreSkipAll && _shouldSkipRemainingStages) {
+                            // If doesIgnoreSkipAll is true then this check is ignored, all others are not though
+                            skipStage("All remaining steps are skipped")
+                        } else if (args.shouldSkip()) {
+                            skipStage("Should skip function evaluated to true")
+                        }
+                        // Run the stage
+                        else {
+                            steps.echo "Executing stage ${args.name}"
+
+                            stage.wasExecuted = true
+                            if (args.isSkipable) {
+                                steps.echo "This step can be skipped by setting the `${getStageSkipOption(args.name)}` option to true"
+                            }
+
+                            def environment = []
+
+                            // Add items to the environment if needed
+                            if (args.environment) {
+                                args.environment.each { key, value -> environment.push("${key}=${value}") }
+                            }
+
+                            // Run the passed stage with the proper environment variables
+                            steps.withEnv(environment) {
+                                _closureWrapper(stage) {
+                                    args.stage()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates a new stage to be run in the Jenkins pipeline.
+     *
+     * @param arguments A map of arguments that can be instantiated to a {@link StageArgs} instance.
+     *
+     * @see #createStage(StageArgs)
+     */
+    void createStage(Map arguments) {
+        // Parse arguments and initialize the stage
+        StageArgs args = new StageArgs(arguments)
+
+        // Call the overloaded method
+        createStage(args)
+    }
+
+    /**
      * Gets the first failing stage within {@link #_stages}
      *
      * @return The first failing stage if one exists, null otherwise
@@ -185,7 +341,8 @@ class NodeJSRunner {
      * pipeline will fail. It is also recommended that any public properties of this class are set
      * prior to calling setup.
      *
-     * The setup method creates 4 stages in your Jenkins pipeline.
+     * The setup method creates 4 stages in your Jenkins pipeline using the {@link #createStage(Map)}
+     * function.
      *
      * Setup:
      * ---------------------------------------------------------------------------------------------
@@ -290,219 +447,59 @@ class NodeJSRunner {
         }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
     }
 
-    // Separate class method in prep for other steps needing this functionality...cough...cough...deploy...cough
-    private void _loginToRegistry(RegistryConfig registry) {
-        if (!registry.email) {
-            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
-        }
-        if (!registry.credentialsId) {
-            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
-        }
-
-        if (!registry.url) {
-            steps.echo "Attempting to login to the default registry"
-        } else {
-            steps.echo "Attempting to login to the ${registry.url} registry"
-        }
-
-        // Bad formatting but this is probably the cleanest way to do the expect script
-        def expectCommand = """/usr/bin/expect <<EOD
-set timeout 60
-#npm login command, add whatever command-line args are necessary
-spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
-match_max 100000
-
-expect "Username"
-send "\$EXPECT_USERNAME\\r"
-
-expect "Password"
-send "\$EXPECT_PASSWORD\\r"
-
-expect "Email"
-send "\$EXPECT_EMAIL\\r"
-
-expect {
-   timeout      exit 1
-   eof
-}
-"""
-        // Echo the command that was run
-        steps.echo expectCommand
-
-        steps.withCredentials([
-            steps.usernamePassword(
-                credentialsId: registry.credentialsId,
-                usernameVariable: 'EXPECT_USERNAME',
-                passwordVariable: 'EXPECT_PASSWORD'
-            )
-        ]) {
-            steps.withEnv(["EXPECT_EMAIL=${registry.email}"]) {
-                steps.sh expectCommand
-            }
-        }
-    }
-
-    private void _logoutOfRegistry(RegistryConfig registry) {
-        if (!registry.url) {
-            steps.echo "Attempting to logout of the default registry"
-        } else {
-            steps.echo "Attempting to logout of the ${registry.url} registry"
-        }
-
-        try {
-            // If the logout fails, don't blow up. Coded this way because a failed
-            // logout doesn't mean we've failed. It also doesn't stop any other
-            // logouts that might need to be done.
-            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
-        } catch (e) {
-            steps.echo "Failed logout but will continue"
-        }
-    }
-
-    // Takes instantiated args and runs a stage
-    // @FUTURE NEED TO MAKE THIS A STANDALONE CLASS THAT NODE JS EXTENDS
-    // @FUTURE TO REDUCE FILE SIZE
-    public void createStage(StageArgs args) {
-        Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
-
-        _stages.add(stage)
-
-        if (args.isSkipable) {
-            // Add the option to the build, this will be called in setup
-            buildParameters.push(
-                    steps.booleanParam(
-                            defaultValue: false,
-                            description: "Setting this to true will skip the stage \"${args.name}\"",
-                            name: getStageSkipOption(args.name)
-                    )
-            )
-        }
-
-        stage.execute = {
-            steps.stage(args.name) {
-                steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
-                    // Skips the stage when called with a reason code
-                    Closure skipStage = { reason ->
-                        steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
-                        Utils.markStageSkippedForConditional(args.name)
-                    }
-
-                    // If the stage is skippable
-                    if (stage.args.isSkipable) {
-                        // Check if the stage was skipped by the build parameter
-                        stage.isSkippedByParam = steps.params[getStageSkipOption(stage.name)]
-                    }
-
-                    _closureWrapper(stage) {
-                        // First check that setup was called first
-                        if (!(_setupCalled && _stages.firstStageToExecute.name.equals(_SETUP_STAGE_NAME))) {
-                            throw new StageException(
-                                "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
-                                args.name
-                            )
-                        } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
-                            skipStage("${steps.currentBuild.currentResult} does not meet required threshold ${args.resultThreshold.value}")
-                        } else if (stage.isSkippedByParam) {
-                            skipStage("Skipped by build parameter")
-                        } else if (!args.doesIgnoreSkipAll && _shouldSkipRemainingStages) {
-                            // If doesIgnoreSkipAll is true then this check is ignored, all others are not though
-                            skipStage("All remaining steps are skipped")
-                        } else if (args.shouldSkip()) {
-                            skipStage("Should skip function evaluated to true")
-                        }
-                        // Run the stage
-                        else {
-                            steps.echo "Executing stage ${args.name}"
-
-                            stage.wasExecuted = true
-                            if (args.isSkipable) {
-                                steps.echo "This step can be skipped by setting the `${getStageSkipOption(args.name)}` option to true"
-                            }
-
-                            def environment = []
-
-                            // Add items to the environment if needed
-                            if (args.environment) {
-                                args.environment.each { key, value -> environment.push("${key}=${value}") }
-                            }
-
-                            // Run the passed stage with the proper environment variables
-                            steps.withEnv(environment) {
-                                _closureWrapper(stage) {
-                                    args.stage()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // document later
-    // accept stage as a map to instantiate
-    public void createStage(Map arguments) {
-        // Parse arguments and initialize the stage
-        StageArgs args = new StageArgs(arguments)
-
-        // Call the overloaded method
-        createStage(args)
-    }
-
-    private void _closureWrapper(Stage stage, Closure closure) {
-        try {
-            closure()
-        } catch (e) {
-            _stages.firstFailingStage = stage
-
-            setResult(Result.FAILURE)
-            stage.exception = e
-
-            throw e
-        } finally {
-            stage.endOfStepBuildStatus = steps.currentBuild.currentResult
-
-            // Don't alert of the build status if the stage already has an exception
-            if (!stage.exception && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
-                // Add the exception of the bad build status
-                stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
-                _stages.firstFailingStage = stage
-            }
-        }
-    }
-
-    public void buildStage(Map arguments = [:]) {
-        // Force build to only happen on success, this cannot be overridden
-        arguments.resultThreshold = ResultEnum.SUCCESS
-
-        BuildArgs args = arguments
-
-        args.name = "Build: ${args.name}"
-        args.stage = {
-            if (_didBuild) {
-                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
-            }
-
-            // Either use a custom build script or the default npm run build
-            if (args.buildOperation) {
-                args.buildOperation()
-            } else {
-                steps.sh 'npm run build'
-            }
-
-            // @FUTURE In the deploy story, we should npm pack the build artifacts and archive that bundle instead for all builds.
-
-            steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
-            steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
-            steps.sh "rm -f ${BUILD_ARCHIVE_NAME}"
-
-            _didBuild = true
-        }
-
-        createStage(args)
-    }
-
-    public void testStage(Map arguments = [:]) {
+    /**
+     * Creates a stage that will execute tests on a NodeJS.
+     *
+     * Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link TestArgs} class.
+     *
+     * Test: {arguments.name}
+     * ---------------------------------------------------------------------------------------------
+     * Runs one of your application tests. If testOperation, the stage will execute `npm run test`
+     * as the default operation. If the test operation throws an error, that error is ignored and
+     * will be assumed to be caught in the junit processing. Some test functions may exit with a
+     * non-zero return code on a test failure but may still capture junit output. In this scenario,
+     * it is assumed that the junit report is either missing or contains failing tests. In the case
+     * that it is missing, the build will fail on this report and relevant exceptions are printed.
+     * If the junit report contains failing tests, the build will be marked as unstable and a report
+     * of failing tests can be viewed.
+     *
+     * The following reports can be captured:
+     *
+     * -----------------------------------
+     * Test Results HTML Report
+     * -----------------------------------
+     * This is an html report that contains the result of the build. The report must be defined to
+     * the method in the {@link TestArgs#testResults} variable.
+     *
+     * -----------------------------------
+     * Code Coverage HTML Report
+     * -----------------------------------
+     * This is an HTML report generated from code coverage output from your build. The report can
+     * be omitted by omitting {@link TestArgs#coverageResults}
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
+     * on {@link ResultEnum#SUCCESS}.
+     *
+     * After the buildOperation is complete, the stage will continue to archive the contents of the
+     * build into a tar file. The folder to archive is specified by arguments.output. In the future,
+     * this function will run the npm pack command and archive that tar file instead.
+     *
+     * This stage will throw a {@link BuildStageException} if called more than once in your pipeline.
+     * ---------------------------------------------------------------------------------------------
+     *
+     * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
+     *                  the stage.
+     */
+    void testStage(Map arguments = [:]) {
         // Default the resultThreshold to unstable for tests,
         // if a custom value is passed then that will be used instead
         if (!arguments.resultThreshold) {
@@ -556,23 +553,23 @@ expect {
 
             // Collect Test Results HTML Report
             steps.publishHTML(target: [
-                allowMissing         : false,
-                alwaysLinkToLastBuild: true,
-                keepAll              : true,
-                reportDir            : args.testResults.dir,
-                reportFiles          : args.testResults.files,
-                reportName           : args.testResults.name
+                    allowMissing         : false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll              : true,
+                    reportDir            : args.testResults.dir,
+                    reportFiles          : args.testResults.files,
+                    reportName           : args.testResults.name
             ])
 
             // Collect coverage if applicable
             if (args.coverageResults) {
                 steps.publishHTML(target: [
-                    allowMissing         : false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll              : true,
-                    reportDir            : args.coverageResults.dir,
-                    reportFiles          : args.coverageResults.files,
-                    reportName           : args.coverageResults.name
+                        allowMissing         : false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll              : true,
+                        reportDir            : args.coverageResults.dir,
+                        reportFiles          : args.coverageResults.files,
+                        reportName           : args.coverageResults.name
                 ])
             }
 
@@ -585,6 +582,28 @@ expect {
         }
 
         createStage(args)
+    }
+
+    private void _closureWrapper(Stage stage, Closure closure) {
+        try {
+            closure()
+        } catch (e) {
+            _stages.firstFailingStage = stage
+
+            setResult(Result.FAILURE)
+            stage.exception = e
+
+            throw e
+        } finally {
+            stage.endOfStepBuildStatus = steps.currentBuild.currentResult
+
+            // Don't alert of the build status if the stage already has an exception
+            if (!stage.exception && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
+                // Add the exception of the bad build status
+                stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
+                _stages.firstFailingStage = stage
+            }
+        }
     }
 
     private void _validateReportInfo(TestReport report, String reportName, String stageName) {
@@ -812,5 +831,78 @@ expect {
     // Shorthand for setting results
     public void setResult(Result result) {
         steps.currentBuild.result = result
+    }
+
+    /**
+     *
+     * @param registry
+     * @throws NodeJSRunnerException
+     */
+    private void _loginToRegistry(RegistryConfig registry) throws NodeJSRunnerException {
+        if (!registry.email) {
+            throw new NodeJSRunnerException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
+        }
+        if (!registry.credentialsId) {
+            throw new NodeJSRunnerException("Missing credentials for registry: ${registry.url ? registry.url : "default"}")
+        }
+
+        if (!registry.url) {
+            steps.echo "Attempting to login to the default registry"
+        } else {
+            steps.echo "Attempting to login to the ${registry.url} registry"
+        }
+
+        // Bad formatting but this is probably the cleanest way to do the expect script
+        def expectCommand = """/usr/bin/expect <<EOD
+set timeout 60
+#npm login command, add whatever command-line args are necessary
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
+match_max 100000
+
+expect "Username"
+send "\$EXPECT_USERNAME\\r"
+
+expect "Password"
+send "\$EXPECT_PASSWORD\\r"
+
+expect "Email"
+send "\$EXPECT_EMAIL\\r"
+
+expect {
+   timeout      exit 1
+   eof
+}
+"""
+        // Echo the command that was run
+        steps.echo expectCommand
+
+        steps.withCredentials([
+                steps.usernamePassword(
+                        credentialsId: registry.credentialsId,
+                        usernameVariable: 'EXPECT_USERNAME',
+                        passwordVariable: 'EXPECT_PASSWORD'
+                )
+        ]) {
+            steps.withEnv(["EXPECT_EMAIL=${registry.email}"]) {
+                steps.sh expectCommand
+            }
+        }
+    }
+
+    private void _logoutOfRegistry(RegistryConfig registry) {
+        if (!registry.url) {
+            steps.echo "Attempting to logout of the default registry"
+        } else {
+            steps.echo "Attempting to logout of the ${registry.url} registry"
+        }
+
+        try {
+            // If the logout fails, don't blow up. Coded this way because a failed
+            // logout doesn't mean we've failed. It also doesn't stop any other
+            // logouts that might need to be done.
+            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+        } catch (e) {
+            steps.echo "Failed logout but will continue"
+        }
     }
 }
