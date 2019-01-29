@@ -11,4 +11,5 @@ ant.groovydoc(
     link(packages:"org.apache.tools.ant.",         href:"http://docs.groovy-lang.org/docs/ant/api/")
     link(packages:"org.junit.,junit.framework.",   href:"http://junit.org/junit4/javadoc/latest/")
     link(packages:"org.codehaus.gmaven.",          href:"http://groovy.github.io/gmaven/apidocs/")
+    link(packages:"hudson.,jenkins.",              href:"https://javadoc.jenkins-ci.org/")
 }

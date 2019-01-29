@@ -6,11 +6,11 @@ package org.zowe.pipelines.nodejs.models
  */
 class BuildArgs extends StageArgs { //@TODO figure out why the groovydoc inheritance breaks.
     /**
-     * The build output directory, used to archive the contents of the build.
+     * Custom build operation function.
      *
-     * <p><b>Default:</b> {@code "./lib/"}</p>
+     * <p>Specifying a closure will overwrite the default build operation</p>
      */
-    String output = "./lib/"
+    Closure buildOperation
 
     /**
      * The name of the build step.
@@ -20,9 +20,9 @@ class BuildArgs extends StageArgs { //@TODO figure out why the groovydoc inherit
     String name = "Source"
 
     /**
-     * Custom build operation function.
+     * The build output directory, used to archive the contents of the build.
      *
-     * <p>Specifying a closure will overwrite the default build operation</p>
+     * <p><b>Default:</b> {@code "./lib/"}</p>
      */
-    Closure buildOperation
+    String output = "./lib/"
 }

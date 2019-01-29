@@ -526,7 +526,7 @@ class NodeJSRunner {
 
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-            if (result != 0) {
+            if (result == 0) {
                 steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
                 _shouldSkipRemainingStages = true
                 setResult(Result.NOT_BUILT)
@@ -721,8 +721,8 @@ class NodeJSRunner {
             // Collect cobertura coverage if specified
             if (args.cobertura) {
                 steps.cobertura(TestArgs.coberturaDefaults + args.cobertura)
-            } else {
-                steps.echo "Cobertura file not detected, skipping"
+            } else if (args.coverageResults) {
+                steps.echo "WARNING: Cobertura file not detected, skipping"
             }
         }
 
