@@ -851,8 +851,8 @@ expect {
     /**
      * Gets a test summary string.
      *
-     * This method was created using @NonCPS because some of the operations performed cannot be
-     * serialized. The @NonCPS annotation tells jenkins to not save the variable state of this
+     * This method was created using {@literal @NonCPS} because some of the operations performed cannot be
+     * serialized. The {@literal @NonCPS} annotation tells jenkins to not save the variable state of this
      * function on shutdown. Failure to run in this mode causes a java.io.NotSerializableException
      * in this method.
      *
