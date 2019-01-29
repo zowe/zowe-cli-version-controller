@@ -51,6 +51,8 @@ class StageArgs {
      *
      * <p>If the current build health is less than the value specified, the stage will be skipped.</p>
      *
+     * <p><b>Default:</b> {@link ResultEnum#SUCCESS}</p>
+     *
      * <p>For more information about the skip precedent, see
      * {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
      */

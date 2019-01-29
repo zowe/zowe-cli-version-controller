@@ -91,8 +91,9 @@ class NodeJSRunner {
     RegistryConfig publishConfig
 
     /**
-     * An array of registry connection information information for each registry. These
-     * logins will happen before the npm install in setup.
+     * An array of registry connection information information for each registry.
+     *
+     * <p>These login operations will happen before the npm install in setup.</p>
      */
     RegistryConfig[] registryConfig
 
@@ -488,6 +489,7 @@ class NodeJSRunner {
      * the stage will login to any registries specified in the {@link #registryConfig} array. On
      * exit, the step will try to logout of the registries specified in {@link #registryConfig}.
      *
+     * - If two default registries, a registry that omits a url, are specified, this stage will fail
      * - Failure to login to a registry or install dependencies will result in a failed build.
      * - Failure to logout of a registry will not fail the build.
      * ---------------------------------------------------------------------------------------------
@@ -524,7 +526,7 @@ class NodeJSRunner {
 
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-            if (result == 0) {
+            if (result != 0) {
                 steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
                 _shouldSkipRemainingStages = true
                 setResult(Result.NOT_BUILT)

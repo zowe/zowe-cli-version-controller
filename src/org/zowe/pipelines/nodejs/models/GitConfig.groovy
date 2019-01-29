@@ -1,10 +1,23 @@
 package org.zowe.pipelines.nodejs.models
+
 /**
- * Model of git config used to check out and commit
- * to the project
+ * Git configuration used to checkout the source.
  */
 class GitConfig {
+    /**
+     * The git username
+     *
+     * @todo extract this from the credentialsId
+     */
     String user
+
+    /**
+     * The git email
+     */
     String email
+
+    /**
+     * The credentials id in Jenkins
+     */
     String credentialsId
 }
