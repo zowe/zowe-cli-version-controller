@@ -2,13 +2,9 @@ def ant = new AntBuilder()
 ant.taskdef(name: "groovydoc", classname: "org.codehaus.groovy.ant.Groovydoc")
 ant.groovydoc(
         destdir      : "docs/groovydoc",
-        sourcepath   : "src/org",
-        packagenames : "**.*",
+        sourcepath   : "src",
+        packagenames : "org.zowe.*",
         use          : "true",
-//        windowtitle  : "${title}",
-//        doctitle     : "${title}",
-//        header       : "${title}",
-//        footer       : "${docFooter}",
         private      : "true") {
     link(packages:"java.,org.xml.,javax.,org.xml.",href:"http://docs.oracle.com/javase/8/docs/api/")
     link(packages:"groovy.,org.codehaus.groovy.",  href:"http://docs.groovy-lang.org/latest/html/api/")

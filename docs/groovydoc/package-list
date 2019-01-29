@@ -1,3 +1,3 @@
-zowe.pipelines.nodejs
-zowe.pipelines.nodejs.exceptions
-zowe.pipelines.nodejs.models
+org.zowe.pipelines.nodejs
+org.zowe.pipelines.nodejs.exceptions
+org.zowe.pipelines.nodejs.models

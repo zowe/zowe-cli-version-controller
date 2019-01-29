@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 // @TODO include that the image to run on is controlled by the outer pipeline
 class NodeJSRunner {
     /**
-     * The name of the library output archived from the {@link #buildStage()} method.
+     * The name of the library output archived from the {@link #buildStage(Map)} method.
      */
     static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
@@ -222,6 +222,8 @@ class NodeJSRunner {
      *
      * Stages are executed in the order that they are created. For more details on what arguments
      * can be sent into a stage, see the {@link StageArgs} class.
+     *
+     * @TODO document the skip stuff
      *
      * @param args The arguments that define the stage.
      */
