@@ -30,11 +30,20 @@ enum ResultEnum {
      */
     ABORTED("ABORTED");
 
-    ResultEnum(String v) {
+    /**
+     * Initialize an enum with a value.
+     * @param v The string value of the enum.
+     */
+    private ResultEnum(String v) {
         value = v
     }
     private String value
-    public String getValue() {
+
+    /**
+     * Get the value of the enum
+     * @return The value of the enum.
+     */
+    String getValue() {
         return value
     }
 }
