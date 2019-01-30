@@ -9,9 +9,74 @@ import org.zowe.pipelines.nodejs.exceptions.*
 import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import com.cloudbees.groovy.cps.NonCPS
 
-// @TODO still needs to be documented
-// @TODO include that the image to run on is controlled by the outer pipeline
+/**
+ * A stage executor for a NodeJS pipeline.
+ *
+ * <p>This class provides methods that allow you to build, test, and deploy your NodeJS application.</p>
+ *
+ * <h5>Basic Usage</h5>
+ * <pre>
+ * {@code
+ * @Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSRunner
+ *
+ * node('pipeline-node') {
+ *     // Create the runner and pass the methods available to the workflow script to the runner
+ *     NodeJSRunner nodejs = new NodeJSRunner(this)
+ *
+ *     // Set your config up before calling setup
+ *     nodejs.adminEmails = [
+ *         "email1@example.com",
+ *         "email2@example.com"
+ *     ]
+ *
+ *     nodejs.protectedBranches = [
+ *         master: 'daily'
+ *     ]
+ *
+ *     nodejs.gitConfig = [
+ *         user: 'robot-user',
+ *         email: 'robot-user@example.com',
+ *         credentialsId: 'robot-user'
+ *     ]
+ *
+ *     nodejs.publishConfig = [
+ *         email: nodejs.gitConfig.email,
+ *         credentialsId: 'robot-user'
+ *     ]
+ *
+ *     // MUST BE CALLED FIRST
+ *     nodejs.setup()
+ *
+ *     // Create custom stages for your build like this
+ *     nodejs.createStage(name: 'Some Stage", stage: {
+ *         echo "This is my stage"
+ *     })
+ *
+ *     // Run a build
+ *     nodejs.buildStage()
+ *
+ *     // Run a test
+ *     nodejs.testStage() // Provide required parameters in your pipeline.
+ *
+ *     // MUST BE CALLED LAST
+ *     nodejs.end()
+ * }
+ * </pre>
+ *
+ * <p>In the example above, the stages will run on a node labeled {@code 'pipeline-node'}. You must
+ * define the node where you pipeline will execute.</p>
+ *
+ * <p>Stages are not executed until the end stage. This means that the node that
+ * {@code nodejs.end()} executes on is where the entire pipeline will execute. You also can't rely
+ * that between the buildStage line and the testStage line that the build stage was successful.
+ * The stage functions and should skip functions are run in order with the stages. This is where
+ * any stage logic should go that is dependent on stage order of execution.
+ * </p>
+ *
+ * <p>
+ */
 class NodeJSRunner {
     /**
      * The name of the library output archived from the {@link #buildStage(Map)} method.
@@ -77,11 +142,13 @@ class NodeJSRunner {
     /**
      * A map of protected branches.
      *
-     * The keys in the map represent the name of a protected branch.
-     * The values represent the corresponding npm tag the branch is published to.
+     * <ul>
+     * <li>The keys in the map represent the name of a protected branch.</li>
+     * <li>The values represent the corresponding npm tag the branch is published to.</li>
+     * </ul>
      *
-     * Any branches that are specified as protected will also have concurrent builds disabled. This
-     * is to prevent issues with publishing.
+     * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
+     * is to prevent issues with publishing.</p>
      */
     Map protectedBranches = [master: 'latest']
 
@@ -134,7 +201,7 @@ class NodeJSRunner {
     /**
      * Reference to the groovy pipeline variable.
      *
-     * @see #NodeJSRunner()
+     * @see #NodeJSRunner(def)
      */
     def steps
 
@@ -151,11 +218,13 @@ class NodeJSRunner {
     /**
      * Constructs the class.
      *
-     * When invoking from a Jenkins pipeline script, the NodeJSRunner must be passed
-     * the current environment of the Jenkinsfile to have access to the steps.
+     * <p>When invoking from a Jenkins pipeline script, the NodeJSRunner must be passed
+     * the current environment of the Jenkinsfile to have access to the steps.</p>
      *
-     * <h3>Example Setup:</h3>
+     * <h5>Example Setup:</h5>
+     * <pre>
      * def nodejs = new NodeJSRunner(this)
+     * </pre>
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
@@ -164,23 +233,21 @@ class NodeJSRunner {
     /**
      * Creates a stage that will build a NodeJS package.
      *
-     * Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link BuildArgs} class.
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link BuildArgs} class.</p>
      *
-     * Build: {@link BuildArgs#name}
-     * ---------------------------------------------------------------------------------------------
-     * Runs the build of your application. If {@link BuildArgs#buildOperation} is not provided, the
-     * stage will default to executing `npm run build`.
+     * <h5>Build: {@link BuildArgs#name}</h5>
+     * <p>Runs the build of your application. If {@link BuildArgs#buildOperation} is not provided, the
+     * stage will default to executing `npm run build`.</p>
      *
-     * The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
-     * on {@link ResultEnum#SUCCESS}.
+     * <p>The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
+     * on {@link ResultEnum#SUCCESS}.</p>
      *
-     * After the buildOperation is complete, the stage will continue to archive the contents of the
+     * <p>After the buildOperation is complete, the stage will continue to archive the contents of the
      * build into a tar file. The folder to archive is specified by arguments.output. In the future,
-     * this function will run the npm pack command and archive that tar file instead.
+     * this function will run the npm pack command and archive that tar file instead.</p>
      *
-     * This stage will throw a {@link BuildStageException} if called more than once in your pipeline.
-     * ---------------------------------------------------------------------------------------------
+     * <p>This stage will throw a {@link BuildStageException} if called more than once in your pipeline.</p>
      *
      * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
      *                  the stage.
@@ -223,10 +290,25 @@ class NodeJSRunner {
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
-     * Stages are executed in the order that they are created. For more details on what arguments
-     * can be sent into a stage, see the {@link StageArgs} class.
+     * <p>Stages are executed in the order that they are created. For more details on what arguments
+     * can be sent into a stage, see the {@link StageArgs} class.</p>
      *
-     * @TODO document the skip stuff
+     * <p>Stages can also encounter various conditions that will cause them to skip. The following
+     * skip search order is used when determining if a stage should be skipped.</p>
+     *
+     * <ol>
+     * <li>If the {@link StageArgs#resultThreshold} value is greater than the current result, the
+     * stage will be skipped. There is no override for this operation.</li>
+     * <li>If the stage is skipable and the stage skip build option was passed, the stage will
+     * be skipped.</li>
+     * <li>If the remaining pipeline stages are to be skipped, then this stage will be skipped. This
+     * can be overridden if the stage has set {@link StageArgs#doesIgnoreSkipAll} to true.</li>
+     * <li>Finally, if the call to {@link StageArgs#shouldSkip} returns true, the stage will be
+     * skipped.</li>
+     * </ol>
+     *
+     * <p>If the stage is not skipped after executing the above checks, the stage will continue to
+     * its execute phase.</p>
      *
      * @param args The arguments that define the stage.
      */
@@ -324,50 +406,51 @@ class NodeJSRunner {
 
     // Npm logs will always be archived
     /**
-     * The end method MUST be the last method called as part of your pipeline. The end method is
+     * Call to inform the runner that no more stages are to be added and execution can begin.
+     *
+     * <p>The end method MUST be the last method called as part of your pipeline. The end method is
      * responsible for executing all the stages previously created after setting the required build
      * options and possible stage parameters. Failure to call this method will prevent your pipeline
-     * stages from executing.
+     * stages from executing.</p>
      *
-     * Prior to executing the stages, various build options are set. Some of these options include
+     * <p>Prior to executing the stages, various build options are set. Some of these options include
      * the build history and stage skip parameters. After this is done, the method will execute
-     * all of the created stages in the order they were defined.
+     * all of the created stages in the order they were defined.</p>
      *
-     * After stage execution, an email will be sent out to those that made the commit. If the build
+     * <p>After stage execution, an email will be sent out to those that made the commit. If the build
      * failed or returned to normal, all committers since the last successful build will also
      * receive the email. Finally if this build is on a protected branch, all emails listed in the
-     * {@link #adminEmails} list will also receive a status email.
+     * {@link #adminEmails} list will also receive a status email.</p>
      *
-     * The end method adds the following stage to the pipeline:
+     * <p>The end method adds the following stage to the pipeline:</p>
      *
-     * Log Archive:
-     * ---------------------------------------------------------------------------------------------
-     * This stage will attempt to archive any folders specified. The purpose is to capture any
+     * <h5>Log Archive</h5>
+     *
+     * <p>This stage will attempt to archive any folders specified. The purpose is to capture any
      * relevant logging information to help debug a pipeline build. The stage will execute as long
-     * as the current result is greater than or equal to {@link ResultEnum#FAILURE}
+     * as the current result is greater than or equal to {@link ResultEnum#FAILURE}</p>
      *
-     * Any folders specified in archiveFolders will be archived. If a folder is not available, the
+     * <p>Any folders specified in archiveFolders will be archived. If a folder is not available, the
      * archive will fail. In this scenario, the build will note the copy step as failed but will
      * not modify the current build result. This allows you to list directories to archive that only
      * appear under certain scenarios without the worry that they will affect the result of your
-     * build when missing.
+     * build when missing.</p>
      *
-     * The following locations are always archived:
+     * <p>The following locations are always archived:</p>
      *
-     * - /home/jenkins/.npm/_logs
-     *
-     * ---------------------------------------------------------------------------------------------
-     *
+     * <ul>
+     * <li>{@literal /home/jenkins/.npm/_logs}</li>
+     * </ul>
      *
      * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
      *                       build will ignore it and will not modify the current build result. See
      *                       the notes in the log for the reasoning. If a folder in this array
-     *                       starts with a `/`, the stage will copy the folder into a temp directory
+     *                       starts with a {@literal `/`}, the stage will copy the folder into a temp directory
      *                       inside the project (retaining the folder structure). This is due to
      *                       the fact that folders outside the workspace cannot be archived by
-     *                       Jenkins. The leading `/` should be used for any logs that you wish to
+     *                       Jenkins. The leading {@literal `/`} should be used for any logs that you wish to
      *                       capture that are outside the workspace. Also if the directory starts
-     *                       with a ../, the stage will abort access to that folder. This is because
+     *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
     void end(String[] archiveFolders = []) {
@@ -399,7 +482,7 @@ class NodeJSRunner {
                 }
             }
 
-            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/**/*.*"
+            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*" // The weird concat because groovydoc blew up here
         }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
 
         try {
@@ -461,40 +544,38 @@ class NodeJSRunner {
     /**
      * Creates the pipeline setup stages.
      *
-     * This method MUST be called before any other stages are created. If not called, your Jenkins
+     * <p>This method MUST be called before any other stages are created. If not called, your Jenkins
      * pipeline will fail. It is also recommended that any public properties of this class are set
-     * prior to calling setup.
+     * prior to calling setup.</p>
      *
-     * The setup method creates 4 stages in your Jenkins pipeline using the {@link #createStage(Map)}
-     * function.
+     * <o>The setup method creates 4 stages in your Jenkins pipeline using the {@link #createStage(Map)}
+     * function.</p>
      *
-     * Setup:
-     * ---------------------------------------------------------------------------------------------
-     * Used internally to indicate that the NodeJSRunner properly set the pipeline up.
-     * ---------------------------------------------------------------------------------------------
+     * <h5>Setup</h5>
      *
-     * Checkout:
-     * ---------------------------------------------------------------------------------------------
-     * Checks the git source out for the pipeline.
-     * ---------------------------------------------------------------------------------------------
+     * <p>Used internally to indicate that the NodeJSRunner properly set the pipeline up.</p>
      *
-     * Check for CI Skip:
-     * ---------------------------------------------------------------------------------------------
-     * Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
+     * <h5>Checkout</h5>
+     *
+     * <p>Checks the git source out for the pipeline.</p>
+     *
+     * <h5>Check for CI Skip</h5>
+     *
+     * <p>Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
      * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
-     * will also be skipped. The build will also be marked as not built in this scenario.
-     * ---------------------------------------------------------------------------------------------
+     * will also be skipped. The build will also be marked as not built in this scenario.</p>
      *
-     * Install Node Package Dependencies:
-     * ---------------------------------------------------------------------------------------------
-     * This step will install all your package dependencies via `npm install`. Prior to install
+     * <h5>Install Node Package Dependencies</h5>
+     *
+     * <p>This step will install all your package dependencies via `npm install`. Prior to install
      * the stage will login to any registries specified in the {@link #registryConfig} array. On
-     * exit, the step will try to logout of the registries specified in {@link #registryConfig}.
+     * exit, the step will try to logout of the registries specified in {@link #registryConfig}.</p>
      *
-     * - If two default registries, a registry that omits a url, are specified, this stage will fail
-     * - Failure to login to a registry or install dependencies will result in a failed build.
-     * - Failure to logout of a registry will not fail the build.
-     * ---------------------------------------------------------------------------------------------
+     * <ul>
+     * <li>If two default registries, a registry that omits a url, are specified, this stage will fail</li>
+     * <li>Failure to login to a registry or install dependencies will result in a failed build.</li>
+     * <li>Failure to logout of a registry will not fail the build.</li>
+     * </ul>
      */
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
@@ -573,75 +654,69 @@ class NodeJSRunner {
     }
 
     /**
-     * Creates a stage that will execute tests on a NodeJS.
+     * Creates a stage that will execute tests on your application.
      *
-     * Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link TestArgs} class.
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link TestArgs} class.</p>
      *
-     * Test: {@link TestArgs#name}
-     * ---------------------------------------------------------------------------------------------
-     * Runs one of your application tests. If {@link TestArgs#testOperation}, the stage will execute
+     * <h5>Test: {@link TestArgs#name}</h5>
+     *
+     * <p>Runs one of your application tests. If {@link TestArgs#testOperation}, the stage will execute
      * `npm run test` as the default operation. If the test operation throws an error, that error is
      * ignored and  will be assumed to be caught in the junit processing. Some test functions may
      * exit with a non-zero return code on a test failure but may still capture junit output. In
      * this scenario, it is assumed that the junit report is either missing or contains failing
      * tests. In the case that it is missing, the build will fail on this report and relevant
      * exceptions are printed. If the junit report contains failing tests, the build will be marked
-     * as unstable and a report of failing tests can be viewed.
+     * as unstable and a report of failing tests can be viewed.</p>
      *
-     * The following reports can be captured:
+     * <p>The following reports can be captured:</p>
      *
+     * <h6>Test Results HTML Report (REQUIRED)</h6>
      *
-     * Test Results HTML Report (REQUIRED)
-     * -----------------------------------
-     * This is an html report that contains the result of the build. The report must be defined to
-     * the method in the {@link TestArgs#testResults} variable.
-     * -----------------------------------
+     * <p>This is an html report that contains the result of the build. The report must be defined to
+     * the method in the {@link TestArgs#testResults} variable.</p>
      *
-     * Code Coverage HTML Report
-     * -----------------------------------
-     * This is an HTML report generated from code coverage output from your build. The report can
-     * be omitted by omitting {@link TestArgs#coverageResults}
-     * -----------------------------------
+     * <h6>Code Coverage HTML Report</h6>
      *
-     * JUnit report (REQUIRED)
-     * -----------------------------------
-     * This report feeds Jenkins the data about the current test run. It can be used to mark a build
-     * as failed or unstable. The report location must be present in {@link TestArgs#junitOutput}
-     * -----------------------------------
+     * <p>This is an HTML report generated from code coverage output from your build. The report can
+     * be omitted by omitting {@link TestArgs#coverageResults}</p>
      *
-     * Cobertura Report
-     * -----------------------------------
-     * This report feeds Jenkins the data about the coverage results for the current test run. If
+     * <h6>JUnit report (REQUIRED)</h6>
+     *
+     * <p>This report feeds Jenkins the data about the current test run. It can be used to mark a build
+     * as failed or unstable. The report location must be present in {@link TestArgs#junitOutput}</p>
+     *
+     * <h6>Cobertura Report</h6>
+     *
+     * <p>This report feeds Jenkins the data about the coverage results for the current test run. If
      * no Cobertura options are passed, then no coverage data will be collected. For more
-     * information, see {@link TestArgs#cobertura}
-     * -----------------------------------
+     * information, see {@link TestArgs#cobertura}</p>
      *
-     * The test stage will execute by default if the current build result is greater than or
+     * <p>The test stage will execute by default if the current build result is greater than or
      * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
-     * precedent.
+     * precedent.</p>
      *
-     * After the test is complete, the stage will continue to collect the JUnit Report and the Test
+     * <p>After the test is complete, the stage will continue to collect the JUnit Report and the Test
      * Results HTML Report. The stage will fail if either of those are missing. If specified, the
      * Code Coverage HTML Report and the Cobertura Report are then captured. The build will fail if
-     * these reports are to be collected and were missing.
+     * these reports are to be collected and were missing.</p>
      *
-     * Some tests may also require the use of the gnome-keyring. The stage can be configured to
-     * unlock the keyring prior to the tests by passing {@link TestArgs#shouldUnlockKeyring} as true
+     * <p>Some tests may also require the use of the gnome-keyring. The stage can be configured to
+     * unlock the keyring prior to the tests by passing {@link TestArgs#shouldUnlockKeyring} as true.</p>
      *
-     * Stage Exceptions
-     * -----------------------------------
+     * <h6>Stage Exceptions</h6>
      *
-     * The test stage can throw a {@link TestStageException} under any of the following
-     * circumstances:
+     * <p>The test stage can throw a {@link TestStageException} under any of the following
+     * circumstances:</p>
      *
-     * - A test stage was created before a call to {@link #buildStage(Map)}
-     * - {@link TestArgs#testResults} was missing
-     * - Invalid options specified for {@link TestArgs#testResults}
-     * - {@link TestArgs#coverageResults} was provided but had an invalid format
-     * - {@link TestArgs#junitOutput} is missing
-     *
-     * ---------------------------------------------------------------------------------------------
+     * <ul>
+     * <li>A test stage was created before a call to {@link #buildStage(Map)}</li>
+     * <li>{@link TestArgs#testResults} was missing</li>
+     * <li>Invalid options specified for {@link TestArgs#testResults}</li>
+     * <li>{@link TestArgs#coverageResults} was provided but had an invalid format</li>
+     * <li>{@link TestArgs#junitOutput} is missing.</li>
+     * </ul>
      *
      * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
      *                  the stage.
@@ -734,8 +809,8 @@ class NodeJSRunner {
     /**
      * Wraps a closure function in a try catch.
      *
-     * Used internally by {@link #createStage(StageArgs)} to handle errors thrown by timeouts and
-     * stage executions.
+     * <p>Used internally by {@link #createStage(StageArgs)} to handle errors thrown by timeouts and
+     * stage executions.</p>
      *
      * @param stage The stage that is currently executing
      * @param closure The closure function to execute
@@ -857,10 +932,10 @@ expect {
     /**
      * Gets a test summary string.
      *
-     * This method was created using {@literal @NonCPS} because some of the operations performed cannot be
+     * <p>This method was created using {@literal @NonCPS} because some of the operations performed cannot be
      * serialized. The {@literal @NonCPS} annotation tells jenkins to not save the variable state of this
      * function on shutdown. Failure to run in this mode causes a java.io.NotSerializableException
-     * in this method.
+     * in this method.</p>
      *
      * @return An HTML string of test results to add to the email.
      */
