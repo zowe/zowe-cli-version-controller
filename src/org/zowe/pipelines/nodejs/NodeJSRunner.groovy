@@ -59,10 +59,11 @@ class NodeJSRunner {
             'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
         ],
         UNSTABLE: [
-            'https://i.imgur.com/fV89ZD8.png'  /*not sure if*/
+            'https://i.imgur.com/fV89ZD8.png',  /*not sure if*/
+            'https://media.giphy.com/media/rmRUASq4WujsY/giphy.gif' /*f1 tires fly off*/
         ],
         FAILURE : [
-//            'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
+            'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
             'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
         ]
     ]
