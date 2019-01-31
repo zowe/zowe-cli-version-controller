@@ -1,7 +1,6 @@
-@Library("shared-pipelines")
-import org.zowe.pipelines.nodejs.NodeJSRunner
-
 node('ca-jenkins-agent') {
+    def NodeJSRunner = library("shared-pipelines@{$BRANCH_NAME}").org.zowe.pipelines.nodejs.NodeJSRunner
+    
     def nodejs = new NodeJSRunner(this)
 
     nodejs.adminEmails = [
