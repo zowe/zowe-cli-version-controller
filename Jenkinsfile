@@ -1,5 +1,7 @@
 node('ca-jenkins-agent') {
-    def lib = library("shared-pipelines@{$BRANCH_NAME}").org.zowe.pipelines.nodejs
+    def branch = CHANGE_BRANCH ? CHANGE_BRANCH : BRANCH_NAME
+    
+    def lib = library("shared-pipelines@$branch").org.zowe.pipelines.nodejs
     
     def nodejs = lib.NodeJSRunner.new(this)
 
