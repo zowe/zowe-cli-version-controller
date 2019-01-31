@@ -403,28 +403,28 @@ class Pipeline {
      *
      * <p>Checks the git source out for the pipeline.</p>
      */
-    void setup() {
+    public void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         // @FUTURE PART OF SUB CLASS
-        this._setupCalled = true
+        _setupCalled = true
 
-        this.createStage(name: Pipeline._SETUP_STAGE_NAME, stage: {
-            this.steps.echo "Setup was called first"
+        createStage(name: _SETUP_STAGE_NAME, stage: {
+            steps.echo "Setup was called first"
 
-            if (this._stages.firstFailingStage) {
-                if (this._stages.firstFailingStage.exception) {
-                    throw this._stages.firstFailingStage.exception
+            if (_stages.firstFailingStage) {
+                if (_stages.firstFailingStage.exception) {
+                    throw _stages.firstFailingStage.exception
                 } else {
-                    throw new StageException("Setup found a failing stage but there was no associated exception.", this._stages.firstFailingStage.name)
+                    throw new StageException("Setup found a failing stage but there was no associated exception.", _stages.firstFailingStage.name)
                 }
             } else {
-                this.steps.echo "No problems with preinitialization of pipeline :)"
+                steps.echo "No problems with preinitialization of pipeline :)"
             }
         }, isSkipable: false, timeout: [time: 10, unit: 'SECONDS'])
 
-        this.createStage(name: 'Checkout', stage: {
-            this.steps.checkout this.steps.scm
+        createStage(name: 'Checkout', stage: {
+            steps.checkout steps.scm
         }, isSkipable: false, timeout: [time: 1, unit: 'MINUTES'])
     }
 

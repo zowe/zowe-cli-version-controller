@@ -257,7 +257,7 @@ class GenericPipeline extends Pipeline {
      * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
      * will also be skipped. The build will also be marked as not built in this scenario.</p>
      */
-    void setup() {
+    public void setup() {
         // Call setup from the super class
         super.setup()
 
