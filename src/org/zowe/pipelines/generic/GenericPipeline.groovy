@@ -261,7 +261,7 @@ class GenericPipeline extends Pipeline {
         // Call setup from the super class
         super.setup()
 
-        createStage(name: 'Check for CI Skip', stage: {
+        this.createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
