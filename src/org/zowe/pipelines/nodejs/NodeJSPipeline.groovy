@@ -134,17 +134,17 @@ class NodeJSPipeline extends GenericPipeline{
             if (passedOperation) {
                 passedOperation()
             } else {
-                steps.sh 'npm run build'
+                this.steps.sh 'npm run build'
             }
 
-            steps.sh "npm pack"
+            this.steps.sh "npm pack"
             // determine the file name of the produced .tgz file
-            def buildArchiveName = steps.sh (
+            def buildArchiveName = this.steps.sh (
                     script: 'ls *.tgz',
                     returnStdout: true
             )
-            steps.archiveArtifacts "${buildArchiveName}"
-            steps.sh "rm -f ${buildArchiveName}"
+            this.steps.archiveArtifacts "${buildArchiveName}"
+            this.steps.sh "rm -f ${buildArchiveName}"
         }
 
         super.buildStage(arguments)
