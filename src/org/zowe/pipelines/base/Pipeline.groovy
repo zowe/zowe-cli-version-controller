@@ -403,7 +403,7 @@ class Pipeline {
      *
      * <p>Checks the git source out for the pipeline.</p>
      */
-    public void setup() {
+    void setupB() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         // @FUTURE PART OF SUB CLASS

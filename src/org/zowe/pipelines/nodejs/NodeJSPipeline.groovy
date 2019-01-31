@@ -197,10 +197,10 @@ class NodeJSPipeline extends GenericPipeline {
      * <li>Failure to logout of a registry will not fail the build.</li>
      * </ul>
      */
-    public void setup() {
+    void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
-        super.setup()
+        setupG()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             try {
