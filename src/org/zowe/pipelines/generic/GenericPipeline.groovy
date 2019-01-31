@@ -259,7 +259,7 @@ class GenericPipeline extends Pipeline {
      */
     void setup() {
         // Call setup from the super class
-//        super.setup()
+        super.setup()
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where

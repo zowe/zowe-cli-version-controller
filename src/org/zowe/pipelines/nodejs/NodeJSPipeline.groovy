@@ -134,20 +134,20 @@ class NodeJSPipeline extends GenericPipeline{
             if (passedOperation) {
                 passedOperation()
             } else {
-                this.steps.sh 'npm run build'
+                steps.sh 'npm run build'
             }
 
-            this.steps.sh "npm pack"
+            steps.sh "npm pack"
             // determine the file name of the produced .tgz file
-            def buildArchiveName = this.steps.sh (
+            def buildArchiveName = steps.sh (
                     script: 'ls *.tgz',
                     returnStdout: true
             )
-            this.steps.archiveArtifacts "${buildArchiveName}"
-            this.steps.sh "rm -f ${buildArchiveName}"
+            steps.archiveArtifacts "${buildArchiveName}"
+            steps.sh "rm -f ${buildArchiveName}"
         }
 
-//        super.buildStage(arguments)
+        super.buildStage(arguments)
     }
 
     // Npm logs will always be archived
@@ -314,7 +314,7 @@ class NodeJSPipeline extends GenericPipeline{
             }
         }
 
-//        super.testStage(arguments)
+        super.testStage(arguments)
     }
 
     /**
