@@ -1,4 +1,6 @@
-package org.zowe.pipelines.nodejs.models
+package org.zowe.pipelines.generic.models
+
+import org.zowe.pipelines.base.models.StageArgs
 
 /**
  * Represents the arguments available to the

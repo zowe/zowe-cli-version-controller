@@ -64,6 +64,7 @@ class Pipeline {
      * is to prevent issues with publishing.</p>
      */
     Map protectedBranches = [master: 'latest'] // @TODO need to remove npm tag reference from base pipeline do with subclassing of the type
+    // @TODO getter and setter would be necessary
 
     /**
      * Tracks if the current branch is protected.
@@ -374,8 +375,8 @@ class Pipeline {
      * Set the build result
      * @param result The new result for the build.
      */
-    final void setResult(Result result) {
-        steps.currentBuild.result = result
+    final void setResult(ResultEnum result) {
+        steps.currentBuild.result = result.value
     }
 
     // @FUTURE a super class could define this method for setup and checkout and the nodejs
@@ -468,6 +469,8 @@ class Pipeline {
         return "Skip Stage: ${stage.name}"
     }
 
+
+    // @TODO move email off to a separate class
     // NonCPS informs jenkins to not save variable state that would resolve in a
     // java.io.NotSerializableException on the TestResults class
     /**

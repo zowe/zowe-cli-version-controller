@@ -1,4 +1,4 @@
-package org.zowe.pipelines.nodejs.models
+package org.zowe.pipelines.generic.models
 
 /**
  * Test report archive information.

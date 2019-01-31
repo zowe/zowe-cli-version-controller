@@ -1,4 +1,4 @@
-package org.zowe.pipelines.nodejs.exceptions
+package org.zowe.pipelines.generic.exceptions
 
 import org.zowe.pipelines.base.exceptions.StageException
 
