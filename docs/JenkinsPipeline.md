@@ -29,7 +29,7 @@ Jenkins will also need to know when there is a code change so it can trigger the
 
 ## Variables
 
-This sections describes the special variables contained in most Jenkinsfiles on our repositories. Some variables will have a start (**`*`**) next to them indicating it should be parameterized.
+This section describes the special variables contained in most Jenkinsfiles on our repositories. Some variables will have a star (**`*`**) next to them indicating it should be parameterized.
 
 * **MASTER_BRANCH`*`**: Contains the branch name that should be treated as the "master" branch of the entire source. This variable could be changed to a development branch in case someone wanted to test specific tasks that Jenkins performs only when it builds the real `master` branch.
 
@@ -43,7 +43,7 @@ This sections describes the special variables contained in most Jenkinsfiles on 
 
   * **SYSTEM_RESULTS**
 
-* **Pipeline Control variables`*`:** The purpose of this set of variables is to manage whether or not the specified step should run. There are two ways of specifying these variables, either one by one with their specific name and value or with special Linux-like options (similar to the [*tar* command](http://man7.org/linux/man-pages/man1/tar.1.html)) passed to a variable called `PIPELINE_CONTROL`. Each variable below has a **generic representation** which is the value used required to be passed in to `PIPELINE_CONTROL`.
+* **Pipeline Control variables`*`:** The purpose of this set of variables is to manage whether or not the specified step should run. There are two ways of specifying these variables, either one by one with their specific name and value or with special Linux-like options (similar to the [*tar* command](http://man7.org/linux/man-pages/man1/tar.1.html)) passed to a variable called `PIPELINE_CONTROL`. Each variable below has a **generic representation** which is the value required to be passed in to `PIPELINE_CONTROL`.
 
   * **PIPELINE_CONTROL_CI_SKIP`*`** 
     * Default: **true**
@@ -98,15 +98,15 @@ This sections describes the special variables contained in most Jenkinsfiles on 
 
 ## Environment Setup
 
-This section cover the basic aspects of how the pipeline environment should be structured. First and foremost, Almost all variables should be parameterized to allow flexibility on each step for all pipelines using this scheme and all default should be provided by the pipelines themselves.
+This section cover the basic aspects of how the pipeline environment should be structured. First and foremost, almost all variables should be parameterized to allow flexibility on each step for all pipelines using this scheme and all defaults should be provided by the pipelines themselves.
 
-Since memory could become an issue given that we plan to release beta version frequently, we want to limit the number of builds kept in memory for the release branches as well as any other branch on a given repository. For release branches, e.g. `master`, `beta`, `latest`, we will keep only twenty (20) builds and will disable concurrent builds to avoid any issues and complications that can arise because of this. For regular branches, such as fixes or enhancements/features, we will keep only five (5) builds and concurrent builds should be allowed to provide a smooth developing experience in terms of Continuous Integration (CI).
+Since memory could become an issue given that we plan to release the beta version frequently, we want to limit the number of builds kept in memory for the release branches as well as any other branch on a given repository. For release branches, e.g. `master`, `beta`, `latest`, we will keep only twenty (20) builds and will disable concurrent builds to avoid any issues and complications that can arise because of this. For regular branches, such as fixes or enhancements/features, we will keep only five (5) builds and concurrent builds should be allowed to provide a smooth developing experience in terms of Continuous Integration (CI).
 
-Also, we will implement a containerization system based on Docker. This allows pipelines to run in a controlled environments and possibly perform destructive operations without harming the host machine.
+Also, we will implement a containerization system based on Docker. This allows pipelines to run in controlled environments and possibly perform destructive operations without harming the host machine.
 
 ## Protected Branches
 
-This section explains in details the purpose of each branch and their corresponding build strategy. The following branches are considered protected as only administrators and robots can and will have the authority to push changes directly to them in order to guarantee a successful Continuous Integration / Continuous Delivery (CI/CD) cycle. Please refer to the [tag names](https://github.com/zowe/zowe-cli/blob/master/docs/MaintainerVersioning.md#npm-tag-names) for more information about the specific NPM tags that will be mentioned in this section. Please note that the release number `[3(major).5(minor).1(patch)]` used in the example are just for illustration purposes.
+This section explains in details the purpose of each branch and their corresponding build strategy. The following branches are considered protected as only administrators and robots can and will have the authority to push changes directly to them in order to guarantee a successful Continuous Integration / Continuous Delivery (CI/CD) cycle. Please refer to the [tag names](https://github.com/zowe/zowe-cli/blob/master/docs/MaintainerVersioning.md#npm-tag-names) for more information about the specific NPM tags that will be mentioned in this section.
 
 ### master
 
@@ -126,25 +126,25 @@ The purpose of the Long Term Support (LTS) branches is to provide a more stable 
 
 #### lts-incremental
 
-The `lts-incremental` branch is where **only** non-breaking backward-compatible enhancements and bug fixes are allowed. This provides users with the ability to receive new functionality while maintaining a version that guarantees zero negative effects on what they previously had. For example, the version could be `3.5.1` which corresponds to the NPM tag `lts-incremental` and should only increment the `minor` and `patch` level.
+The `lts-incremental` branch is where **only** non-breaking backward-compatible enhancements and bug fixes are allowed. This provides users with the ability to receive new functionality while maintaining a version that guarantees zero negative effects on what they previously had. For example, the version could `3.5.1`  which corresponds to the NPM tag `lts-incremental-v3` and should only increment the `minor` and `patch` level.
 
-The build is triggered any time code gets merged into the branch and since it's a protected branch, we enforce the rule that only approved PRs can add changes. When a PR is opened, the major version of the package are compared the most recent `@lts-incremental` release and fail the PR if the major version has changed. This will ensure that the major version never increases, thus ensuring no breaking changes are introduced into the branch. The PR will also fail when the version specified has already been published.
+The build is triggered any time code gets merged into the branch and since it's a protected branch, we enforce the rule that only approved PRs can add changes. When a PR is opened, the major version of the package are compared against `<major>` in the most recent `@lts-incremental-v<major>` NPM tag and fail the PR if the major version has changed. This will ensure that the major version never increases, thus ensuring no breaking changes are introduced into the branch. The PR will also fail when the version specified has already been published.
 
 #### lts-stable
 
-The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a no-changing version that guarantees that no new features are applied but only patches. For example, the version could be `3.5.1` which corresponds to the NPM tag `lts-stable` and should only increment the `patch` level.
+The `lts-stable` branch is where **only** bug fixes are allowed. This provides users with a non-changing version that guarantees that no new features are applied but only patches. For example, the version `3.5.1` corresponds to the NPM tag `lts-stable-v3.5` and should only increment the `patch` level.
 
-Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minor versions of the package are compared against the most recent `@lts-stable` release and fail the PR if the major or minor versions have changed. This will ensure that the major and minor version never increase, thus ensuring no features are introduced into the branch.
+Similar to `lts-incremental`, the build is triggered any time changes are merged into the branch. This branch also enforces approved PRs as the only way to make changes. When a PR is opened, the major and minor versions of the package are compared against `<major>` and `<minor>` in the most recent `@lts-stable-v<major>.<minor>` NPM tag and fail the PR if the major or minor versions have changed. This will ensure that the major or minor version never increase, thus ensuring no features are introduced into the branch.
 
 Since this branch only accepts bug fixes (or patch increments), PRs will also fail if the patch version is changed manually. The version will automatically bump after a successful build.
 
 ## Tag Migration
 
-This section covers how the tags corresponding to each protected branch get moved into the next level of delivery. There will be an email mechanism that will notify and ask users for action on what version number to publish. The email may contain various options as described in the `beta` branch section. After the user replies or clicks a link/button, the controller receives the action and the CD process begins.
+This section covers how the tags corresponding to each protected branch gets moved into the next level of delivery. There will be an email mechanism that will notify and ask users for action on what version number to publish. The email may contain various options as described in the `beta` branch section. After the user replies or clicks a link/button, the controller receives the action and the CD process begins.
 
 First, we take the most current snapshot contained on the `beta` branch (which is tagged `@beta`) and move the code to the `latest` branch, which then triggers a build generating a new `latest` release (also known as CE). Then we move the most current snapshot of `master` and move it to `beta`, triggering the beta deployment as well.
 
-In terms of LTS branches, the tag migration works a little different given that the release cycle is at Product Management discretion and they decide when the next incremental or stable version will be available. There will be a build button in the jenkins machine to facilitate the release effort once the decision is made. The build process executes the following steps:
+In terms of LTS branches, the tag migration works a little different given that the release cycle is at Product Management discretion and they decide when should the next incremental or stable version be available. There will be a build button in the jenkins machine to facilitate the release effort once the decision is made. The build process executes the following steps:
   1. Rename the `lts-stable` branch to `lts-stable-v<major>.<minor>.<patch>` in case we need to go back to that specific stable release. It can be deleted later if needed.
   2. Rename the `lts-incremental` branch to `lts-stable`. This will trigger CI/CD on the lts-stable branch. The CD build will be skipped if the version already exists.
   3. Move the `@lts-stable` NPM tag to `@lts-incremental` tag version. This is needed because the version that `@lts-incremental` is pointing to, has already been published to the registry and cannot be republished.
@@ -167,7 +167,7 @@ TODO: This section will be modified as we work on [issue 139 of Zowe CLI](https:
   - This allows the template steps to call well-structured scripts on the project.
 
 - Handle Zowe CLI/imperative builds
-  - Zowe requires npm tag `@<imperative-git-branch-name>` so builds of the protected branches should always install and save to the package json this version.
+  - Zowe requires npm tag `@<imperative-git-branch-name>` so builds of the protected branches should always install and save to the package json of this version.
   - We need to do npm install then npm install imperative@tag --save and commit that before publishing when in protected branches.
   - This implies that the biweekly builds have knowledge about both builds and first builds imperative then Zowe CLI.
   
