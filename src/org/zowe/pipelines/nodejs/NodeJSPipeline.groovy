@@ -1,5 +1,6 @@
 package org.zowe.pipelines.nodejs
 
+import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
@@ -130,7 +131,7 @@ class NodeJSPipeline extends GenericPipeline{
 
         arguments.buildOperation = {
             // Either use a custom build script or the default npm run build
-            if (passedOperation.buildOperation) {
+            if (passedOperation) {
                 passedOperation()
             } else {
                 steps.sh 'npm run build'
