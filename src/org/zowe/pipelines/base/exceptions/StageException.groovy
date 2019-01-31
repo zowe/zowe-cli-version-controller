@@ -1,9 +1,9 @@
-package org.zowe.pipelines.nodejs.exceptions
+package org.zowe.pipelines.base.exceptions
 
 /**
  * A generic exception that can be thrown during any stage of your Jenkins pipeline.
  */
-class StageException extends NodeJSRunnerException {
+class StageException extends PipelineException {
     /**
      * The stage where the exception was thrown.
      */

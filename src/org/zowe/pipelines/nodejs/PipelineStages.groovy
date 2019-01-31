@@ -1,7 +1,7 @@
 package org.zowe.pipelines.nodejs
 
+import org.zowe.pipelines.base.exceptions.StageException
 import org.zowe.pipelines.base.models.Stage
-import org.zowe.pipelines.nodejs.exceptions.*
 
 /**
  * Create the various stages of a pipeline.
@@ -10,7 +10,7 @@ import org.zowe.pipelines.nodejs.exceptions.*
  *
  * <pre>
  * {@code
- *     PipelineStages stages = new PipelineStages()
+ *     Stages stages = new Stages()
  *
  *     // Add some stages
  *     // Your stages should be filled out, just using the map stage constructor
@@ -63,14 +63,14 @@ class PipelineStages {
      * Multiple calls to the add method can be done in a single run.
      *
      * <pre>
-     *     PipelineStages stages = new PipelineStages()
+     *     Stages stages = new Stages()
      *     stages.add(name: "Stage 1").add(name: "Stage 2")
      * </pre>
      *
      * @param stage The stage to add to the pipeline.
      * @return A reference to this class instance for method chaining.
      *
-     * @throws StageException when adding a stage that has the same name as another stage.
+     * @throws org.zowe.pipelines.base.exceptions.StageException when adding a stage that has the same name as another stage.
      */
     PipelineStages add(Stage stage) throws StageException {
 

@@ -1,5 +1,8 @@
 package org.zowe.pipelines.base
 
+import org.zowe.pipelines.base.models.*
+import org.zowe.pipelines.base.exceptions.*
+
 /**
  * Create the various stages of a pipeline.
  *
@@ -7,7 +10,7 @@ package org.zowe.pipelines.base
  *
  * <pre>
  * {@code
- *     PipelineStages stages = new PipelineStages()
+ *     Stages stages = new Stages()
  *
  *     // Add some stages
  *     // Your stages should be filled out, just using the map stage constructor
@@ -23,7 +26,7 @@ package org.zowe.pipelines.base
  * }
  * </pre>
  */
-class PipelineStages {
+final class Stages {
     /**
      * The first failing stage if there is one.
      */
@@ -60,7 +63,7 @@ class PipelineStages {
      * Multiple calls to the add method can be done in a single run.
      *
      * <pre>
-     *     PipelineStages stages = new PipelineStages()
+     *     Stages stages = new Stages()
      *     stages.add(name: "Stage 1").add(name: "Stage 2")
      * </pre>
      *
@@ -69,7 +72,7 @@ class PipelineStages {
      *
      * @throws StageException when adding a stage that has the same name as another stage.
      */
-    PipelineStages add(Stage stage) throws StageException {
+    Stages add(Stage stage) throws StageException {
 
         // First validate if the stage name doesn't exist
         if (_stages.containsKey(stage.name)) {

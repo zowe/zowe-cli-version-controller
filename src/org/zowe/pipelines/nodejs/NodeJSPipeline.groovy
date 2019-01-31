@@ -1,5 +1,6 @@
 package org.zowe.pipelines.nodejs
 
+import org.zowe.pipelines.base.exceptions.StageException
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 
