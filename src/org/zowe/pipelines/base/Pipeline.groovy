@@ -150,7 +150,7 @@ class Pipeline {
      * @param args The arguments that define the stage.
      */
     final void createStage(StageArgs args) {
-        Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
+        Stage stage = new Stage(args: args, name: args.name, order: this._stages.size() + 1)
 
         _stages.add(stage)
 
