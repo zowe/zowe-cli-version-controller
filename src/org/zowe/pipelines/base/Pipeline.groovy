@@ -407,7 +407,7 @@ class Pipeline {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         // @FUTURE PART OF SUB CLASS
-        _setupCalled = true
+        this._setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
