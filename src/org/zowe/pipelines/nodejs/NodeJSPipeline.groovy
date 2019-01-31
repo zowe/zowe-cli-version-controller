@@ -1,5 +1,8 @@
 package org.zowe.pipelines.nodejs
 
+import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.Stage
+
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
@@ -12,18 +15,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
 
 /**
- * A stage executor for a NodeJS pipeline.
+ * A stage executor for a NodeJSPipeline pipeline.
  *
- * <p>This class provides methods that allow you to build, test, and deploy your NodeJS application.</p>
+ * <p>This class provides methods that allow you to build, test, and deploy your NodeJSPipeline application.</p>
  *
  * <h5>Basic Usage</h5>
  * <pre>
  * {@code
- * @Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSRunner
+ * @Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline
  *
  * node('pipeline-node') {
  *     // Create the runner and pass the methods available to the workflow script to the runner
- *     NodeJSRunner nodejs = new NodeJSRunner(this)
+ *     NodeJSPipeline nodejs = new NodeJSPipeline(this)
  *
  *     // Set your config up before calling setup
  *     nodejs.adminEmails = [
@@ -77,7 +80,7 @@ import com.cloudbees.groovy.cps.NonCPS
  *
  * <p>
  */
-class NodeJSRunner {
+class NodeJSPipeline {
     /**
      * The name of the library output archived from the {@link #buildStage(Map)} method.
      */
@@ -218,20 +221,20 @@ class NodeJSRunner {
     /**
      * Constructs the class.
      *
-     * <p>When invoking from a Jenkins pipeline script, the NodeJSRunner must be passed
+     * <p>When invoking from a Jenkins pipeline script, the NodeJSPipeline must be passed
      * the current environment of the Jenkinsfile to have access to the steps.</p>
      *
      * <h5>Example Setup:</h5>
      * <pre>
-     * def nodejs = new NodeJSRunner(this)
+     * def nodejs = new NodeJSPipeline(this)
      * </pre>
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
-    NodeJSRunner(steps) { this.steps = steps }
+    NodeJSPipeline(steps) { this.steps = steps }
 
     /**
-     * Creates a stage that will build a NodeJS package.
+     * Creates a stage that will build a NodeJSPipeline package.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
      * to this function will map to the {@link BuildArgs} class.</p>
@@ -241,7 +244,7 @@ class NodeJSRunner {
      * stage will default to executing `npm run build`.</p>
      *
      * <p>The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
-     * on {@link ResultEnum#SUCCESS}.</p>
+     * on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
      *
      * <p>After the buildOperation is complete, the stage will continue to archive the contents of the
      * build into a tar file. The folder to archive is specified by arguments.output. In the future,
@@ -347,7 +350,7 @@ class NodeJSRunner {
                         // First check that setup was called first
                         if (!(_setupCalled && _stages.firstStageToExecute.name.equals(_SETUP_STAGE_NAME))) {
                             throw new StageException(
-                                    "Pipeline setup not complete, please execute setup() on the instantiated NodeJS class",
+                                    "Pipeline setup not complete, please execute setup() on the instantiated NodeJSPipeline class",
                                     args.name
                             )
                         } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
@@ -553,7 +556,7 @@ class NodeJSRunner {
      *
      * <h5>Setup</h5>
      *
-     * <p>Used internally to indicate that the NodeJSRunner properly set the pipeline up.</p>
+     * <p>Used internally to indicate that the NodeJSPipeline properly set the pipeline up.</p>
      *
      * <h5>Checkout</h5>
      *

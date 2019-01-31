@@ -2,7 +2,7 @@ package org.zowe.pipelines.nodejs.exceptions
 
 /**
  * A generic exception that is thrown from within the
- * {@link org.zowe.pipelines.nodejs.NodeJSRunner#buildStage(java.util.Map)} method.
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#buildStage(java.util.Map)} method.
  */
 class BuildStageException extends StageException {
     /**

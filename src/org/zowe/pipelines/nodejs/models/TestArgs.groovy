@@ -2,7 +2,7 @@ package org.zowe.pipelines.nodejs.models
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.nodejs.NodeJSRunner#testStage(java.util.Map)} method.
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#testStage(java.util.Map)} method.
  */
 class TestArgs extends StageArgs {
     /**

@@ -1,7 +1,4 @@
-package org.zowe.pipelines.nodejs
-
-import org.zowe.pipelines.base.models.Stage
-import org.zowe.pipelines.nodejs.exceptions.*
+package org.zowe.pipelines.base
 
 /**
  * Create the various stages of a pipeline.

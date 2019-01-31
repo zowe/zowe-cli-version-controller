@@ -1,4 +1,4 @@
-package org.zowe.pipelines.nodejs.models
+package org.zowe.pipelines.base.models
 
 /**
  * Enumeration of the various build statuses accepted by Jenkins

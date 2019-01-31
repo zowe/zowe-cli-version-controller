@@ -1,8 +1,8 @@
-package org.zowe.pipelines.nodejs.models
+package org.zowe.pipelines.base.models
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
  * method.
  */
 class StageArgs {
@@ -54,7 +54,7 @@ class StageArgs {
      * <p><b>Default:</b> {@link ResultEnum#SUCCESS}</p>
      *
      * <p>For more information about the skip precedent, see
-     * {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
+     * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
      */
     ResultEnum resultThreshold = ResultEnum.SUCCESS
 
@@ -66,7 +66,7 @@ class StageArgs {
      * be skipped.</p>
      *
      * <p>For more information about the skip precedent, see
-     * {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
+     * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
      */
     Closure shouldSkip = { -> false }
 

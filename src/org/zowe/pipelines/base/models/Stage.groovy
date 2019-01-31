@@ -1,11 +1,11 @@
-package org.zowe.pipelines.nodejs.models
+package org.zowe.pipelines.base.models
 
 /**
  * A stage that will be executed in the Jenkins pipeline.
  */
 class Stage {
     /**
-     * The arguments passed into the {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
+     * The arguments passed into the {@link org.zowe.pipelines.nodejs.NodeJSPipeline#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
      * method.
      */
     StageArgs args
@@ -58,7 +58,7 @@ class Stage {
     /**
      * Was the stage executed?
      *
-     * <p>This variable will become true when {@link org.zowe.pipelines.nodejs.NodeJSRunner#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
+     * <p>This variable will become true when {@link org.zowe.pipelines.nodejs.NodeJSPipeline#createStage(org.zowe.pipelines.nodejs.models.StageArgs)}
      * calls the {@link org.zowe.pipelines.nodejs.models.StageArgs#stage} operation.</p>
      *
      * <p><b>Default:</b> {@code false}</p>

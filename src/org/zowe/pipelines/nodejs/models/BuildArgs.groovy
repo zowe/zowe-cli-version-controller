@@ -2,7 +2,7 @@ package org.zowe.pipelines.nodejs.models
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.nodejs.NodeJSRunner#buildStage(java.util.Map)} method.
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#buildStage(java.util.Map)} method.
  */
 class BuildArgs extends StageArgs { //@TODO figure out why the groovydoc inheritance breaks.
     /**
