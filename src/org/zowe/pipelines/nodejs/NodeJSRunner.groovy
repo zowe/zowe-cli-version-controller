@@ -78,10 +78,6 @@ import com.cloudbees.groovy.cps.NonCPS
  * <p>
  */
 class NodeJSRunner {
-    /**
-     * The name of the library output archived from the {@link #buildStage(Map)} method.
-     */
-    static final String BUILD_ARCHIVE_NAME = "BuildArchive.tar.gz"
 
     /**
      * Text used for the CI SKIP commit.
@@ -271,11 +267,14 @@ class NodeJSRunner {
                 steps.sh 'npm run build'
             }
 
-            // @FUTURE In the deploy story, we should npm pack the build artifacts and archive that bundle instead for all builds.
-
-            steps.sh "tar -czvf ${BUILD_ARCHIVE_NAME} \"${args.output}\""
-            steps.archiveArtifacts "${BUILD_ARCHIVE_NAME}"
-            steps.sh "rm -f ${BUILD_ARCHIVE_NAME}"
+            steps.sh "npm pack"
+            // determine the file name of the produced .tgz file
+            def buildArchiveName = steps.sh (
+                    script: 'ls *.tgz',
+                    returnStdout: true
+            )
+            steps.archiveArtifacts "${buildArchiveName}"
+            steps.sh "rm -f ${buildArchiveName}"
 
             _didBuild = true
         }
