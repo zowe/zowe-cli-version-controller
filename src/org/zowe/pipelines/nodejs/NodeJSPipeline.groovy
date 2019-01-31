@@ -314,7 +314,7 @@ class NodeJSPipeline extends GenericPipeline{
             }
         }
 
-        super.testStage(arguments)
+//        super.testStage(arguments)
     }
 
     /**
