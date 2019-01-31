@@ -1,4 +1,4 @@
-@Library('shared-pipelines@zowe/zowe-cli/139_declarative-to-scripted')
+@Library("shared-pipelines@${BRANCH_NAME}")
 import org.zowe.pipelines.nodejs.NodeJSRunner
 
 node('ca-jenkins-agent') {
