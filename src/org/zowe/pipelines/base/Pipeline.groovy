@@ -85,7 +85,7 @@ class Pipeline {
      * The stages of the pipeline to execute. As stages are created, they are
      * added into this control class.
      */
-    private final Stages _stages = new Stages()
+    protected final Stages _stages = new Stages()
 
     /**
      * Reference to the groovy pipeline variable.
@@ -150,7 +150,7 @@ class Pipeline {
      * @param args The arguments that define the stage.
      */
     final void createStage(StageArgs args) {
-        Stage stage = new Stage(args: args, name: args.name, order: this._stages.size() + 1)
+        Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
         _stages.add(stage)
 
