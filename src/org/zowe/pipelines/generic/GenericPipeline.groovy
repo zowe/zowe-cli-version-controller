@@ -10,7 +10,7 @@ class GenericPipeline extends Pipeline {
     /**
      * Text used for the CI SKIP commit.
      */
-    static final String _CI_SKIP = "[ci skip]"
+    private static final String _CI_SKIP = "[ci skip]"
 
     /**
      * Shell command that gets the current git revision.
