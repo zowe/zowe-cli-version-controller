@@ -1,5 +1,11 @@
 node('ca-jenkins-agent') {
-    def branch = CHANGE_BRANCH ? CHANGE_BRANCH : BRANCH_NAME
+    def branch = ""
+    
+    try {
+        branch = CHANGE_BRANCH
+    } catch (MissingPropertyException e) {
+        branch = BRANCH_NAME
+    }
     
     def lib = library("shared-pipelines@$branch").org.zowe.pipelines.nodejs
     
