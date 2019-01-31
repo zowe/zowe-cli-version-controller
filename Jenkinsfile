@@ -1,4 +1,4 @@
-@Library("shared-pipelines@${BRANCH_NAME}")
+@Library("shared-pipelines")
 import org.zowe.pipelines.nodejs.NodeJSRunner
 
 node('ca-jenkins-agent') {
