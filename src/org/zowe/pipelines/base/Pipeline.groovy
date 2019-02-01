@@ -257,7 +257,7 @@ class Pipeline {
      * receive the email. Finally if this build is on a protected branch, all emails listed in the
      * {@link #adminEmails} list will also receive a status email.</p>
      */
-    final void end() {
+    final void endBasic() {
         try {
             // First setup the build properties
             def history = defaultBuildHistory
@@ -301,7 +301,7 @@ class Pipeline {
      * appear under certain scenarios without the worry that they will affect the result of your
      * build when missing.</p>
      *
-     * <p>After the log capture stage has been created, the end method will call the {@link #end()}
+     * <p>After the log capture stage has been created, the end method will call the {@link #endBasic()}
      * method to kick off stage execution.</p>
      *
      * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
@@ -315,7 +315,7 @@ class Pipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    void end(String[] archiveFolders) {
+    void endBasic(String[] archiveFolders) {
         if (archiveFolders.length > 0) {
             createStage(name: "Log Archive", stage: {
                 def archiveLocation = "postBuildArchive"
@@ -347,7 +347,7 @@ class Pipeline {
             }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
         }
 
-        end()
+        endBasic()
     }
 
     /**
@@ -402,7 +402,7 @@ class Pipeline {
      *
      * <p>Checks the git source out for the pipeline.</p>
      */
-    void setup() {
+    void setupBase() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         // @FUTURE PART OF SUB CLASS

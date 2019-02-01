@@ -147,7 +147,7 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "rm -f ${buildArchiveName}"
         }
 
-        super.buildStage(arguments)
+        super.buildStageGeneric(arguments)
     }
 
     // Npm logs will always be archived
@@ -173,9 +173,9 @@ class NodeJSPipeline extends GenericPipeline {
      */
     void end(String[] archiveFolders) {
         if (archiveFolders) {
-            super.end(["/home/jenkins/.npm/_logs"] + archiveFolders)
+            super.endBasic(["/home/jenkins/.npm/_logs"] + archiveFolders)
         } else {
-            super.end()
+            super.endBasic()
         }
     }
 
@@ -197,11 +197,10 @@ class NodeJSPipeline extends GenericPipeline {
      * <li>Failure to logout of a registry will not fail the build.</li>
      * </ul>
      */
-    @Override
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
-        super.setup()
+        super.setupGeneric()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             try {
@@ -315,7 +314,7 @@ class NodeJSPipeline extends GenericPipeline {
             }
         }
 
-        super.testStage(arguments)
+        super.testStageGeneric(arguments)
     }
 
     /**

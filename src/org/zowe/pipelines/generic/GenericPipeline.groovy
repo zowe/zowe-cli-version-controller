@@ -60,7 +60,7 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
      *                  the stage.
      */
-    void buildStage(Map arguments = [:]) {
+    void buildStageGeneric(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
@@ -146,7 +146,7 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.
      */
-    void testStage(Map arguments = [:]) {
+    void testStageGeneric(Map arguments = [:]) {
         // Default the resultThreshold to unstable for tests,
         // if a custom value is passed then that will be used instead
         if (!arguments.resultThreshold) {
@@ -257,10 +257,9 @@ class GenericPipeline extends Pipeline {
      * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
      * will also be skipped. The build will also be marked as not built in this scenario.</p>
      */
-    @Override
-    void setup() {
+    void setupGeneric() {
         // Call setup from the super class
-        super.setup()
+        super.setupBase()
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
