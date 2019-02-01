@@ -71,7 +71,7 @@ import org.zowe.pipelines.nodejs.exceptions.*
  *
  * <p>
  */
-class NodeJSPipeline extends GenericPipeline {
+class NodeJSPipeline extends GenericPipeline implements Serializable {
     // @FUTURE part of the deploy story
     /**
      * This is the connection information for the registry where code is published
