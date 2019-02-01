@@ -1,6 +1,5 @@
 package org.zowe.pipelines.generic
 
-import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
 
@@ -61,7 +60,6 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
      *                  the stage.
      */
-    @NonCPS
     void buildStage(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
@@ -148,7 +146,6 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.
      */
-    @NonCPS
     void testStage(Map arguments = [:]) {
         // Default the resultThreshold to unstable for tests,
         // if a custom value is passed then that will be used instead
@@ -260,7 +257,7 @@ class GenericPipeline extends Pipeline {
      * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
      * will also be skipped. The build will also be marked as not built in this scenario.</p>
      */
-    @NonCPS
+    @Override
     void setup() {
         // Call setup from the super class
         super.setup()

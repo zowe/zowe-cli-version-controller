@@ -6,7 +6,6 @@ import org.zowe.pipelines.base.exceptions.*
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
-import hudson.model.Result
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
@@ -258,7 +257,6 @@ class Pipeline {
      * receive the email. Finally if this build is on a protected branch, all emails listed in the
      * {@link #adminEmails} list will also receive a status email.</p>
      */
-    @NonCPS
     final void end() {
         try {
             // First setup the build properties
@@ -317,7 +315,6 @@ class Pipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    @NonCPS
     void end(String[] archiveFolders) {
         if (archiveFolders.length > 0) {
             createStage(name: "Log Archive", stage: {
@@ -405,7 +402,6 @@ class Pipeline {
      *
      * <p>Checks the git source out for the pipeline.</p>
      */
-    @NonCPS
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
@@ -556,7 +552,6 @@ class Pipeline {
     /**
      * Send an email notification about the result of the build to the appropriate users
      */
-    @NonCPS
     protected void _sendEmailNotification() {
         steps.echo "Sending email notification..."
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"

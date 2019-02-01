@@ -1,6 +1,5 @@
 package org.zowe.pipelines.nodejs
 
-import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.nodejs.models.*
@@ -124,7 +123,6 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.BuildArgs} used to define
      *                  the stage.
      */
-    @NonCPS
     void buildStage(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
@@ -173,7 +171,6 @@ class NodeJSPipeline extends GenericPipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    @NonCPS
     void end(String[] archiveFolders) {
         if (archiveFolders) {
             super.end(["/home/jenkins/.npm/_logs"] + archiveFolders)
@@ -200,7 +197,7 @@ class NodeJSPipeline extends GenericPipeline {
      * <li>Failure to logout of a registry will not fail the build.</li>
      * </ul>
      */
-    @NonCPS
+    @Override
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
@@ -311,7 +308,6 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.
      */
-    @NonCPS
     void testStage(Map arguments = [:]) {
         if (!arguments.testOperation) {
             arguments.testOperation = {
