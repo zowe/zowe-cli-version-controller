@@ -127,28 +127,23 @@ class NodeJSPipeline extends GenericPipeline {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        Closure passedOperation = arguments.buildOperation
-
-        arguments.buildOperation = {
+        buildStageGeneric(arguments + [buildOperation: {
             // Either use a custom build script or the default npm run build
-            if (passedOperation) {
-                passedOperation()
+            if (arguments.buildOperation) {
+                arguments.buildOperation()
             } else {
                 steps.sh 'npm run build'
             }
 
             steps.sh "npm pack"
             // determine the file name of the produced .tgz file
-            def buildArchiveName = steps.sh (
+            def buildArchiveName = steps.sh(
                     script: 'ls *.tgz',
                     returnStdout: true
             )
             steps.archiveArtifacts "${buildArchiveName}"
             steps.sh "rm -f ${buildArchiveName}"
-        }
-
-        super.buildStageGeneric(arguments)
-    }
+        }])
 
     // Npm logs will always be archived
     /**
