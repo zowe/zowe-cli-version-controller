@@ -172,13 +172,13 @@ class NodeJSPipeline extends GenericPipeline {
      *                       Jenkins cannot archive files outside the workspace.
      */
     void end(String[] archiveFolders) {
-        def archive = ["/home/jenkins/.npm/_logs"]
+        String[] archive = ["/home/jenkins/.npm/_logs"]
 
         if (archiveFolders) {
             archive = archive + archiveFolders
         }
 
-        super.endBasic(archive)
+        endBasic(archive)
     }
 
 
