@@ -556,6 +556,7 @@ class Pipeline {
     /**
      * Send an email notification about the result of the build to the appropriate users
      */
+    @NonCPS
     protected void _sendEmailNotification() {
         steps.echo "Sending email notification..."
         def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
