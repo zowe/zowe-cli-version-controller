@@ -486,7 +486,8 @@ class Pipeline {
      *
      * @return An HTML string of test results to add to the email.
      */
-    private String _getTestSummary() {
+    @NonCPS
+    protected final String _getTestSummary() {
         def testResultAction = steps.currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
         def text = "<h3>Test Results</h3>"
 
