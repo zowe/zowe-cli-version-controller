@@ -10,12 +10,12 @@ class GenericPipeline extends Pipeline {
     /**
      * Text used for the CI SKIP commit.
      */
-    private static final String _CI_SKIP = "[ci skip]"
+    protected static final String _CI_SKIP = "[ci skip]"
 
     /**
      * Shell command that gets the current git revision.
      */
-    private static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
+    protected static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
 
     // @FUTURE Only relevant for CD story
     /**
@@ -27,12 +27,12 @@ class GenericPipeline extends Pipeline {
      * The git commit revision of the build. This is determined at the beginning of
      * the build.
      */
-    private String _buildRevision
+    protected String _buildRevision
 
     /**
      * A boolean that tracks if the build step was run. When false, the build still hasn't completed
      */
-    private boolean _didBuild = false
+    protected boolean _didBuild = false
 
     GenericPipeline(steps) {
         super(steps)
@@ -236,7 +236,7 @@ class GenericPipeline extends Pipeline {
      *
      * @throws TestStageException when any of the report properties are invalid.
      */
-    private static void _validateReportInfo(TestReport report, String reportName, String stageName) {
+    protected static void _validateReportInfo(TestReport report, String reportName, String stageName) {
         if (!report.dir) {
             throw new TestStageException("${reportName} is missing property `dir`", stageName)
         }

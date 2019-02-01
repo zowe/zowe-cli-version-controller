@@ -14,7 +14,7 @@ class Pipeline {
     /**
      * The name of the root setup stage.
      */
-    private static final String _SETUP_STAGE_NAME = "Setup"
+    protected static final String _SETUP_STAGE_NAME = "Setup"
 
     /**
      * This is a list of administrator emails addresses that will receive emails when a build
@@ -73,7 +73,7 @@ class Pipeline {
     /**
      * Tracks if the setup method was called.
      */
-    private boolean _setupCalled = false
+    protected boolean _setupCalled = false
 
     /**
      * Tracks if the remaining stages should be skipped.
@@ -464,7 +464,7 @@ class Pipeline {
      * @param stage The stage to skip.
      * @return The name of the skip stage parameter.
      */
-    private static String _getStageSkipOption(Stage stage) {
+    protected static String _getStageSkipOption(Stage stage) {
         return "Skip Stage: ${stage.name}"
     }
 

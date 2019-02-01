@@ -324,7 +324,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @throws NodeJSPipelineException when either the email address or credentials property is missing
      *                               from the specified registry.
      */
-    private void _loginToRegistry(RegistryConfig registry) throws NodeJSPipelineException {
+    protected void _loginToRegistry(RegistryConfig registry) throws NodeJSPipelineException {
         if (!registry.email) {
             throw new NodeJSPipelineException("Missing email address for registry: ${registry.url ? registry.url : "default"}")
         }
@@ -380,7 +380,7 @@ expect {
      *
      * @param registry The registry to logout of.
      */
-    private void _logoutOfRegistry(RegistryConfig registry) {
+    protected void _logoutOfRegistry(RegistryConfig registry) {
         if (!registry.url) {
             steps.echo "Attempting to logout of the default registry"
         } else {
