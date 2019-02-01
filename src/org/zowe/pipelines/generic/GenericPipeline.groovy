@@ -1,5 +1,6 @@
 package org.zowe.pipelines.generic
 
+import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
 
@@ -257,9 +258,10 @@ class GenericPipeline extends Pipeline implements Serializable {
      * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
      * will also be skipped. The build will also be marked as not built in this scenario.</p>
      */
-    void setupG() {
+    @NonCPS
+    void setup() {
         // Call setup from the super class
-        setupB()
+        super.setup()
 
         createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where

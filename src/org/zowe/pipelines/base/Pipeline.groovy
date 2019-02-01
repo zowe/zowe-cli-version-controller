@@ -404,7 +404,7 @@ class Pipeline implements Serializable {
      * <p>Checks the git source out for the pipeline.</p>
      */
     @NonCPS
-    void setupB() {
+    void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         // @FUTURE PART OF SUB CLASS
