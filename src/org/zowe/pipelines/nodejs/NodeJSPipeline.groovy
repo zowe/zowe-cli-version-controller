@@ -124,6 +124,7 @@ class NodeJSPipeline extends GenericPipeline implements Serializable {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.BuildArgs} used to define
      *                  the stage.
      */
+    @NonCPS
     void buildStage(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
@@ -309,6 +310,7 @@ class NodeJSPipeline extends GenericPipeline implements Serializable {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.
      */
+    @NonCPS
     void testStage(Map arguments = [:]) {
         if (!arguments.testOperation) {
             arguments.testOperation = {
