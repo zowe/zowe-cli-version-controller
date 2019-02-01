@@ -442,7 +442,7 @@ class Pipeline {
         } catch (e) {
             _stages.firstFailingStage = stage
 
-            setResult(Result.FAILURE)
+            setResult(ResultEnum.FAILURE)
             stage.exception = e
 
             throw e
