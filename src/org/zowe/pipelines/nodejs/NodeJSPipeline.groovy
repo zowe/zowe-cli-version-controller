@@ -202,7 +202,7 @@ class NodeJSPipeline extends GenericPipeline implements Serializable {
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
         // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
-        setupG()
+        super.setup()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             try {
