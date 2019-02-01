@@ -202,7 +202,7 @@ class Pipeline {
 
                             stage.wasExecuted = true
                             if (args.isSkipable) {
-                                steps.echo "This step can be skipped by setting the `${_getStageSkipOption(args.name)}` option to true"
+                                steps.echo "This step can be skipped by setting the `${_getStageSkipOption(stage)}` option to true"
                             }
 
                             def environment = []
