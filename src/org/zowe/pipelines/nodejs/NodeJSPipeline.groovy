@@ -144,6 +144,7 @@ class NodeJSPipeline extends GenericPipeline {
             steps.archiveArtifacts "${buildArchiveName}"
             steps.sh "rm -f ${buildArchiveName}"
         }])
+    }
 
     // Npm logs will always be archived
     /**
