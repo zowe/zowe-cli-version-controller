@@ -11,7 +11,7 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
 
-class Pipeline implements Serializable {
+class Pipeline {
     /**
      * The name of the root setup stage.
      */
@@ -258,6 +258,7 @@ class Pipeline implements Serializable {
      * receive the email. Finally if this build is on a protected branch, all emails listed in the
      * {@link #adminEmails} list will also receive a status email.</p>
      */
+    @NonCPS
     final void end() {
         try {
             // First setup the build properties
@@ -316,6 +317,7 @@ class Pipeline implements Serializable {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
+    @NonCPS
     void end(String[] archiveFolders) {
         if (archiveFolders.length > 0) {
             createStage(name: "Log Archive", stage: {

@@ -7,7 +7,7 @@ import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
-class GenericPipeline extends Pipeline implements Serializable {
+class GenericPipeline extends Pipeline {
     /**
      * Text used for the CI SKIP commit.
      */

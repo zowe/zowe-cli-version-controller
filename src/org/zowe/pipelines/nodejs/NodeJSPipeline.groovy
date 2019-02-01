@@ -72,7 +72,7 @@ import org.zowe.pipelines.nodejs.exceptions.*
  *
  * <p>
  */
-class NodeJSPipeline extends GenericPipeline implements Serializable {
+class NodeJSPipeline extends GenericPipeline {
     // @FUTURE part of the deploy story
     /**
      * This is the connection information for the registry where code is published
@@ -173,6 +173,7 @@ class NodeJSPipeline extends GenericPipeline implements Serializable {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
+    @NonCPS
     void end(String[] archiveFolders) {
         if (archiveFolders) {
             super.end(["/home/jenkins/.npm/_logs"] + archiveFolders)
