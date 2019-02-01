@@ -72,6 +72,8 @@ class GenericPipeline extends Pipeline {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
+            args.buildOperation()
+
             _didBuild = true
         }
 
