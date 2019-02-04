@@ -515,7 +515,7 @@ class Pipeline {
             setResult(ResultEnum.FAILURE)
             stage.exception = e
 
-            Utils.markStageFailedAndContinued(stage.name)
+            Utils.markStageSkippedForFailure(stage.name)
 
 //            throw e
         } finally {
