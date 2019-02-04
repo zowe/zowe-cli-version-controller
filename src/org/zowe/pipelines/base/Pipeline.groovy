@@ -515,9 +515,7 @@ class Pipeline {
             setResult(ResultEnum.FAILURE)
             stage.exception = e
 
-            Utils.markStageSkippedForFailure(stage.name)
-
-//            throw e
+            throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
