@@ -21,11 +21,11 @@ final class ProtectedBranches<T extends ProtectedBranch> implements Serializable
      * @throws ProtectedBranchException when a branch is already protected.
      */
     ProtectedBranches add(T branch) throws ProtectedBranchException {
-        if (_protectedBranches.hasProperty(branch.branchName)) {
-            throw new ProtectedBranchException("${branch.branchName} already exists as a protected branch.")
+        if (_protectedBranches.hasProperty(branch.name)) {
+            throw new ProtectedBranchException("${branch.name} already exists as a protected branch.")
         }
 
-        _protectedBranches.put(branch.branchName, branch)
+        _protectedBranches.put(branch.name, branch)
 
         return this
     }

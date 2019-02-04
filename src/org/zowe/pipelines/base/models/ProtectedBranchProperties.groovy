@@ -9,5 +9,5 @@ class ProtectedBranchProperties implements ProtectedBranch {
     /**
      * The string name of the branch
      */
-    String branchName
+    String name
 }
