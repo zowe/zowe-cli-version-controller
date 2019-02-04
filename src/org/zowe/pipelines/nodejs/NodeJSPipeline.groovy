@@ -200,7 +200,7 @@ class NodeJSPipeline extends GenericPipeline {
         createStage(name: 'Install Node Package Dependencies', stage: {
             def branch = ""
 
-            try {
+            try { // @TODO MOVE THIS TO SUPERCLASS SETUP AND OPEN TEST PR TO GET MERGE INTO BRANCH CORRECT
                 branch = steps.CHANGE_BRANCH
                 steps.echo "Code merge into $branch detected"
             } catch (MissingPropertyException e) {
