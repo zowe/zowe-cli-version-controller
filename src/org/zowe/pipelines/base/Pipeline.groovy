@@ -19,7 +19,7 @@ import com.cloudbees.groovy.cps.NonCPS
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.base.Pipeline
  *
- * import org.zowe.pipelines.base.models.ProtectedBranchProperties
+ * import org.zowe.pipelines.base.models.ProtectedBranch
  *
  * node('pipeline-node') {
  *   Pipeline pipeline = new Pipeline(this)
@@ -30,7 +30,7 @@ import com.cloudbees.groovy.cps.NonCPS
  *       "email2@example.com"
  *   ]
  *
- *   pipeline.protectedBranches.add(new ProtectedBranchProperties(name: "master"))
+ *   pipeline.protectedBranches.add(new ProtectedBranch(name: "master"))
  *
  *   // MUST BE CALLED FIRST
  *   pipeline.setupBase()
@@ -135,7 +135,7 @@ class Pipeline {
      * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
      * is to prevent issues with publishing.</p>
      */
-    ProtectedBranches protectedBranches = new ProtectedBranches<ProtectedBranchProperties>()
+    ProtectedBranches protectedBranches = new ProtectedBranches<ProtectedBranch>()
 
     /**
      * Tracks if the current branch is protected.

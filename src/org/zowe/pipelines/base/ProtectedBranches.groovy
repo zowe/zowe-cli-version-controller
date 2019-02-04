@@ -1,56 +1,62 @@
 package org.zowe.pipelines.base
 
 import org.zowe.pipelines.base.exceptions.ProtectedBranchException
-import org.zowe.pipelines.base.interfaces.ProtectedBranch
-import org.zowe.pipelines.base.models.ProtectedBranchProperties
+import org.zowe.pipelines.base.interfaces.ProtectedBranchProperties
 
 /**
  * Manages the protected branches of a Pipeline.
- * @param <T> This type ensures that the branch properties implement the {@link ProtectedBranch}
+ * @param <T> This type ensures that the branch properties implement the {@link ProtectedBranchProperties}
  *            interface and all branches are of the same property.
  */
-final class ProtectedBranches<T extends ProtectedBranch> implements Serializable {
+final class ProtectedBranches<T extends ProtectedBranchProperties> implements Serializable {
     /**
      * The mapping of protected branches
      */
-    private HashMap<String, T> _protectedBranches
-
-    ProtectedBranches() {
-        _protectedBranches = new HashMap()
-    }
-
-    /**
-     * Construct the protected branches object with some default branches.
-     * @param branches
-     */
-    ProtectedBranches(HashMap<String, T> branches) {
-        ProtectedBranches()
-        _protectedBranches.putAll(branches)
-    }
+    private HashMap<String, T> _protectedBranches = new HashMap()
 
     /**
      * Adds a branch object as protected.
      * @param branch The properties of a branch that is protected.
-     * @return a reference to this class for chaining.
+     * @return The object that was added.
      * @throws ProtectedBranchException when a branch is already protected.
      */
-    ProtectedBranches add(T branch) throws ProtectedBranchException {
+    T add(T branch) throws ProtectedBranchException {
         if (_protectedBranches.hasProperty(branch.name)) {
             throw new ProtectedBranchException("${branch.name} already exists as a protected branch.")
         }
 
-        _protectedBranches.put(branch.name, branch)
-
-        return this
+        return _protectedBranches.put(branch.name, branch)
     }
 
     /**
-     * Add a branch map into the object.
+     * Add a branch map into the object. This map must follow the syntax of the Groovy Map Object
+     * Constructor.
      * @param branch The branch to add.
-     * @return a reference to this class for chaining.
+     * @return The object that was added
      */
-    ProtectedBranches add(Map branch) {
+    T add(Map branch) {
         return add(branch as T)
+    }
+
+    /**
+     * Adds a list of branches to the map.
+     * @param branches The branches to add as protected.
+     */
+    void addList(List<T> branches) {
+        for (T branch : branches) {
+            add(branch)
+        }
+    }
+
+    /**
+     * Adds a list of branches to the protected maps. The elements of the list must follow the syntax
+     * of the Groovy Map Object Constructor.
+     * @param branches The branches to add as protected.
+     */
+    void addListMap(List<Map> branches) {
+        for (Map branch : branches) {
+            add(branch)
+        }
     }
 
     /**
