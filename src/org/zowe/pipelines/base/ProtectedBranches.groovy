@@ -15,6 +15,14 @@ final class ProtectedBranches<T extends ProtectedBranch> implements Serializable
     private HashMap<String, T> _protectedBranches = new HashMap()
 
     /**
+     * Construct the protected branches object with some default branches.
+     * @param branches
+     */
+    ProtectedBranches(HashMap<String, T> branches) {
+        _protectedBranches.putAll(branches)
+    }
+
+    /**
      * Adds a branch object as protected.
      * @param branch The properties of a branch that is protected.
      * @return a reference to this class for chaining.
@@ -28,6 +36,15 @@ final class ProtectedBranches<T extends ProtectedBranch> implements Serializable
         _protectedBranches.put(branch.name, branch)
 
         return this
+    }
+
+    /**
+     * Add a branch map into the object.
+     * @param branch The branch to add.
+     * @return a reference to this class for chaining.
+     */
+    ProtectedBranches add(Map branch) {
+        return add(branch as T)
     }
 
     /**

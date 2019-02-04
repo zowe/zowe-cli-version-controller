@@ -17,13 +17,12 @@ import com.cloudbees.groovy.cps.NonCPS
  * <h5>Basic Usage</h5>
  *
  * <pre>
- * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.basic.Pipeline
+ * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.base.Pipeline
+ *
+ * import org.zowe.pipelines.base.models.ProtectedBranchProperties
  *
  * node('pipeline-node') {
  *   Pipeline pipeline = new Pipeline(this)
- *
- *   // Create the runner and pass the methods available to the workflow script to the runner
- *   NodeJSPipeline nodejs = new NodeJSPipeline(this)
  *
  *   // Set your config up before calling setup
  *   pipeline.adminEmails = [
@@ -31,9 +30,7 @@ import com.cloudbees.groovy.cps.NonCPS
  *       "email2@example.com"
  *   ]
  *
- *   pipeline.protectedBranches = [
- *       master: 'daily'
- *   ]
+ *   pipeline.protectedBranches.add(new ProtectedBranchProperties(name: "master"))
  *
  *   // MUST BE CALLED FIRST
  *   pipeline.setupBase()
