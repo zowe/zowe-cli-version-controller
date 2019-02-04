@@ -515,7 +515,7 @@ class Pipeline {
             setResult(ResultEnum.FAILURE)
             stage.exception = e
 
-            throw e
+            throw e // TODO If this is thrown logs will not be captured, fix please
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
