@@ -57,6 +57,11 @@ class GenericPipeline extends Pipeline {
     protected boolean _didBuild = false
 
     /**
+     * A boolean that tracks if a single test was run. When false, there hasn't been a test run yet.
+     */
+    protected boolean _didTest = false
+
+    /**
      * Constructs the class.
      *
      * <p>When invoking from a Jenkins pipeline script, the GenericPipeline must be passed
@@ -295,6 +300,8 @@ class GenericPipeline extends Pipeline {
             } else if (args.coverageResults) {
                 steps.echo "WARNING: Cobertura file not detected, skipping"
             }
+
+            _didTest = true
         }
 
         createStage(args)

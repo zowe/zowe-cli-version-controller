@@ -198,6 +198,17 @@ class NodeJSPipeline extends GenericPipeline {
         super.setupGeneric()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
+            def branch = ""
+
+            try {
+                branch = steps.CHANGE_BRANCH
+                steps.echo "Code merge into $branch detected"
+            } catch (MissingPropertyException e) {
+                branch = steps.BRANCH_NAME
+            }
+
+            steps.sh "printenv"
+
             try {
                 if (registryConfig) {
                     // Only one is allowed to use the default registry
@@ -221,6 +232,13 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 steps.sh "npm install"
+
+                if (_isProtectedBranch) {
+                    def branchProps = protectedBranches.get(branch)
+
+                    branchProps.dependencies.each{ npmPackage, version -> steps.sh "npm install --save $npmPackage@$version"}
+                    branchProps.devDependencies.each{ npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version"}
+                }
             } finally {
                 // Always try to logout regardless of errors
                 if (registryConfig) {

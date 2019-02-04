@@ -78,7 +78,7 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * @param branchName The name of the branch to retrieve
      * @return The object for the branch name or null if there is no branch of the corresponding name.
      */
-    T getProtectedBranch(String branchName) {
+    T get(String branchName) {
         return _protectedBranches.get(branchName)
     }
 
