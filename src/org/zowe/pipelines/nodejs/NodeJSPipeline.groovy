@@ -233,11 +233,11 @@ class NodeJSPipeline extends GenericPipeline {
 
                 steps.sh "npm install"
 
-                if (_isProtectedBranch) {
+                if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    branchProps.dependencies.each{ npmPackage, version -> steps.sh "npm install --save $npmPackage@$version"}
-                    branchProps.devDependencies.each{ npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version"}
+                    branchProps.dependencies.each {npmPackage, version -> steps.sh "npm install --save $npmPackage@$version"}
+                    branchProps.devDependencies.each {npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version"}
                 }
             } finally {
                 // Always try to logout regardless of errors
