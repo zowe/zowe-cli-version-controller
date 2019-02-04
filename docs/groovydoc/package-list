@@ -1,3 +1,9 @@
+org.zowe.pipelines.base
+org.zowe.pipelines.base.exceptions
+org.zowe.pipelines.base.models
+org.zowe.pipelines.generic
+org.zowe.pipelines.generic.exceptions
+org.zowe.pipelines.generic.models
 org.zowe.pipelines.nodejs
 org.zowe.pipelines.nodejs.exceptions
 org.zowe.pipelines.nodejs.models

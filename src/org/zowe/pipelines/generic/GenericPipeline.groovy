@@ -6,6 +6,28 @@ import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
+/**
+ * Extends the functionality available in the {@link Pipeline} class. This class adds methods for
+ * building and testing your code.
+ *
+ * <h5>Basic Usage</h5>
+ *
+ * <pre>
+ * // Setup is the same as the {@link Pipeline} class.
+ * // ...
+ * GenericPipeline pipeline = new GenericPipeline(this)
+ *
+ * // ...
+ *
+ * pipeline.setupGeneric()
+ *
+ * pipeline.buildStageGeneric()
+ * pipeline.testStageGeneric() // Provide required parameters in your pipeline
+ *
+ * // MUST BE CALLED LAST
+ * pipeline.endGeneric()
+ * </pre>
+ */
 class GenericPipeline extends Pipeline {
     /**
      * Text used for the CI SKIP commit.
@@ -34,6 +56,19 @@ class GenericPipeline extends Pipeline {
      */
     protected boolean _didBuild = false
 
+    /**
+     * Constructs the class.
+     *
+     * <p>When invoking from a Jenkins pipeline script, the GenericPipeline must be passed
+     * the current environment of the Jenkinsfile to have access to the steps.</p>
+     *
+     * <h5>Example Setup:</h5>
+     * <pre>
+     * def pipeline = new GenericPipeline(this)
+     * </pre>
+     *
+     * @param steps The workflow steps object provided by the Jenkins pipeline
+     */
     GenericPipeline(steps) {
         super(steps)
     }
@@ -44,18 +79,16 @@ class GenericPipeline extends Pipeline {
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
      * to this function will map to the {@link BuildArgs} class.</p>
      *
-     * <h5>Build: {@link BuildArgs#name}</h5>
-     * <p>Runs the build of your application. If {@link BuildArgs#buildOperation} is not provided, the
-     * stage will default to executing `npm run build`.</p>
+     * <h4>Build: {@link BuildArgs#name}</h4>
+     * <p>Runs the build of your application.</p>
      *
      * <p>The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
      * on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
      *
-     * <p>After the buildOperation is complete, the stage will continue to archive the contents of the
-     * build into a tar file. The folder to archive is specified by arguments.output. In the future,
-     * this function will run the npm pack command and archive that tar file instead.</p>
-     *
      * <p>This stage will throw a {@link BuildStageException} if called more than once in your pipeline.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code buildStage} but had to be named
+     * {@code buildStageGeneric} due to the issues described in {@link Pipeline}.</p>
      *
      * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
      *                  the stage.
@@ -81,14 +114,49 @@ class GenericPipeline extends Pipeline {
     }
 
     /**
+     * Calls {@link org.zowe.pipelines.base.Pipeline#setupBase()} to setup the build.
+     *
+     * <p>Additionally, this method adds the following stage to the build:</p>
+     *
+     * <h4>Check for CI Skip</h4>
+     *
+     * <p>Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
+     * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
+     * will also be skipped. The build will also be marked as not built in this scenario.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
+     * {@code setupGeneric} due to the issues described in {@link Pipeline}.</p>
+     */
+    void setupGeneric() {
+        // Call setup from the super class
+        super.setupBase()
+
+        createStage(name: 'Check for CI Skip', stage: {
+            // We need to keep track of the current commit revision. This is to prevent the condition where
+            // the build starts on master and another branch gets merged to master prior to version bump
+            // commit taking place. If left unhandled, the version bump could be done on latest master branch
+            // code which would already be ahead of this build.
+            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP
+
+            // This checks for the [ci skip] text. If found, the status code is 0
+            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+            if (result == 0) {
+                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
+                _shouldSkipRemainingStages = true
+                setResult(ResultEnum.NOT_BUILT)
+            }
+        }, timeout: [time: 1, unit: 'MINUTES'])
+    }
+
+    /**
      * Creates a stage that will execute tests on your application.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link org.zowe.pipelines.generic.models.TestArgs} class.</p>
+     * to this function will map to the {@link TestArgs} class.</p>
      *
-     * <h5>Test: {@link org.zowe.pipelines.generic.models.TestArgs#name}</h5>
+     * <h4>Test: {@link TestArgs#name}</h4>
      *
-     * <p>Runs one of your application tests. If {@link org.zowe.pipelines.generic.models.TestArgs#testOperation}, the stage will execute
+     * <p>Runs one of your application tests. If {@link TestArgs#testOperation}, the stage will execute
      * `npm run test` as the default operation. If the test operation throws an error, that error is
      * ignored and  will be assumed to be caught in the junit processing. Some test functions may
      * exit with a non-zero return code on a test failure but may still capture junit output. In
@@ -99,26 +167,26 @@ class GenericPipeline extends Pipeline {
      *
      * <p>The following reports can be captured:</p>
      *
-     * <h6>Test Results HTML Report (REQUIRED)</h6>
+     * <h5>Test Results HTML Report (REQUIRED)</h5>
      *
      * <p>This is an html report that contains the result of the build. The report must be defined to
-     * the method in the {@link org.zowe.pipelines.generic.models.TestArgs#testResults} variable.</p>
+     * the method in the {@link TestArgs#testResults} variable.</p>
      *
-     * <h6>Code Coverage HTML Report</h6>
+     * <h5>Code Coverage HTML Report</h5>
      *
      * <p>This is an HTML report generated from code coverage output from your build. The report can
-     * be omitted by omitting {@link org.zowe.pipelines.generic.models.TestArgs#coverageResults}</p>
+     * be omitted by omitting {@link TestArgs#coverageResults}</p>
      *
-     * <h6>JUnit report (REQUIRED)</h6>
+     * <h5>JUnit report (REQUIRED)</h5>
      *
      * <p>This report feeds Jenkins the data about the current test run. It can be used to mark a build
-     * as failed or unstable. The report location must be present in {@link org.zowe.pipelines.generic.models.TestArgs#junitOutput}</p>
+     * as failed or unstable. The report location must be present in {@link TestArgs#junitOutput}</p>
      *
-     * <h6>Cobertura Report</h6>
+     * <h5>Cobertura Report</h5>
      *
      * <p>This report feeds Jenkins the data about the coverage results for the current test run. If
      * no Cobertura options are passed, then no coverage data will be collected. For more
-     * information, see {@link org.zowe.pipelines.generic.models.TestArgs#cobertura}</p>
+     * information, see {@link TestArgs#cobertura}</p>
      *
      * <p>The test stage will execute by default if the current build result is greater than or
      * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
@@ -130,22 +198,25 @@ class GenericPipeline extends Pipeline {
      * these reports are to be collected and were missing.</p>
      *
      * <p>Some tests may also require the use of the gnome-keyring. The stage can be configured to
-     * unlock the keyring prior to the tests by passing {@link org.zowe.pipelines.generic.models.TestArgs#shouldUnlockKeyring} as true.</p>
+     * unlock the keyring prior to the tests by passing {@link TestArgs#shouldUnlockKeyring} as true.</p>
      *
-     * <h6>Stage Exceptions</h6>
+     * <h5>Stage Exceptions</h5>
      *
-     * <p>The test stage can throw a {@link org.zowe.pipelines.generic.exceptions.TestStageException} under any of the following
+     * <p>The test stage can throw a {@link TestStageException} under any of the following
      * circumstances:</p>
      *
      * <ul>
-     * <li>A test stage was created before a call to {@link #buildStage(Map)}</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#testResults} was missing</li>
-     * <li>Invalid options specified for {@link org.zowe.pipelines.generic.models.TestArgs#testResults}</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#coverageResults} was provided but had an invalid format</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#junitOutput} is missing.</li>
+     * <li>A test stage was created before a call to {@link #buildStageGeneric(Map)}</li>
+     * <li>{@link TestArgs#testResults} was missing</li>
+     * <li>Invalid options specified for {@link TestArgs#testResults}</li>
+     * <li>{@link TestArgs#coverageResults} was provided but had an invalid format</li>
+     * <li>{@link TestArgs#junitOutput} is missing.</li>
      * </ul>
      *
-     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
+     * <p><b>Note:</b> This method was intended to be called {@code testStage} but had to be named
+     * {@code testStageGeneric} due to the issues described in {@link Pipeline}.</p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
      *                  the stage.
      */
     void testStageGeneric(Map arguments = [:]) {
@@ -250,33 +321,5 @@ class GenericPipeline extends Pipeline {
         if (!report.name) {
             throw new TestStageException("${reportName} is missing property `name`", stageName)
         }
-    }
-
-    /**
-     * <h5>Check for CI Skip</h5>
-     *
-     * <p>Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
-     * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
-     * will also be skipped. The build will also be marked as not built in this scenario.</p>
-     */
-    void setupGeneric() {
-        // Call setup from the super class
-        super.setupBase()
-
-        createStage(name: 'Check for CI Skip', stage: {
-            // We need to keep track of the current commit revision. This is to prevent the condition where
-            // the build starts on master and another branch gets merged to master prior to version bump
-            // commit taking place. If left unhandled, the version bump could be done on latest master branch
-            // code which would already be ahead of this build.
-            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP
-
-            // This checks for the [ci skip] text. If found, the status code is 0
-            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-            if (result == 0) {
-                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
-                _shouldSkipRemainingStages = true
-                setResult(ResultEnum.NOT_BUILT)
-            }
-        }, timeout: [time: 1, unit: 'MINUTES'])
     }
 }

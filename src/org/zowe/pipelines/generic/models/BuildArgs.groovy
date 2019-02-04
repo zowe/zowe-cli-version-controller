@@ -4,9 +4,9 @@ import org.zowe.pipelines.base.models.StageArgs
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#buildStage(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#buildStageGeneric(java.util.Map)} method.
  */
-class BuildArgs extends StageArgs { //@TODO figure out why the groovydoc inheritance breaks.
+class BuildArgs extends StageArgs {
     /**
      * Custom build operation function.
      *

@@ -12,64 +12,54 @@ import org.zowe.pipelines.nodejs.exceptions.*
  *
  * <h5>Basic Usage</h5>
  * <pre>
- * {@code
- * @Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline
+ * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline
  *
  * node('pipeline-node') {
  *     // Create the runner and pass the methods available to the workflow script to the runner
- *     NodeJSPipeline nodejs = new NodeJSPipeline(this)
+ *     NodeJSPipeline pipeline = new NodeJSPipeline(this)
  *
  *     // Set your config up before calling setup
- *     nodejs.adminEmails = [
+ *     pipeline.adminEmails = [
  *         "email1@example.com",
  *         "email2@example.com"
  *     ]
  *
- *     nodejs.protectedBranches = [
+ *     pipeline.protectedBranches = [
  *         master: 'daily'
  *     ]
  *
- *     nodejs.gitConfig = [
+ *     pipeline.gitConfig = [
  *         user: 'robot-user',
  *         email: 'robot-user@example.com',
  *         credentialsId: 'robot-user'
  *     ]
  *
- *     nodejs.publishConfig = [
+ *     pipeline.publishConfig = [
  *         email: nodejs.gitConfig.email,
  *         credentialsId: 'robot-user'
  *     ]
  *
  *     // MUST BE CALLED FIRST
- *     nodejs.setup()
+ *     pipeline.setup()
  *
  *     // Create custom stages for your build like this
- *     nodejs.createStage(name: 'Some Stage", stage: {
+ *     pipeline.createStage(name: 'Some Stage", stage: {
  *         echo "This is my stage"
  *     })
  *
  *     // Run a build
- *     nodejs.buildStage()
+ *     pipeline.buildStage()
  *
  *     // Run a test
- *     nodejs.testStage() // Provide required parameters in your pipeline.
+ *     pipeline.testStage() // Provide required parameters in your pipeline.
  *
  *     // MUST BE CALLED LAST
- *     nodejs.end()
+ *     pipeline.end()
  * }
  * </pre>
  *
  * <p>In the example above, the stages will run on a node labeled {@code 'pipeline-node'}. You must
- * define the node where you pipeline will execute.</p>
- *
- * <p>Stages are not executed until the end stage. This means that the node that
- * {@code nodejs.end()} executes on is where the entire pipeline will execute. You also can't rely
- * that between the buildStage line and the testStage line that the build stage was successful.
- * The stage functions and should skip functions are run in order with the stages. This is where
- * any stage logic should go that is dependent on stage order of execution.
- * </p>
- *
- * <p>
+ * define the node where your pipeline will execute.</p>
  */
 class NodeJSPipeline extends GenericPipeline {
     // @FUTURE part of the deploy story
@@ -94,7 +84,7 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * <h5>Example Setup:</h5>
      * <pre>
-     * def nodejs = new NodeJSPipeline(this)
+     * def pipeline = new NodeJSPipeline(this)
      * </pre>
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
@@ -104,21 +94,16 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Creates a stage that will build a NodeJSPipeline package.
      *
-     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link org.zowe.pipelines.generic.models.BuildArgs} class.</p>
+     * <p>Arguments passed to this function will map to the
+     * {@link org.zowe.pipelines.generic.models.BuildArgs} class.</p>
      *
-     * <h5>Build: {@link org.zowe.pipelines.generic.models.BuildArgs#name}</h5>
-     * <p>Runs the build of your application. If {@link org.zowe.pipelines.generic.models.BuildArgs#buildOperation} is not provided, the
-     * stage will default to executing `npm run build`.</p>
-     *
-     * <p>The build stage also ignores any {@link org.zowe.pipelines.generic.models.BuildArgs#resultThreshold} provided and only runs
-     * on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
-     *
-     * <p>After the buildOperation is complete, the stage will continue to archive the contents of the
-     * build into a tar file. The folder to archive is specified by arguments.output. In the future,
-     * this function will run the npm pack command and archive that tar file instead.</p>
-     *
-     * <p>This stage will throw a {@link org.zowe.pipelines.generic.exceptions.BuildStageException} if called more than once in your pipeline.</p>
+     * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#buildStageGeneric(java.util.Map)}
+     * method and will have the following additional operations. <ul>
+     *     <li>If {@link org.zowe.pipelines.generic.models.BuildArgs#buildOperation} is not
+     *     provided, the stage will default to executing {@code npm run build}.</li>
+     *     <li>After the buildOperation is complete, the stage will use npm pack to generate an
+     *     installable artifact. This artifact is archived to the build for later access.</li>
+     * </ul>
      *
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.BuildArgs} used to define
      *                  the stage.
@@ -146,7 +131,6 @@ class NodeJSPipeline extends GenericPipeline {
         }])
     }
 
-    // Npm logs will always be archived
     /**
      * Call to inform the runner that no more stages are to be added and execution can begin.
      *
@@ -174,16 +158,18 @@ class NodeJSPipeline extends GenericPipeline {
             archive = archive + archiveFolders
         }
 
-        endBasic(archive)
+        endBase(archive)
     }
 
 
     // @FUTURE a super class could define this method for setup and checkout and the nodejs
     // @FUTURE class can extend it to add the npm install stuff
     /**
-     * Creates the pipeline setup stages.
+     * Calls {@link org.zowe.pipelines.generic.GenericPipeline#setupGeneric()} to setup the build.
      *
-     * <h5>Install Node Package Dependencies</h5>
+     * <p>Additionally, this method adds the following stage to the build:</p>
+     *
+     * <h4>Install Node Package Dependencies</h4>
      *
      * <p>This step will install all your package dependencies via `npm install`. Prior to install
      * the stage will login to any registries specified in the {@link #registryConfig} array. On
@@ -240,67 +226,14 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Creates a stage that will execute tests on your application.
      *
-     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link org.zowe.pipelines.generic.models.TestArgs} class.</p>
+     * <p>Arguments passed to this function will map to the
+     * {@link org.zowe.pipelines.generic.models.TestArgs} class.</p>
      *
-     * <h5>Test: {@link org.zowe.pipelines.generic.models.TestArgs#name}</h5>
+     * <p>The stage will be created with the
+     * {@link org.zowe.pipelines.generic.GenericPipeline#testStageGeneric(java.util.Map)} method. If
+     * {@link org.zowe.pipelines.generic.models.TestArgs#testOperation} is not provided, this method
+     * will default to executing {@code npm run test}</p>
      *
-     * <p>Runs one of your application tests. If {@link org.zowe.pipelines.generic.models.TestArgs#testOperation}, the stage will execute
-     * `npm run test` as the default operation. If the test operation throws an error, that error is
-     * ignored and  will be assumed to be caught in the junit processing. Some test functions may
-     * exit with a non-zero return code on a test failure but may still capture junit output. In
-     * this scenario, it is assumed that the junit report is either missing or contains failing
-     * tests. In the case that it is missing, the build will fail on this report and relevant
-     * exceptions are printed. If the junit report contains failing tests, the build will be marked
-     * as unstable and a report of failing tests can be viewed.</p>
-     *
-     * <p>The following reports can be captured:</p>
-     *
-     * <h6>Test Results HTML Report (REQUIRED)</h6>
-     *
-     * <p>This is an html report that contains the result of the build. The report must be defined to
-     * the method in the {@link org.zowe.pipelines.generic.models.TestArgs#testResults} variable.</p>
-     *
-     * <h6>Code Coverage HTML Report</h6>
-     *
-     * <p>This is an HTML report generated from code coverage output from your build. The report can
-     * be omitted by omitting {@link org.zowe.pipelines.generic.models.TestArgs#coverageResults}</p>
-     *
-     * <h6>JUnit report (REQUIRED)</h6>
-     *
-     * <p>This report feeds Jenkins the data about the current test run. It can be used to mark a build
-     * as failed or unstable. The report location must be present in {@link org.zowe.pipelines.generic.models.TestArgs#junitOutput}</p>
-     *
-     * <h6>Cobertura Report</h6>
-     *
-     * <p>This report feeds Jenkins the data about the coverage results for the current test run. If
-     * no Cobertura options are passed, then no coverage data will be collected. For more
-     * information, see {@link org.zowe.pipelines.generic.models.TestArgs#cobertura}</p>
-     *
-     * <p>The test stage will execute by default if the current build result is greater than or
-     * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
-     * precedent.</p>
-     *
-     * <p>After the test is complete, the stage will continue to collect the JUnit Report and the Test
-     * Results HTML Report. The stage will fail if either of those are missing. If specified, the
-     * Code Coverage HTML Report and the Cobertura Report are then captured. The build will fail if
-     * these reports are to be collected and were missing.</p>
-     *
-     * <p>Some tests may also require the use of the gnome-keyring. The stage can be configured to
-     * unlock the keyring prior to the tests by passing {@link org.zowe.pipelines.generic.models.TestArgs#shouldUnlockKeyring} as true.</p>
-     *
-     * <h6>Stage Exceptions</h6>
-     *
-     * <p>The test stage can throw a {@link org.zowe.pipelines.generic.exceptions.TestStageException} under any of the following
-     * circumstances:</p>
-     *
-     * <ul>
-     * <li>A test stage was created before a call to {@link #buildStage(Map)}</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#testResults} was missing</li>
-     * <li>Invalid options specified for {@link org.zowe.pipelines.generic.models.TestArgs#testResults}</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#coverageResults} was provided but had an invalid format</li>
-     * <li>{@link org.zowe.pipelines.generic.models.TestArgs#junitOutput} is missing.</li>
-     * </ul>
      *
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.

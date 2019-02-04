@@ -10,6 +10,82 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
 
+/**
+ * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
+ * your pipeline.
+ *
+ * <h5>Basic Usage</h5>
+ *
+ * <pre>
+ * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.basic.Pipeline
+ *
+ * node('pipeline-node') {
+ *   Pipeline pipeline = new Pipeline(this)
+ *
+ *   // Create the runner and pass the methods available to the workflow script to the runner
+ *   NodeJSPipeline nodejs = new NodeJSPipeline(this)
+ *
+ *   // Set your config up before calling setup
+ *   pipeline.adminEmails = [
+ *       "email1@example.com",
+ *       "email2@example.com"
+ *   ]
+ *
+ *   pipeline.protectedBranches = [
+ *       master: 'daily'
+ *   ]
+ *
+ *   // MUST BE CALLED FIRST
+ *   pipeline.setupBase()
+ *
+ *   // Create a stage in your pipeline
+ *   pipeline.createStage(name: 'Some Pipeline Stage', stage: {
+ *       echo "This is my stage"
+ *   })
+ *
+ *   // MUST BE CALLED LAST
+ *   pipeline.endBase()
+ * }
+ * </pre>
+ *
+ * <p>In the above example, the stages will run on a node labeled {@code 'pipeline-node'}. You
+ * must define the node where your pipeline will execute.</p>
+ *
+ * <p>Stages are not executed until the {@link #endBase} method is called. This means that you can't
+ * rely on stages being executed as soon as they are defined. If you need logic to help determine if
+ * a stage should be executed, you must use the proper options allowed by {@link StageArgs}.</p>
+ *
+ * <p><b>Note:</b> Due to issues with how Jenkins loads a shared pipeline library, you might notice
+ * that some methods that were meant to be overridden by subclasses are just named differently. This
+ * is due to how the CPS Jenkins wrapper modifies classes and subclasses. See below for the full
+ * explanation of the problem.</p>
+ *
+ * <ul>
+ *     <li>The superclass implements a method of the signature {@code setup()}</li>
+ *     <li>The subclass implements a method of the signature {@code setup()}. Which is the same as the
+ *     superclass, so under normal OOP the method would be overridden.</li>
+ *     <li>In the subclass's implementation of {@code setup()}, it calls {@code super.setup()}.<ul>
+ *             <li>In normal Groovy OOP, this would be fine and the superclass method will be called
+ *             properly.</li>
+ *             <li>In Jenkins, calling {@code super.setup()} actually calls the subclass method.
+ *             this results in a stack overflow error, since the method is just calling itself until
+ *             the method stack is completely used up.</li>
+ *         </ul>
+ *     </li>
+ * </ul>
+ *
+ * <p>I believe this is due to how Jenkins does inheritance. It looks like Jenkins is just taking
+ * all the methods available across the superclasses of a class and adding them as a base
+ * definition to the class itself. When there's a conflict, it seems that Jenkins just takes the
+ * method from the lowest class in the hierarchy and refers all calls to that method no matter what.
+ * This theory stems from the fact that if you call a superclass method that accesses a superclass
+ * private variable, Jenkins complains that the variable doesn't exist. If you change that variable
+ * or method to protected or public, Jenkins doesn't complain anymore and operation acts as normal.
+ * </p>
+ *
+ * <p>This issue seems to signify that they may never fix this problem.
+ * {@link https://issues.jenkins-ci.org/browse/JENKINS-47355?jql=text%20~%20%22inherit%20class%22}</p>
+ */
 class Pipeline {
     /**
      * The name of the root setup stage.
@@ -111,17 +187,13 @@ class Pipeline {
      *
      * <h5>Example Setup:</h5>
      * <pre>
-     * def nodejs = new NodeJSPipeline(this)
+     * def pipeline = new Pipeline(this)
      * </pre>
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
     Pipeline(steps) { this.steps = steps }
 
-
-    // @FUTURE NEED TO MAKE THIS A STANDALONE CLASS THAT NODE JS EXTENDS
-    // @FUTURE TO REDUCE FILE SIZE
-    //
     // @FUTURE allow easy way for create stage to specify build parameters
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
@@ -256,8 +328,11 @@ class Pipeline {
      * failed or returned to normal, all committers since the last successful build will also
      * receive the email. Finally if this build is on a protected branch, all emails listed in the
      * {@link #adminEmails} list will also receive a status email.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
+     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
      */
-    final void endBasic() {
+    final void endBase() {
         try {
             // First setup the build properties
             def history = defaultBuildHistory
@@ -289,7 +364,7 @@ class Pipeline {
      *
      * <p>The end method adds the following stage to the pipeline:</p>
      *
-     * <h5>Log Archive</h5>
+     * <h4>Log Archive</h4>
      *
      * <p>This stage will attempt to archive any folders specified. The purpose is to capture any
      * relevant logging information to help debug a pipeline build. The stage will execute as long
@@ -301,8 +376,11 @@ class Pipeline {
      * appear under certain scenarios without the worry that they will affect the result of your
      * build when missing.</p>
      *
-     * <p>After the log capture stage has been created, the end method will call the {@link #endBasic()}
+     * <p>After the log capture stage has been created, the end method will call the {@link #endBase()}
      * method to kick off stage execution.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
+     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
      *
      * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
      *                       build will ignore it and will not modify the current build result. See
@@ -315,7 +393,7 @@ class Pipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    void endBasic(String[] archiveFolders) {
+    void endBase(String[] archiveFolders) {
         if (archiveFolders.length > 0) {
             createStage(name: "Log Archive", stage: {
                 def archiveLocation = "postBuildArchive"
@@ -347,7 +425,7 @@ class Pipeline {
             }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
         }
 
-        endBasic()
+        endBase()
     }
 
     /**
@@ -378,8 +456,6 @@ class Pipeline {
         steps.currentBuild.result = result.value
     }
 
-    // @FUTURE a super class could define this method for setup and checkout and the nodejs
-    // @FUTURE class can extend it to add the npm install stuff
     /**
      * Creates the pipeline setup stages.
      *
@@ -394,18 +470,19 @@ class Pipeline {
      * <p>The setup method creates 2 stages in your Jenkins pipeline using the {@link #createStage(Map)}
      * function.</p>
      *
-     * <h5>Setup</h5>
+     * <h4>Setup</h4>
      *
-     * <p>Used internally to indicate that the NodeJSPipeline properly set the pipeline up.</p>
+     * <p>Used internally to indicate that the Pipeline has been properly setup.</p>
      *
-     * <h5>Checkout</h5>
+     * <h4>Checkout</h4>
      *
-     * <p>Checks the git source out for the pipeline.</p>
+     * <p>Checks the source out for the pipeline.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
+     * {@code setupBase} due to the issues described in {@link Pipeline}.</p>
      */
     void setupBase() {
         // @TODO all timeouts should be configurable do as part of next story
-        // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
-        // @FUTURE PART OF SUB CLASS
         _setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
@@ -468,8 +545,6 @@ class Pipeline {
         return "Skip Stage: ${stage.name}"
     }
 
-
-    // @TODO move email off to a separate class
     // NonCPS informs jenkins to not save variable state that would resolve in a
     // java.io.NotSerializableException on the TestResults class
     /**
@@ -568,7 +643,7 @@ class Pipeline {
         // add an image reflecting the result
         if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
                 notificationImages[steps.currentBuild.currentResult].size() > 0) {
-            def imageList = notificationImages[steps.currentBuild.currentResult];
+            def imageList = notificationImages[steps.currentBuild.currentResult]
             def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
             bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
         }
@@ -590,15 +665,15 @@ class Pipeline {
                 bodyText += "at ${stackTrace[i]}<br/>"
             }
 
-            bodyText += "</div></td></tr>";
+            bodyText += "</div></td></tr>"
             bodyText += "</table>"
         }
 
-        List<String> ccList = new ArrayList<String>();
+        List<String> ccList = new ArrayList<String>()
         if (_isProtectedBranch) {
             // only CC administrators if we are on a protected branch
             for (String email : adminEmails) {
-                ccList.add("cc: " + email);
+                ccList.add("cc: " + email)
             }
         }
         try {
@@ -617,7 +692,7 @@ class Pipeline {
         }
         catch (emailException) {
             steps.echo "Exception encountered while attempting to send email!"
-            steps.echo emailException.toString();
+            steps.echo emailException.toString()
             steps.echo emailException.getStackTrace().join("\n")
         }
     }
