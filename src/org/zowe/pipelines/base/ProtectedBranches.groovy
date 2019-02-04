@@ -2,6 +2,7 @@ package org.zowe.pipelines.base
 
 import org.zowe.pipelines.base.exceptions.ProtectedBranchException
 import org.zowe.pipelines.base.interfaces.ProtectedBranch
+import org.zowe.pipelines.base.models.ProtectedBranchProperties
 
 /**
  * Manages the protected branches of a Pipeline.
@@ -12,14 +13,19 @@ final class ProtectedBranches<T extends ProtectedBranch> implements Serializable
     /**
      * The mapping of protected branches
      */
-    private HashMap<String, T> _protectedBranches = new HashMap()
+    private HashMap<String, T> _protectedBranches
+
+    ProtectedBranches() {
+        _protectedBranches = new HashMap()
+    }
 
     /**
      * Construct the protected branches object with some default branches.
      * @param branches
      */
     ProtectedBranches(Map<String, T> branches) {
-        _protectedBranches.putAll(branches as Map)
+        ProtectedBranches()
+        _protectedBranches.putAll(branches)
     }
 
     /**
