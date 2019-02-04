@@ -9,15 +9,15 @@ import org.zowe.pipelines.base.interfaces.ProtectedBranchProperties
  *            interface and all branches are of the same property.
  */
 final class ProtectedBranches<T extends ProtectedBranchProperties> implements Serializable {
+    final Class<T> objectClass
+
     /**
      * The mapping of protected branches
      */
     private HashMap<String, T> _protectedBranches = new HashMap()
 
-    def pipeline
-
-    ProtectedBranches(Pipeline pipeline) {
-        this.pipeline = pipeline
+    ProtectedBranches(final Class<T> objectClass) {
+        this.objectClass = objectClass
     }
 
     /**
@@ -27,8 +27,6 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * @throws ProtectedBranchException when a branch is already protected.
      */
     T add(T branch) throws ProtectedBranchException {
-        pipeline.steps.echo branch.toString()
-
         if (_protectedBranches.hasProperty(branch.name)) {
             throw new ProtectedBranchException("${branch.name} already exists as a protected branch.")
         }
@@ -43,7 +41,7 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * @return The object that was added
      */
     T add(Map branch) {
-        return add(branch as T)
+        return add(this.objectClass.newInstance(branch))
     }
 
     /**
