@@ -415,7 +415,7 @@ class Pipeline {
                 }
 
                 steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*" // The weird concat because groovydoc blew up here
-            }, resultThreshold: ResultEnum.NOT_BUILT, doesIgnoreSkipAll: true, isSkipable: false)
+            }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
         }
 
         endBase()
@@ -515,7 +515,7 @@ class Pipeline {
             setResult(ResultEnum.FAILURE)
             stage.exception = e
 
-            throw e
+//            throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
