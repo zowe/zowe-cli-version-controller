@@ -337,8 +337,8 @@ class Pipeline {
             def history = defaultBuildHistory
 
             // Add protected branch to build options
-            if (protectedBranches.containsKey(steps.BRANCH_NAME)) {
-                _isProtectedBranch = true;
+            if (protectedBranches.isProtected(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true
                 history = protectedBranchBuildHistory
                 buildOptions.push(steps.disableConcurrentBuilds())
             }
