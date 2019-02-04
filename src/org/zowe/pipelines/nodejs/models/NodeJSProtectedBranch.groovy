@@ -10,6 +10,6 @@ class NodeJSProtectedBranch extends ProtectedBranch {
      * This is the npm tag in which the branch will be published with. If this
      * property is left null, then the branch will not be published.
      */
-    String npmPublishTag
+    String tag
 }
 

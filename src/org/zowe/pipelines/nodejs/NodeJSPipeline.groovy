@@ -77,6 +77,12 @@ class NodeJSPipeline extends GenericPipeline {
      */
     RegistryConfig[] registryConfig
 
+    /**
+     * A map of protected branches.
+     *
+     * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
+     * is to prevent issues with publishing.</p>
+     */
     ProtectedBranches<NodeJSProtectedBranch> protectedBranches = new ProtectedBranches<>(NodeJSProtectedBranch.class)
 
     /**

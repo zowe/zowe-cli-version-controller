@@ -127,11 +127,6 @@ class Pipeline {
     /**
      * A map of protected branches.
      *
-     * <ul>
-     * <li>The keys in the map represent the name of a protected branch.</li>
-     * <li>The values represent the corresponding npm tag the branch is published to.</li>
-     * </ul>
-     *
      * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
      * is to prevent issues with publishing.</p>
      */
