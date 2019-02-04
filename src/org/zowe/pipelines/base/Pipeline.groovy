@@ -135,7 +135,7 @@ class Pipeline {
      * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
      * is to prevent issues with publishing.</p>
      */
-    ProtectedBranches protectedBranches = new ProtectedBranches<ProtectedBranch>()
+    ProtectedBranches protectedBranches
 
     /**
      * Tracks if the current branch is protected.
@@ -188,7 +188,10 @@ class Pipeline {
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
-    Pipeline(steps) { this.steps = steps }
+    Pipeline(steps) {
+        this.steps = steps
+        protectedBranches = new ProtectedBranches<ProtectedBranch>(this)
+    }
 
     // @FUTURE allow easy way for create stage to specify build parameters
     /**

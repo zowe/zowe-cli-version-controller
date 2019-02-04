@@ -14,6 +14,12 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      */
     private HashMap<String, T> _protectedBranches = new HashMap()
 
+    def pipeline
+
+    ProtectedBranches(Pipeline pipeline) {
+        this.pipeline = pipeline
+    }
+
     /**
      * Adds a branch object as protected.
      * @param branch The properties of a branch that is protected.
