@@ -135,7 +135,7 @@ class Pipeline {
      * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
      * is to prevent issues with publishing.</p>
      */
-    ProtectedBranches protectedBranches = new ProtectedBranches(ProtectedBranch.class)
+    ProtectedBranches<ProtectedBranch> protectedBranches = new ProtectedBranches<ProtectedBranch>(ProtectedBranch.class)
 
     /**
      * Tracks if the current branch is protected.

@@ -1,5 +1,6 @@
 package org.zowe.pipelines.nodejs
 
+import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.nodejs.models.*
@@ -76,6 +77,8 @@ class NodeJSPipeline extends GenericPipeline {
      */
     RegistryConfig[] registryConfig
 
+    ProtectedBranches<NodeJSProtectedBranch> protectedBranches = new ProtectedBranches<>(NodeJSProtectedBranch.class)
+
     /**
      * Constructs the class.
      *
@@ -89,7 +92,9 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
-    NodeJSPipeline(steps) { super(steps) }
+    NodeJSPipeline(steps) {
+        super(steps)
+    }
 
     /**
      * Creates a stage that will build a NodeJSPipeline package.

@@ -1,5 +1,6 @@
 org.zowe.pipelines.base
 org.zowe.pipelines.base.exceptions
+org.zowe.pipelines.base.interfaces
 org.zowe.pipelines.base.models
 org.zowe.pipelines.generic
 org.zowe.pipelines.generic.exceptions
