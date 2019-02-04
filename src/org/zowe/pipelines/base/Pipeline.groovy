@@ -138,8 +138,7 @@ class Pipeline {
      * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
      * is to prevent issues with publishing.</p>
      */
-    Map protectedBranches = [master: 'latest'] // @TODO need to remove npm tag reference from base pipeline do with subclassing of the type
-    // @TODO getter and setter would be necessary
+    ProtectedBranches protectedBranches = new ProtectedBranches<ProtectedBranchProperties>()
 
     /**
      * Tracks if the current branch is protected.
