@@ -23,7 +23,7 @@ final class ProtectedBranches<T extends ProtectedBranch> implements Serializable
      * Construct the protected branches object with some default branches.
      * @param branches
      */
-    ProtectedBranches(Map<String, T> branches) {
+    ProtectedBranches(HashMap<String, T> branches) {
         ProtectedBranches()
         _protectedBranches.putAll(branches)
     }
