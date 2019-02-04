@@ -415,7 +415,7 @@ class Pipeline {
                 }
 
                 steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*" // The weird concat because groovydoc blew up here
-            }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
+            }, resultThreshold: ResultEnum.NOT_BUILT, doesIgnoreSkipAll: true, isSkipable: false)
         }
 
         endBase()
