@@ -21,6 +21,8 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * @throws ProtectedBranchException when a branch is already protected.
      */
     T add(T branch) throws ProtectedBranchException {
+        def x = branch.name
+
         if (_protectedBranches.hasProperty(branch.name)) {
             throw new ProtectedBranchException("${branch.name} already exists as a protected branch.")
         }
