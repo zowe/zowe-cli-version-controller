@@ -188,7 +188,8 @@ class NodeJSPipeline extends GenericPipeline {
 
             // First retrieve the version string
             def baseVersion = steps.sh returnStdout: true, script: 'node -e "console.log(require(\'./package.json\').version.split(\'-\')[0])"'
-            baseVersion = baseVersion.trim()
+
+            steps.echo baseVersion
 
             // Extract the raw version
             def rawVersion = baseVersion.split(".")
