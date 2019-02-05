@@ -260,6 +260,8 @@ class NodeJSPipeline extends GenericPipeline {
                         // Add package.json and fail if it doesn't exist.
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
 
+                        steps.sh "git status"
+
                         // Attempt to add package lock and exit cleanly if not there
                         // Reason: We only want to source the change if it exists but not worry about the package_lock
                         //         being non-existent
