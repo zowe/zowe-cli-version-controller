@@ -10,6 +10,12 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
 
+import hudson.model.Action
+
+import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
+import org.jenkinsci.plugins.workflow.actions.LabelAction
+
 /**
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
  * your pipeline.
@@ -515,6 +521,8 @@ class Pipeline {
             setResult(ResultEnum.FAILURE)
             stage.exception = e
 
+            steps.echo getStageName()
+
 //            throw e // TODO If this is thrown logs will not be captured, fix please
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
@@ -526,6 +534,53 @@ class Pipeline {
                 _stages.firstFailingStage = stage
             }
         }
+    }
+
+    def getStageName(){
+        def build = steps.currentBuild.getRawBuild()
+        def execution = build.getExecution()
+        def executionHeads = execution.getCurrentHeads()
+        def stepStartNode = getStepStartNode(executionHeads)
+
+        if(stepStartNode){
+            return stepStartNode.getDisplayName()
+        }
+    }
+
+    def getStepStartNode(List<FlowNode> flowNodes){
+        def currentFlowNode = null
+        def labelAction = null
+
+        for (FlowNode flowNode: flowNodes){
+            currentFlowNode = flowNode
+            labelAction = false
+
+            if (flowNode instanceof StepStartNode){
+                labelAction = hasLabelAction(flowNode)
+            }
+
+            if (labelAction){
+                return flowNode
+            }
+        }
+
+        if (currentFlowNode == null) {
+            return null
+        }
+
+        return getStepStartNode(currentFlowNode.getParents())
+    }
+
+    def hasLabelAction(FlowNode flowNode){
+        def actions = flowNode.getActions()
+
+        for (Action action: actions){
+            if (action instanceof LabelAction) {
+                return true
+            }
+        }
+
+        return false
     }
 
     /**
