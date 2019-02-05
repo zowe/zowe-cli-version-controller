@@ -126,10 +126,15 @@ class GenericPipeline extends Pipeline {
     /**
      * Commit a code change during pipeline execution.
      *
-     * <p>The commit will be appended with the ci skip text.</p>
+     * <p>If no changes were detected, the commit will not happen. If a commit occurs, the end of
+     * of the commit message will be appended with the ci skip text.</p>
      * @param message The commit message
      */
     void commit(String message) {
+        def ret = steps.sh returnStatus: true, script: "git status | grep 'nothing to commit'"
+
+        steps.echo ret
+
         steps.sh "git commit -m \"$message $_CI_SKIP\""
     }
 

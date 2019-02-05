@@ -251,23 +251,19 @@ class NodeJSPipeline extends GenericPipeline {
                         devInstall += " --save-dev"
                     }
 
-                    branchProps.dependencies.each {npmPackage, version -> steps.sh "$depInstall $npmPackage@$version"}
-                    branchProps.devDependencies.each {npmPackage, version -> steps.sh "$devInstall $npmPackage@$version"}
+                    branchProps.dependencies.each { npmPackage, version -> steps.sh "$depInstall $npmPackage@$version" }
+                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "$devInstall $npmPackage@$version" }
 
                     if (!_changeInfo.isPullRequest) {
                         steps.sh "git status"
 
                         // Add package.json and fail if it doesn't exist.
-                        steps.sh "git add package.json"
+                        steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
 
                         // Attempt to add package lock and exit cleanly if not there
                         // Reason: We only want to source the change if it exists but not worry about the package_lock
                         //         being non-existent
-                        steps.sh "git add package_lock.json && exit 0"
-
-                        def ret = steps.sh returnStatus: true, script: "git status | grep 'nothing to commit'"
-
-                        steps.echo ret
+//                        steps.sh "git add package_lock.json && exit 0"
 
                         commit("Updating dependencies")
                     }
