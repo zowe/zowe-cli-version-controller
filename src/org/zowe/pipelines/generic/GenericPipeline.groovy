@@ -209,7 +209,7 @@ class GenericPipeline extends Pipeline {
 
 
         if (versionArguments.size() > 0) {
-            versionArguments.name("Versioning")
+            versionArguments.name = "Versioning"
             createSubStage(versionArguments)
         }
 
