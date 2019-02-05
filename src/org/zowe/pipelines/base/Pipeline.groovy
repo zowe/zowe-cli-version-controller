@@ -336,10 +336,6 @@ class Pipeline {
      *                     prior to emails being sent out.
      */
     final void endBase(Closure alwaysAction) {
-        createStage(name: "Finish", stage: {
-            steps.echo "Finishing the build."
-        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
-
         try {
             // First setup the build properties
             def history = defaultBuildHistory
@@ -362,6 +358,10 @@ class Pipeline {
             // Execute the pipeline
             _stages.execute()
         } finally {
+            steps.echo "-----------------------------------------------------------------------------------------------"
+            steps.echo "------------------------------------POST BUILD ACTIONS-----------------------------------------"
+            steps.echo "-----------------------------------------------------------------------------------------------"
+            
             if (alwaysAction) {
                 alwaysAction()
             }
