@@ -202,6 +202,8 @@ class GenericPipeline extends Pipeline {
             // Call the deploy operation now
             args.deployOperation()
         }
+
+        createStage(args)
     }
 
     /**
