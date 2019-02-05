@@ -179,7 +179,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // Set the version operation for an npm pipeline
-        versionArguments.operation = {
+        versionArguments.operation = { // @TODO the stage and operation should be pass itself so that users can have access to the properties
             if (versionException) {
                 throw versionException
             }
