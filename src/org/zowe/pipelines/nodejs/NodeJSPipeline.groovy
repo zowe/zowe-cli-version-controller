@@ -195,6 +195,7 @@ class NodeJSPipeline extends GenericPipeline {
             def rawVersion = baseVersion.trim().split(".")
 
             for (int i = 0; i < rawVersion.length; i++) {
+                steps.echo rawVersion[i]
                 rawVersion[i] = Integer.parseInt(rawVersion[i])
             }
 
