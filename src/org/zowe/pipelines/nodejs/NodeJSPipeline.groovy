@@ -192,7 +192,7 @@ class NodeJSPipeline extends GenericPipeline {
             steps.echo baseVersion
 
             // Extract the raw version
-            def rawVersion = baseVersion.trim().split(".")
+            def rawVersion = baseVersion.trim().split("\\.")
 
             for (int i = 0; i < rawVersion.length; i++) {
                 steps.echo rawVersion[i]
