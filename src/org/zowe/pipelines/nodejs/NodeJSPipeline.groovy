@@ -198,8 +198,6 @@ class NodeJSPipeline extends GenericPipeline {
         super.setupGeneric()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
-            steps.sh "printenv"
-
             try {
                 if (registryConfig) {
                     // Only one is allowed to use the default registry
@@ -255,6 +253,12 @@ class NodeJSPipeline extends GenericPipeline {
 
                     branchProps.dependencies.each {npmPackage, version -> steps.sh "$depInstall $npmPackage@$version"}
                     branchProps.devDependencies.each {npmPackage, version -> steps.sh "$devInstall $npmPackage@$version"}
+
+                    if (!_changeInfo.isPullRequest) {
+                        steps.sh "git add package.json"
+                        steps.sh "git add package_lock.json"
+                        commit("Updating dependencies")
+                    }
                 }
             } finally {
                 // Always try to logout regardless of errors

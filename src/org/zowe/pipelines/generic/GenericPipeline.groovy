@@ -124,6 +124,16 @@ class GenericPipeline extends Pipeline {
     }
 
     /**
+     * Commit a code change during pipeline execution.
+     *
+     * <p>The commit will be appended with the ci skip text.</p>
+     * @param message The commit message
+     */
+    void commit(String message) {
+        steps.sh "git commit -m \"$message $_CI_SKIP\""
+    }
+
+    /**
      * Calls {@link org.zowe.pipelines.base.Pipeline#setupBase()} to setup the build.
      *
      * <p>Additionally, this method adds the following stage to the build:</p>
@@ -143,6 +153,10 @@ class GenericPipeline extends Pipeline {
 
         createStage(name: 'Check for CI Skip', stage: {
             _changeInfo = new ChangeInformation(steps)
+
+            steps.sh "git config user.name \"${gitConfig.user}\""
+            steps.sh "git config user.email \"${gitConfig.email}\""
+            steps.sh "git config push.default simple"
 
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
