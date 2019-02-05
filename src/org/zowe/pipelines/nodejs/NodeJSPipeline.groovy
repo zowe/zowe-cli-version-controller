@@ -372,7 +372,7 @@ expect {
             // If the logout fails, don't blow up. Coded this way because a failed
             // logout doesn't mean we've failed. It also doesn't stop any other
             // logouts that might need to be done.
-            steps.sh "npm logout ${registry.url ? "--registry registry.url" : ""}"
+            steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}"
         } catch (e) {
             steps.echo "Failed logout but will continue"
         }
