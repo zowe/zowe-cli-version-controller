@@ -208,20 +208,21 @@ class NodeJSPipeline extends GenericPipeline {
             List<String> availableVersions = new ArrayList<>()
             availableVersions.add("$baseVersion$prereleaseString (default)")
 
+            Closure addOne = {String number ->
+                return Integer.parseInt(number) + 1
+            }
+
             // This switch case has every statement fallthrough. This is so that we can add all the versions based
             // on whichever has the lowest restriction
             switch(branch.level) {
                 case SemverLevel.MAJOR:
-                    int level = rawIntVersion[0] + 1
-                    availableVersions.add("${level}.${rawIntVersion[1] + 1}.${rawIntVersion[2]}$prereleaseString")
+                    availableVersions.add("${addOne(rawVersion[0])}.${rawVersion[1]}.${rawVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.MINOR:
-                    int level = rawIntVersion[1] + 1
-                    availableVersions.add("${rawIntVersion[0]}.${level}.${rawIntVersion[2]}$prereleaseString")
+                    availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.${rawVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.PATCH:
-                    int level = rawIntVersion[2] + 1
-                    availableVersions.add("${rawIntVersion[0]}.${rawIntVersion[1]}.${level}$prereleaseString")
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
                     break
             }
 
