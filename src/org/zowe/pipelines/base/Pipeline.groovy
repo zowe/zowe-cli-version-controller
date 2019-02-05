@@ -513,7 +513,7 @@ class Pipeline {
             _stages.firstFailingStage = stage
 
             setResult(ResultEnum.FAILURE)
-            stage.exception = e
+//            stage.exception = e
 
             throw e // TODO If this is thrown logs will not be captured, fix please
         } finally {
