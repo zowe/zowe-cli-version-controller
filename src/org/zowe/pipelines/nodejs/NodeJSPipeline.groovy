@@ -124,10 +124,10 @@ class NodeJSPipeline extends GenericPipeline {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        buildGeneric(arguments + [buildOperation: {
+        buildGeneric(arguments + [operation: {
             // Either use a custom build script or the default npm run build
-            if (arguments.buildOperation) {
-                arguments.buildOperation()
+            if (arguments.operation) {
+                arguments.operation()
             } else {
                 steps.sh 'npm run build'
             }
@@ -143,7 +143,7 @@ class NodeJSPipeline extends GenericPipeline {
         }])
     }
 
-    void deploy(Map arguments = [:]) {
+    void deploy(Map deployArguments = [:], Map versionArguments = [:]) {
         super.deployGeneric(arguments + [
                 deployOperation: {
                     // Login to the registry
@@ -313,8 +313,8 @@ class NodeJSPipeline extends GenericPipeline {
      *                  the stage.
      */
     void test(Map arguments = [:]) {
-        if (!arguments.testOperation) {
-            arguments.testOperation = {
+        if (!arguments.operation) {
+            arguments.operation = {
                 steps.sh "npm run test"
             }
         }

@@ -1,13 +1,10 @@
 package org.zowe.pipelines.generic.models
 
-import org.zowe.pipelines.base.models.StageArgs
-
-
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method.
  */
-class TestArgs extends StageArgs {
+class TestArgs extends GenericArgs {
     /**
      * Default values provided to cobertura.
      *
@@ -81,13 +78,6 @@ class TestArgs extends StageArgs {
      * <p><b>Default:</b> {@code false}</p>
      */
     boolean shouldUnlockKeyring = false
-
-    /**
-     * Custom test operation function.
-     *
-     * <p>Specifying a closure will overwrite the default test operation</p>
-     */
-    Closure testOperation
 
     /**
      * Storage location for the report created by your test task.

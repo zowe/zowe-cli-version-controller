@@ -127,7 +127,7 @@ class GenericPipeline extends Pipeline {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
-            args.buildOperation()
+            args.operation()
 
             _didBuild = true
         }
@@ -157,58 +157,67 @@ class GenericPipeline extends Pipeline {
 
     // @TODO DOCUMENT
     // Versioning op happens before commit op and happens before deploy op
-    void deployGeneric(Map arguments) {
-        // Force build to only happen on success, this cannot be overridden
-        arguments.resultThreshold = ResultEnum.SUCCESS
-
-        DeployArgs args = arguments
-
-        if (args.name) {
-            args.name = "Deploy: ${args.name}"
+    void deployGeneric(Map deployArguments = [:], Map versionArguments = [:]) {
+        if (deployArguments.name) {
+            deployArguments.name = "Deploy: ${deployArguments.name}"
         } else {
-            args.name = "Deploy"
+            deployArguments.name = "Deploy"
         }
 
-        DeployStageException preSetupException
+        /**
+         * Creates the various stages for the deploy
+         */
+        Closure createSubStage = { Map arguments ->
+            arguments.resultThreshold = ResultEnum.SUCCESS
 
-        if (args.stage) {
-            preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
+            GenericArgs args = arguments
+
+            DeployStageException preSetupException
+
+            if (args.stage) {
+                preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
+            }
+
+            // Execute the stage if this is a protected branch and the original should execute function
+            // are both true
+            args.shouldExecute = {
+                boolean shouldExecute = true
+
+                if (arguments.shouldExecute) {
+                    shouldExecute = arguments.shouldExecute()
+                }
+
+                return shouldExecute && _isProtectedBranch
+            }
+
+            args.stage = {
+                // If there were any exceptions during the setup, throw them here so proper email notifications
+                // can be sent.
+                if (preSetupException) {
+                    throw preSetupException
+                }
+
+                if (!_didTest) {
+                    throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
+                }
+
+                args.operation()
+            }
+
+            createStage(args)
         }
 
-        // Execute the stage if this is a protected branch and the original should execute function
-        // are both true
-        args.shouldExecute = {
-            boolean shouldExecute = true
 
-            if (arguments.shouldExecute) {
-                shouldExecute = arguments.shouldExecute()
-            }
-
-            return shouldExecute && _isProtectedBranch
+        if (versionArguments.size() > 0) {
+            versionArguments.name("Versioning")
+            createSubStage(versionArguments)
         }
 
-        args.stage = {
-            // If there were any exceptions during the setup, throw them here so proper email notifications
-            // can be sent.
-            if (preSetupException) {
-                throw preSetupException
-            }
-
-            if (!_didTest) {
-                throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
-            }
-
-            if (args.versioningOperation) {
-                args.versioningOperation()
-            }
-
+        createSubStage(deployArguments + [operation: {
             // TODO Check if we need to push any commits here and see if that would be a fast forward
 
-            // Call the deploy operation now
-            args.deployOperation()
-        }
-
-        createStage(args)
+            deployArguments.operation()
+        }])
     }
 
     /**
@@ -374,7 +383,7 @@ class GenericPipeline extends Pipeline {
             }
 
             try {
-                args.testOperation()
+                args.operation()
             } catch (e) {
                 steps.echo "Exception: ${e.getMessage()}"
             }
