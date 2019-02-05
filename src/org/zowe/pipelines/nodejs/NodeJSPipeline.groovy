@@ -194,20 +194,14 @@ class NodeJSPipeline extends GenericPipeline {
             // Extract the raw version
             def rawVersion = baseVersion.trim().split("\\.")
 
-            int[] rawIntVersion = new int[rawVersion.length]
-
-            for (int i = 0; i < rawVersion.length; i++) {
-                rawIntVersion[i] = Integer.parseInt(rawVersion[i])
-            }
-
             NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
 
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            List<String> availableVersions = new ArrayList<>()
-            availableVersions.add("$baseVersion$prereleaseString (default)")
+            List<String> availableVersions = ["$baseVersion$prereleaseString"]
 
+            // closure function to make semver increment easier
             Closure addOne = {String number ->
                 return Integer.parseInt(number) + 1
             }
@@ -225,6 +219,8 @@ class NodeJSPipeline extends GenericPipeline {
                     availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
                     break
             }
+
+            // @TODO Send out the email test tomorrow
 
             // Check if my logic is flawed
             steps.echo availableVersions.join("\n")
