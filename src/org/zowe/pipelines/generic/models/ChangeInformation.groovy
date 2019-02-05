@@ -6,8 +6,6 @@ class ChangeInformation {
     final String baseBranch
     final String changeBranch
 
-    // TODO add build revision
-
     ChangeInformation(def steps) {
         branchName = steps.BRANCH_NAME
 

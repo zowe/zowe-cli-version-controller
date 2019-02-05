@@ -198,15 +198,6 @@ class NodeJSPipeline extends GenericPipeline {
         super.setupGeneric()
 
         createStage(name: 'Install Node Package Dependencies', stage: {
-            def branch = ""
-
-            try { // @TODO MOVE THIS TO SUPERCLASS SETUP AND OPEN TEST PR TO GET MERGE INTO BRANCH CORRECT
-                branch = steps.CHANGE_BRANCH
-                steps.echo "Code merge into $branch detected"
-            } catch (MissingPropertyException e) {
-                branch = steps.BRANCH_NAME
-            }
-
             steps.sh "printenv"
 
             try {
@@ -233,11 +224,37 @@ class NodeJSPipeline extends GenericPipeline {
 
                 steps.sh "npm install"
 
+                // Get the branch that will be used to install dependencies for
+                String branch
+
+                // If this is a pull request, then we will be checking if the base branch is protected
+                if (_changeInfo.isPullRequest) {
+                    branch = _changeInfo.baseBranch
+                }
+                // Otherwise we are checking if the current branch is protected
+                else {
+                    branch = _changeInfo.branchName
+                }
+
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    branchProps.dependencies.each {npmPackage, version -> steps.sh "npm install --save $npmPackage@$version"}
-                    branchProps.devDependencies.each {npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version"}
+                    def depInstall = "npm install"
+                    def devInstall = "npm install"
+
+                    // If this is a pull request, we don't want to make any commits
+                    if (_changeInfo.isPullRequest) {
+                        depInstall += " --no-save"
+                        devInstall += " --no-save"
+                    }
+                    // Otherwise we need to save the version properly
+                    else {
+                        depInstall += " --save"
+                        devInstall += " --save-dev"
+                    }
+
+                    branchProps.dependencies.each {npmPackage, version -> steps.sh "$depInstall $npmPackage@$version"}
+                    branchProps.devDependencies.each {npmPackage, version -> steps.sh "$devInstall $npmPackage@$version"}
                 }
             } finally {
                 // Always try to logout regardless of errors
@@ -249,7 +266,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkipable: false, timeout: [time: 5, unit: 'MINUTES'])
+        }, isSkipable: false, timeout: [time: 10, unit: 'MINUTES'])
     }
 
     /**

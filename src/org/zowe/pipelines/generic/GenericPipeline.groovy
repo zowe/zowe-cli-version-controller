@@ -148,7 +148,7 @@ class GenericPipeline extends Pipeline {
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
             // code which would already be ahead of this build.
-            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP
+            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP //@TODO this probably isn't needed anymore since we can just see how far ahead/behind we are
 
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
