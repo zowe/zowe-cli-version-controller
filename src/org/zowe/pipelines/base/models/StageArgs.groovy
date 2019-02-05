@@ -59,7 +59,7 @@ class StageArgs {
     ResultEnum resultThreshold = ResultEnum.SUCCESS
 
     /**
-     * A custom closure function that has the ability to skip the stage.
+     * A custom closure function that has the ability to skip the stage if it returns false.
      *
      * <p>The purpose of this function is to give you more control over how stage execution occurs
      * in your pipeline. If the closure provided evaluates to true, the stage it is applied to will
@@ -68,7 +68,7 @@ class StageArgs {
      * <p>For more information about the skip precedent, see
      * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
      */
-    Closure shouldSkip = { -> false }
+    Closure shouldExecute = { -> true }
 
     /**
      * The operation to execute for the stage.

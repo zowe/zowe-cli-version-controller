@@ -117,6 +117,8 @@ class GenericPipeline extends Pipeline {
 
         args.name = "Build: ${args.name}"
         args.stage = {
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
             if (preSetupException) {
                 throw preSetupException
             }
@@ -131,42 +133,6 @@ class GenericPipeline extends Pipeline {
         }
 
         createStage(args)
-    }
-
-    void deployGeneric(Map arguments) {
-        // Force build to only happen on success, this cannot be overridden
-        arguments.resultThreshold = ResultEnum.SUCCESS
-
-        DeployArgs args = arguments
-
-        if (args.name) {
-            args.name = "Deploy: ${args.name}"
-        } else {
-            args.name = "Deploy"
-        }
-
-        DeployStageException preSetupException
-
-        if (args.stage) {
-            preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
-        }
-
-        args.stage = {
-            // If there were any exceptions during the setup, throw them here so proper email notifications
-            // can be sent. @TODO ENHANCE THE BUILD AND TEST TO DO THIS ALSO
-            if (preSetupException) {
-                throw preSetupException
-            }
-
-            if (!_didTest) {
-                throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
-            }
-
-            // TODO Check if we need to push any commits here and see if that would be a fast forward
-
-            // Call the deploy operation now
-            args.deployOperation()
-        }
     }
 
     /**
@@ -186,6 +152,55 @@ class GenericPipeline extends Pipeline {
             return true
         } else {
             return false
+        }
+    }
+
+    // @TODO DOCUMENT
+    void deployGeneric(Map arguments) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        DeployArgs args = arguments
+
+        if (args.name) {
+            args.name = "Deploy: ${args.name}"
+        } else {
+            args.name = "Deploy"
+        }
+
+        DeployStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        // Execute the stage if this is a protected branch and the original should execute function
+        // are both true
+        args.shouldExecute = {
+            boolean shouldExecute = true
+
+            if (arguments.shouldExecute) {
+                shouldExecute = arguments.shouldExecute()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
+
+        args.stage = {
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (!_didTest) {
+                throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
+            }
+
+            // TODO Check if we need to push any commits here and see if that would be a fast forward
+
+            // Call the deploy operation now
+            args.deployOperation()
         }
     }
 
@@ -318,6 +333,8 @@ class GenericPipeline extends Pipeline {
 
         args.name = "Test: ${args.name}"
         args.stage = {
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
             if (preSetupException) {
                 throw preSetupException
             }

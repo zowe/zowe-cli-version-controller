@@ -204,7 +204,7 @@ class Pipeline {
      * be skipped.</li>
      * <li>If the remaining pipeline stages are to be skipped, then this stage will be skipped. This
      * can be overridden if the stage has set {@link StageArgs#doesIgnoreSkipAll} to true.</li>
-     * <li>Finally, if the call to {@link StageArgs#shouldSkip} returns true, the stage will be
+     * <li>Finally, if the call to {@link StageArgs#shouldExecute} returns false, the stage will be
      * skipped.</li>
      * </ol>
      *
@@ -258,8 +258,8 @@ class Pipeline {
                         } else if (!args.doesIgnoreSkipAll && _shouldSkipRemainingStages) {
                             // If doesIgnoreSkipAll is true then this check is ignored, all others are not though
                             skipStage("All remaining steps are skipped")
-                        } else if (args.shouldSkip()) {
-                            skipStage("Should skip function evaluated to true")
+                        } else if (!args.shouldExecute()) {
+                            skipStage("Stage was not executed due to shouldExecute being false")
                         }
                         // Run the stage
                         else {

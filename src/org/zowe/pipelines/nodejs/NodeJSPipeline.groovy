@@ -142,6 +142,12 @@ class NodeJSPipeline extends GenericPipeline {
         }])
     }
 
+    void deploy(Map arguments = [:]) {
+        super.deployGeneric(arguments + [stage: {
+            steps.echo "This should blow up"
+        }])
+    }
+
     /**
      * Call to inform the runner that no more stages are to be added and execution can begin.
      *
