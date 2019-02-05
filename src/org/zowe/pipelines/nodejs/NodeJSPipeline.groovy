@@ -255,6 +255,7 @@ class NodeJSPipeline extends GenericPipeline {
                     branchProps.devDependencies.each {npmPackage, version -> steps.sh "$devInstall $npmPackage@$version"}
 
                     if (!_changeInfo.isPullRequest) {
+                        steps.sh "git status"
                         steps.sh "git add package.json"
                         steps.sh "git add package_lock.json"
                         commit("Updating dependencies")
