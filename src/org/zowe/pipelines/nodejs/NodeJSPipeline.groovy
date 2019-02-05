@@ -66,7 +66,8 @@ class NodeJSPipeline extends GenericPipeline {
     // @FUTURE part of the deploy story
     /**
      * This is the connection information for the registry where code is published
-     * to.
+     * to. If URL is passed to publish config, it will be ignored in favor of the package.json file's
+     * publishConfig.registry property.
      */
     RegistryConfig publishConfig
 
@@ -143,9 +144,25 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     void deploy(Map arguments = [:]) {
-        super.deployGeneric(arguments + [stage: {
-            steps.echo "This should blow up"
-        }])
+        super.deployGeneric(arguments + [
+                deployOperation: {
+                    // Login to the registry
+                    def npmRegistry = steps.sh returnStdout: true,
+                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+                    publishConfig.url = npmRegistry.trim()
+
+                    steps.sh "sudo npm config set registry ${publishConfig.url}"
+
+                    // Login to the publish registry
+                    _loginToRegistry(publishConfig)
+
+                    // Logout immediately
+                    _logoutOfRegistry(publishConfig)
+                },
+                versioningOperation: {
+                    steps.echo "Nothing should happen here"
+                }
+        ])
     }
 
     /**

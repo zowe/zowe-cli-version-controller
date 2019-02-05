@@ -156,6 +156,7 @@ class GenericPipeline extends Pipeline {
     }
 
     // @TODO DOCUMENT
+    // Versioning op happens before commit op and happens before deploy op
     void deployGeneric(Map arguments) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
@@ -195,6 +196,10 @@ class GenericPipeline extends Pipeline {
 
             if (!_didTest) {
                 throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
+            }
+
+            if (args.versioningOperation) {
+                args.versioningOperation()
             }
 
             // TODO Check if we need to push any commits here and see if that would be a fast forward
