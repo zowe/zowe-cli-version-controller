@@ -15,6 +15,7 @@ import hudson.model.Action
 import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.actions.LabelAction
+import org.jenkinsci.plugins.workflow.actions.ErrorAction
 
 /**
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
@@ -330,8 +331,15 @@ class Pipeline {
      *
      * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
      * {@code endBase} due to the issues described in {@link Pipeline}.</p>
+     *
+     * @param alwaysAction This is a closure that is always executed at the end of the pipeline prior
+     *                     prior to emails being sent out.
      */
-    final void endBase() {
+    final void endBase(Closure alwaysAction) {
+        createStage(name: "Finish", stage: {
+            steps.echo "Finishing the build."
+        }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
+
         try {
             // First setup the build properties
             def history = defaultBuildHistory
@@ -354,6 +362,10 @@ class Pipeline {
             // Execute the pipeline
             _stages.execute()
         } finally {
+            if (alwaysAction) {
+                alwaysAction()
+            }
+
             _sendEmailNotification() // @FUTURE As part of the deploy story, extract email stuff into separate class
         }
     }
@@ -361,13 +373,9 @@ class Pipeline {
     /**
      * End the pipeline and collect specified log files.
      *
-     * <p>The end method adds the following stage to the pipeline:</p>
+     * <p>The end method adds the following operations to the end of the pipeline to the pipeline:</p>
      *
-     * <h4>Log Archive</h4>
-     *
-     * <p>This stage will attempt to archive any folders specified. The purpose is to capture any
-     * relevant logging information to help debug a pipeline build. The stage will execute as long
-     * as the current result is greater than or equal to {@link ResultEnum#FAILURE}</p>
+     * <h5>Capture Logs</h5>
      *
      * <p>Any folders specified in archiveFolders will be archived. If a folder is not available, the
      * archive will fail. In this scenario, the build will note the copy step as failed but will
@@ -375,8 +383,8 @@ class Pipeline {
      * appear under certain scenarios without the worry that they will affect the result of your
      * build when missing.</p>
      *
-     * <p>After the log capture stage has been created, the end method will call the {@link #endBase()}
-     * method to kick off stage execution.</p>
+     * <p>These operations are put into the alwaysAction closure that is passed to the {@link #endBase(Closure)}
+     * class method.</p>
      *
      * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
      * {@code endBase} due to the issues described in {@link Pipeline}.</p>
@@ -393,8 +401,8 @@ class Pipeline {
      *                       Jenkins cannot archive files outside the workspace.
      */
     void endBase(String[] archiveFolders) {
-        if (archiveFolders.length > 0) {
-            createStage(name: "Log Archive", stage: {
+        endBase({
+            if (archiveFolders.length > 0) {
                 def archiveLocation = "postBuildArchive"
 
                 steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
@@ -421,10 +429,8 @@ class Pipeline {
                 }
 
                 steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*" // The weird concat because groovydoc blew up here
-            }, resultThreshold: ResultEnum.FAILURE, doesIgnoreSkipAll: true, isSkipable: false)
-        }
-
-        endBase()
+            }
+        })
     }
 
     /**
@@ -520,10 +526,7 @@ class Pipeline {
 
             setResult(ResultEnum.FAILURE)
             stage.exception = e
-
-            steps.echo getStageName()
-
-//            throw e // TODO If this is thrown logs will not be captured, fix please
+            throw e // TODO If this is thrown logs will not be captured, fix please
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 
@@ -534,53 +537,6 @@ class Pipeline {
                 _stages.firstFailingStage = stage
             }
         }
-    }
-
-    def getStageName(){
-        def build = steps.currentBuild.getRawBuild()
-        def execution = build.getExecution()
-        def executionHeads = execution.getCurrentHeads()
-        def stepStartNode = getStepStartNode(executionHeads)
-
-        if(stepStartNode){
-            return stepStartNode.getDisplayName()
-        }
-    }
-
-    def getStepStartNode(List<FlowNode> flowNodes){
-        def currentFlowNode = null
-        def labelAction = null
-
-        for (FlowNode flowNode: flowNodes){
-            currentFlowNode = flowNode
-            labelAction = false
-
-            if (flowNode instanceof StepStartNode){
-                labelAction = hasLabelAction(flowNode)
-            }
-
-            if (labelAction){
-                return flowNode
-            }
-        }
-
-        if (currentFlowNode == null) {
-            return null
-        }
-
-        return getStepStartNode(currentFlowNode.getParents())
-    }
-
-    def hasLabelAction(FlowNode flowNode){
-        def actions = flowNode.getActions()
-
-        for (Action action: actions){
-            if (action instanceof LabelAction) {
-                return true
-            }
-        }
-
-        return false
     }
 
     /**
