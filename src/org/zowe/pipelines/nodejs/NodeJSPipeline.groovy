@@ -195,7 +195,6 @@ class NodeJSPipeline extends GenericPipeline {
             def rawVersion = baseVersion.trim().split("\\.")
 
             for (int i = 0; i < rawVersion.length; i++) {
-                steps.echo rawVersion[i]
                 rawVersion[i] = Integer.parseInt(rawVersion[i])
             }
 
@@ -211,13 +210,16 @@ class NodeJSPipeline extends GenericPipeline {
             // on whichever has the lowest restriction
             switch(branch.level) {
                 case SemverLevel.MAJOR:
-                    availableVersions.add("${rawVersion[0] + 1}.${rawVersion[1]}.${rawVersion[2]}$prereleaseString")
+                    int level = rawVersion[0] + 1
+                    availableVersions.add("${level}.${rawVersion[1]}.${rawVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.MINOR:
-                    availableVersions.add("${rawVersion[0]}.${rawVersion[1] + 1}.${rawVersion[2]}$prereleaseString")
+                    int level = rawVersion[1] + 1
+                    availableVersions.add("${rawVersion[0]}.${level}.${rawVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.PATCH:
-                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${rawVersion[2] + 1}$prereleaseString")
+                    int level = rawVersion[2] + 1
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${level}$prereleaseString")
                     break
             }
 
