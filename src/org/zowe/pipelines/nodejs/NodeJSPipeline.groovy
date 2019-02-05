@@ -257,7 +257,16 @@ class NodeJSPipeline extends GenericPipeline {
                     if (!_changeInfo.isPullRequest) {
                         steps.sh "git status"
                         steps.sh "git add package.json"
-                        steps.sh "git add package_lock.json"
+
+                        // Attempt to add package lock and exit cleanly if not there
+                        // Reason: We only want to source the change if it exists but not worry about the package_lock
+                        //         being non-existent
+                        steps.sh "git add package_lock.json && exit 0"
+
+                        def ret = steps.sh returnStatus: true, script: "git status | grep 'nothing to commit'"
+
+                        steps.echo ret
+
                         commit("Updating dependencies")
                     }
                 }
