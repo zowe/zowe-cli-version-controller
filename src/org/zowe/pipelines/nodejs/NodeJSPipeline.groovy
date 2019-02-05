@@ -185,6 +185,37 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.echo "TODO Fill this out"
+
+            // First retrieve the version string
+            def baseVersion = steps.sh returnStdout: true, script: 'node -e "console.log(require(\'./package.json\').version.split(\'-\')[0])"'
+            baseVersion = baseVersion.trim()
+
+            // Extract the raw version
+            def rawVersion = baseVersion.split(".")
+
+            NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+
+            // Format the prerelease to be applied to every item
+            String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
+
+            List<String> availableVersions = ["$baseVersion$prereleaseString (default)"]
+
+            // This switch case has every statement fallthrough. This is so that we can add all the versions based
+            // on whichever has the lowest restriction
+            switch(branch.level) {
+                case SemverLevel.MAJOR:
+                    availableVersions.add("${rawVersion[0] + 1}.${rawVersion[1]}.${rawVersion[2]}$prereleaseString")
+                    // falls through
+                case SemverLevel.MINOR:
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1] + 1}.${rawVersion[2]}$prereleaseString")
+                    // falls through
+                case SemverLevel.PATCH:
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${rawVersion[2] + 1}$prereleaseString")
+                    break
+            }
+
+            // Check if my logic is flawed
+            steps.echo availableVersions.join("\n")
         }
 
         super.deployGeneric(deployArguments, versionArguments)
