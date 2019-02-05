@@ -203,7 +203,8 @@ class NodeJSPipeline extends GenericPipeline {
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            List<String> availableVersions = ["$baseVersion$prereleaseString (default)"]
+            List<String> availableVersions = new ArrayList<>()
+            availableVersions.add("$baseVersion$prereleaseString (default)")
 
             // This switch case has every statement fallthrough. This is so that we can add all the versions based
             // on whichever has the lowest restriction
