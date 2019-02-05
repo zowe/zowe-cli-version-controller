@@ -216,6 +216,10 @@ class GenericPipeline extends Pipeline {
         createSubStage(deployArguments + [operation: {
             // TODO Check if we need to push any commits here and see if that would be a fast forward
 
+            steps.sh "git status"
+
+            // Ask user if no response default to using semver present in branch with proper prerelease branding
+
             deployArguments.operation()
         }])
     }

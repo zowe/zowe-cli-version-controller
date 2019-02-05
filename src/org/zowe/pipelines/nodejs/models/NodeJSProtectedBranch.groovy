@@ -13,6 +13,25 @@ class NodeJSProtectedBranch extends ProtectedBranch {
     String tag
 
     /**
+     * The max release level that will be prompted for the branch.
+     *
+     * <p><b>Note:</b> This does not restrict the level that can be manually committed. It only
+     * restricts what will be asked in the version request.</p>
+     *
+     * <p><b>Default:</b> {@link SemverLevel#MAJOR}</p>
+     */
+    SemverLevel level = SemverLevel.MAJOR
+
+    /**
+     * The prerelease string to apply between the semver and build date.
+     *
+     * <p>If this is omitted, the build will never ask to deploy a prerelease. If specified, the
+     * build will always ask to deploy a prerelease. Committing a manual version to the branch can
+     * override this specification</p>
+     */
+    String prerelease
+
+    /**
      * A map of dependencies and their required installable tags for this
      * protected branch.
      *
