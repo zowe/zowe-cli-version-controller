@@ -49,10 +49,10 @@ import org.zowe.pipelines.nodejs.exceptions.*
  *     })
  *
  *     // Run a build
- *     pipeline.buildStage()
+ *     pipeline.build()
  *
  *     // Run a test
- *     pipeline.testStage() // Provide required parameters in your pipeline.
+ *     pipeline.test() // Provide required parameters in your pipeline.
  *
  *     // MUST BE CALLED LAST
  *     pipeline.end()
@@ -108,7 +108,7 @@ class NodeJSPipeline extends GenericPipeline {
      * <p>Arguments passed to this function will map to the
      * {@link org.zowe.pipelines.generic.models.BuildArgs} class.</p>
      *
-     * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#buildStageGeneric(java.util.Map)}
+     * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)}
      * method and will have the following additional operations. <ul>
      *     <li>If {@link org.zowe.pipelines.generic.models.BuildArgs#buildOperation} is not
      *     provided, the stage will default to executing {@code npm run build}.</li>
@@ -119,11 +119,11 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.BuildArgs} used to define
      *                  the stage.
      */
-    void buildStage(Map arguments = [:]) {
+    void build(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        buildStageGeneric(arguments + [buildOperation: {
+        buildGeneric(arguments + [buildOperation: {
             // Either use a custom build script or the default npm run build
             if (arguments.buildOperation) {
                 arguments.buildOperation()
@@ -281,7 +281,7 @@ class NodeJSPipeline extends GenericPipeline {
      * {@link org.zowe.pipelines.generic.models.TestArgs} class.</p>
      *
      * <p>The stage will be created with the
-     * {@link org.zowe.pipelines.generic.GenericPipeline#testStageGeneric(java.util.Map)} method. If
+     * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method. If
      * {@link org.zowe.pipelines.generic.models.TestArgs#testOperation} is not provided, this method
      * will default to executing {@code npm run test}</p>
      *
@@ -289,14 +289,14 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
      *                  the stage.
      */
-    void testStage(Map arguments = [:]) {
+    void test(Map arguments = [:]) {
         if (!arguments.testOperation) {
             arguments.testOperation = {
                 steps.sh "npm run test"
             }
         }
 
-        super.testStageGeneric(arguments)
+        super.testGeneric(arguments)
     }
 
     /**

@@ -4,7 +4,7 @@ import org.zowe.pipelines.base.exceptions.StageException
 
 /**
  * A generic exception that is thrown from within the
- * {@link org.zowe.pipelines.generic.GenericPipeline#buildStageGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)} method.
  */
 class BuildStageException extends StageException {
     /**

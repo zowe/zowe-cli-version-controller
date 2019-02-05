@@ -21,8 +21,8 @@ import org.zowe.pipelines.generic.exceptions.*
  *
  * pipeline.setupGeneric()
  *
- * pipeline.buildStageGeneric()
- * pipeline.testStageGeneric() // Provide required parameters in your pipeline
+ * pipeline.buildGeneric()
+ * pipeline.testGeneric() // Provide required parameters in your pipeline
  *
  * // MUST BE CALLED LAST
  * pipeline.endGeneric()
@@ -97,20 +97,30 @@ class GenericPipeline extends Pipeline {
      *
      * <p>This stage will throw a {@link BuildStageException} if called more than once in your pipeline.</p>
      *
-     * <p><b>Note:</b> This method was intended to be called {@code buildStage} but had to be named
-     * {@code buildStageGeneric} due to the issues described in {@link Pipeline}.</p>
+     * <p><b>Note:</b> This method was intended to be called {@code build} but had to be named
+     * {@code buildGeneric} due to the issues described in {@link Pipeline}.</p>
      *
      * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
      *                  the stage.
      */
-    void buildStageGeneric(Map arguments = [:]) {
+    void buildGeneric(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
         BuildArgs args = arguments
 
+        BuildStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new BuildStageException("args.stage is an invalid option for buildGeneric", args.name)
+        }
+
         args.name = "Build: ${args.name}"
         args.stage = {
+            if (preSetupException) {
+                throw preSetupException
+            }
+
             if (_didBuild) {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
@@ -121,6 +131,42 @@ class GenericPipeline extends Pipeline {
         }
 
         createStage(args)
+    }
+
+    void deployGeneric(Map arguments) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        DeployArgs args = arguments
+
+        if (args.name) {
+            args.name = "Deploy: ${args.name}"
+        } else {
+            args.name = "Deploy"
+        }
+
+        DeployStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        args.stage = {
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent. @TODO ENHANCE THE BUILD AND TEST TO DO THIS ALSO
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (!_didTest) {
+                throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
+            }
+
+            // TODO Check if we need to push any commits here and see if that would be a fast forward
+
+            // Call the deploy operation now
+            args.deployOperation()
+        }
     }
 
     /**
@@ -242,20 +288,20 @@ class GenericPipeline extends Pipeline {
      * circumstances:</p>
      *
      * <ul>
-     * <li>A test stage was created before a call to {@link #buildStageGeneric(Map)}</li>
+     * <li>A test stage was created before a call to {@link #buildGeneric(Map)}</li>
      * <li>{@link TestArgs#testResults} was missing</li>
      * <li>Invalid options specified for {@link TestArgs#testResults}</li>
      * <li>{@link TestArgs#coverageResults} was provided but had an invalid format</li>
      * <li>{@link TestArgs#junitOutput} is missing.</li>
      * </ul>
      *
-     * <p><b>Note:</b> This method was intended to be called {@code testStage} but had to be named
-     * {@code testStageGeneric} due to the issues described in {@link Pipeline}.</p>
+     * <p><b>Note:</b> This method was intended to be called {@code test} but had to be named
+     * {@code testGeneric} due to the issues described in {@link Pipeline}.</p>
      *
      * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
      *                  the stage.
      */
-    void testStageGeneric(Map arguments = [:]) {
+    void testGeneric(Map arguments = [:]) {
         // Default the resultThreshold to unstable for tests,
         // if a custom value is passed then that will be used instead
         if (!arguments.resultThreshold) {
@@ -264,9 +310,18 @@ class GenericPipeline extends Pipeline {
 
         TestArgs args = arguments
 
-        // @TODO one must happen before deploy
+        TestStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new TestStageException("args.stage is an invalid option for testGeneric", args.name)
+        }
+
         args.name = "Test: ${args.name}"
         args.stage = {
+            if (preSetupException) {
+                throw preSetupException
+            }
+
             if (!_didBuild) {
                 throw new TestStageException("Tests cannot be run before the build has completed", args.name)
             }

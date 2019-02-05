@@ -4,15 +4,15 @@ import org.zowe.pipelines.base.exceptions.StageException
 
 /**
  * A generic exception that is thrown from within the
- * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map)} method.
  */
-class TestStageException extends StageException {
+class DeployStageException extends StageException {
     /**
      * Create the exception.
      * @param message The exception message
      * @param stageName The name of the stage throwing the exception
      */
-    TestStageException(String message, String stageName) {
+    DeployStageException(String message, String stageName) {
         super(message, stageName)
     }
 }

@@ -5,7 +5,7 @@ import org.zowe.pipelines.base.models.StageArgs
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.generic.GenericPipeline#testStageGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method.
  */
 class TestArgs extends StageArgs {
     /**

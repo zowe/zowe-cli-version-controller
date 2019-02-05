@@ -4,7 +4,7 @@ import org.zowe.pipelines.base.models.StageArgs
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.generic.GenericPipeline#buildStageGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)} method.
  */
 class BuildArgs extends StageArgs {
     /**
