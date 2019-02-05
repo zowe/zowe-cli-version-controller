@@ -247,7 +247,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                     // Otherwise we need to save the version properly
                     else {
-                        depInstall += " --save"
+                        depInstall += " --no-save"
                         devInstall += " --save-dev"
                     }
 
@@ -256,6 +256,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                     if (!_changeInfo.isPullRequest) {
                         steps.sh "git status"
+
+                        // Add package.json and fail if it doesn't exist.
                         steps.sh "git add package.json"
 
                         // Attempt to add package lock and exit cleanly if not there
