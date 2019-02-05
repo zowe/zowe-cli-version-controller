@@ -172,6 +172,8 @@ class NodeJSPipeline extends GenericPipeline {
             // Login to the publish registry
             _loginToRegistry(publishConfig)
 
+            steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag} --dry-run"
+
             // Logout immediately
             _logoutOfRegistry(publishConfig)
         }
