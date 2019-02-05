@@ -212,16 +212,16 @@ class NodeJSPipeline extends GenericPipeline {
             // on whichever has the lowest restriction
             switch(branch.level) {
                 case SemverLevel.MAJOR:
-                    int level = rawVersion[0] + 1
-                    availableVersions.add("${level}.${rawVersion[1] + 1}.${rawVersion[2]}$prereleaseString")
+                    int level = rawIntVersion[0] + 1
+                    availableVersions.add("${level}.${rawIntVersion[1] + 1}.${rawIntVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.MINOR:
                     int level = rawIntVersion[1] + 1
-                    availableVersions.add("${rawVersion[0]}.${level}.${rawVersion[2]}$prereleaseString")
+                    availableVersions.add("${rawIntVersion[0]}.${level}.${rawIntVersion[2]}$prereleaseString")
                     // falls through
                 case SemverLevel.PATCH:
                     int level = rawIntVersion[2] + 1
-                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${level}$prereleaseString")
+                    availableVersions.add("${rawIntVersion[0]}.${rawIntVersion[1]}.${level}$prereleaseString")
                     break
             }
 
