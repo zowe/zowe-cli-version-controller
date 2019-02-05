@@ -3,6 +3,7 @@ package org.zowe.pipelines.nodejs
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.GenericPipeline
+import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
@@ -144,25 +145,47 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     void deploy(Map deployArguments = [:], Map versionArguments = [:]) {
-        super.deployGeneric(arguments + [
-                deployOperation: {
-                    // Login to the registry
-                    def npmRegistry = steps.sh returnStdout: true,
-                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
-                    publishConfig.url = npmRegistry.trim()
+        IllegalArgumentException deployException
+        IllegalArgumentException versionException
 
-                    steps.sh "sudo npm config set registry ${publishConfig.url}"
+        if (deployArguments.operation) {
+            deployException = new IllegalArgumentException("operation is an invalid map object for deployArguments")
+        }
 
-                    // Login to the publish registry
-                    _loginToRegistry(publishConfig)
+        if (versionArguments.operation) {
+            versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
+        }
 
-                    // Logout immediately
-                    _logoutOfRegistry(publishConfig)
-                },
-                versioningOperation: {
-                    steps.echo "Nothing should happen here"
-                }
-        ])
+        // Set the deploy operation for an npm pipeline
+        deployArguments.operation = {
+            if (deployException) {
+                throw deployException
+            }
+
+            // Login to the registry
+            def npmRegistry = steps.sh returnStdout: true,
+                    script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+            publishConfig.url = npmRegistry.trim()
+
+            steps.sh "sudo npm config set registry ${publishConfig.url}"
+
+            // Login to the publish registry
+            _loginToRegistry(publishConfig)
+
+            // Logout immediately
+            _logoutOfRegistry(publishConfig)
+        }
+
+        // Set the version operation for an npm pipeline
+        versionArguments.operation = {
+            if (versionException) {
+                throw versionException
+            }
+
+            steps.echo "TODO Fill this out"
+        }
+
+        super.deployGeneric(deployArguments, versionArguments)
     }
 
     /**
