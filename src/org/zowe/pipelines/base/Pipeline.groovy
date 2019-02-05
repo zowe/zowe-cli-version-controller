@@ -10,13 +10,6 @@ import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
 
-import hudson.model.Action
-
-import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
-import org.jenkinsci.plugins.workflow.actions.LabelAction
-import org.jenkinsci.plugins.workflow.actions.ErrorAction
-
 /**
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
  * your pipeline.
@@ -526,7 +519,7 @@ class Pipeline {
 
             setResult(ResultEnum.FAILURE)
             stage.exception = e
-            throw e // TODO If this is thrown logs will not be captured, fix please
+            throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
 

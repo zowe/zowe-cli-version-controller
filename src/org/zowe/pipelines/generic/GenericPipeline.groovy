@@ -52,6 +52,11 @@ class GenericPipeline extends Pipeline {
     protected String _buildRevision
 
     /**
+     * Stores the change information for reference later.
+     */
+    protected ChangeInformation _changeInfo
+
+    /**
      * A boolean that tracks if the build step was run. When false, the build still hasn't completed
      */
     protected boolean _didBuild = false
@@ -137,6 +142,8 @@ class GenericPipeline extends Pipeline {
         super.setupBase()
 
         createStage(name: 'Check for CI Skip', stage: {
+            _changeInfo = new ChangeInformation(steps)
+
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch
