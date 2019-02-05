@@ -412,7 +412,8 @@ class Pipeline {
                             steps.sh "mkdir -p ./${archiveLocation}${directory}"
 
                             // It is an absolute path so try to copy everything into our work directory
-                            steps.sh "cp -r $directory ./${archiveLocation}${directory}"
+                            // always exit with 0 return code so the ui doesn't look broken
+                            steps.sh "cp -r $directory ./${archiveLocation}${directory} || exit 0"
                         } else if (directory.startsWith("..")) {
                             throw new PipelineException("Relative archives are not supported")
                         }
