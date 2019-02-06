@@ -207,9 +207,11 @@ class NodeJSPipeline extends GenericPipeline {
 
             steps.echo "TODO Fill this out"
 
-            // First retrieve the version string
-            def baseVersion = steps.sh returnStdout: true, script: 'node -e "console.log(require(\'./package.json\').version.split(\'-\')[0])"'
-            baseVersion = baseVersion.trim()
+            // Get the package.json
+            def packageJSON = steps.readJSON file: 'package.json'
+
+            // Extract the base version
+            def baseVersion = packageJSON.version.split("-")[0]
 
             // Extract the raw version
             def rawVersion = baseVersion.split("\\.")
@@ -290,6 +292,11 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by ${steps.env.DEPLOY_APPROVER}"
+
+            packageJSON.version = steps.env.DEPLOY_VERSION
+            steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
+            steps.sh "git add package.json"
+            commit("Bump version to ${steps.env.DEPLOY_VERSION}")
 
             // @TODO send out confirmation email in deploy step
         }
