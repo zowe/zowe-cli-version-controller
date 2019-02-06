@@ -1,14 +1,9 @@
 package org.zowe.pipelines.generic.models
 
-import groovy.transform.AutoClone
-
-import static groovy.transform.AutoCloneStyle.SIMPLE
-
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method.
  */
-@AutoClone(style = SIMPLE)
 class TestArgs extends GenericArgs {
     /**
      * Default values provided to cobertura.

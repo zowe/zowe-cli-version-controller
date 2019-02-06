@@ -1,9 +1,6 @@
 package org.zowe.pipelines.generic.models
 
-import groovy.transform.AutoClone
 import org.zowe.pipelines.base.models.StageArgs
-
-import static groovy.transform.AutoCloneStyle.SIMPLE
 
 //TODO change the documentation
 /**
