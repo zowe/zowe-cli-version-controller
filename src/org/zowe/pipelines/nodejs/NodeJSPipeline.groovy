@@ -191,8 +191,6 @@ class NodeJSPipeline extends GenericPipeline {
 
         // Set the version operation for an npm pipeline
         versionArguments.operation = { String stageName ->
-            // @TODO handle auto deploy if set
-
             if (versionException) {
                 throw versionException
             }
@@ -203,10 +201,8 @@ class NodeJSPipeline extends GenericPipeline {
             def baseVersion = steps.sh returnStdout: true, script: 'node -e "console.log(require(\'./package.json\').version.split(\'-\')[0])"'
             baseVersion = baseVersion.trim()
 
-            steps.echo baseVersion
-
             // Extract the raw version
-            def rawVersion = baseVersion.trim().split("\\.")
+            def rawVersion = baseVersion.split("\\.")
 
             NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
 
@@ -234,13 +230,9 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
-            // Check if my logic is flawed
-            steps.echo availableVersions.join("\n")
-
             // @TODO USE THE STAGE TIMEOUT TO GATHER HOW MUCH TIME COULD BE WRAPPED IN THE TIMEOUT
-            // @TODO Approver ids
 
-            if (protectedBranches.get(stageName).autoDeploy) {
+            if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
             } else if (approverIds.size() == 0) {
