@@ -5,7 +5,7 @@ package org.zowe.pipelines.base.models
  * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
  * method.
  */
-class StageArgs {
+class StageArgs implements Cloneable {
     /**
      * Can the stage ignore a skip all condition.
      *
@@ -86,4 +86,11 @@ class StageArgs {
      * The timeout options for the stage.
      */
     StageTimeout timeout = [:]
+
+    @Override
+    Object clone() throws CloneNotSupportedException {
+        StageArgs args = super.clone()
+
+        return args
+    }
 }
