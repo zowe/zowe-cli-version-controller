@@ -2,6 +2,7 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.base.models.TimeUnit
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
@@ -245,6 +246,11 @@ class NodeJSPipeline extends GenericPipeline {
                         stageName
                 )
             } else {
+                // Add a timeout of one minute less than the available stage execution time
+                StageTimeout timeout = getStage(stageName).args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
+
+                steps.echo timeout.toString()
+
                 steps.input message: "Version Information Required", ok: "Publish",
                         submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
                         parameters: [
