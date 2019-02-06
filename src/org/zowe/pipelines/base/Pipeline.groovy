@@ -453,6 +453,23 @@ class Pipeline {
         return _stages.getStage(stageName)
     }
 
+    final void sendHtmlEmail(String subjectTag, String bodyText, String toField = "", addRecipientProviders = true) {
+        def subject = "[$subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+
+        // send the email
+        steps.emailext(
+                subject: subject,
+                to: toField,
+                body: bodyText,
+                mimeType: "text/html",
+                recipientProviders: addRecipientProviders ? [[$class: 'DevelopersRecipientProvider'],
+                                     [$class: 'UpstreamComitterRecipientProvider'],
+                                     [$class: 'CulpritsRecipientProvider'],
+                                     [$class: 'RequesterRecipientProvider']] : []
+        )
+
+    }
+
     /**
      * Set the build result
      * @param result The new result for the build.
@@ -648,7 +665,7 @@ class Pipeline {
         // @TODO if status is aborted, indicate who aborted it
 
         steps.echo "Sending email notification..."
-        def subject = "$buildStatus Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def subject = buildStatus
         def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
@@ -691,15 +708,11 @@ class Pipeline {
         try {
             steps.echo bodyText // log out the exception too
             // send the email
-            steps.emailext(
-                    subject: subject,
-                    to: _isProtectedBranch ? admins.getCCList() : "",
-                    body: bodyText,
-                    mimeType: "text/html",
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider'],
-                                         [$class: 'UpstreamComitterRecipientProvider'],
-                                         [$class: 'CulpritsRecipientProvider'],
-                                         [$class: 'RequesterRecipientProvider']]
+
+            sendHtmlEmail(
+                    subject,
+                    bodyText,
+                    _isProtectedBranch ? admins.getCCList() : ""
             )
         }
         catch (emailException) {
