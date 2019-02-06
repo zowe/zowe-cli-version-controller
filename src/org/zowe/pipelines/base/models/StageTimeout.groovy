@@ -19,6 +19,6 @@ class StageTimeout {
     String unit = 'MINUTES'
 
     String toString() {
-
+        return "${time} ${unit}"
     }
 }
