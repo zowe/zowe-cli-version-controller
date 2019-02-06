@@ -14,11 +14,15 @@ class StageTimeout {
     /**
      * The unit of measurement for {@link #time}
      *
-     * <p><b>Default:</b> {@code "MINUTES"}</p>
+     * <p><b>Default:</b> {@link TimeoutUnit#MINUTES}</p>
      */
-    String unit = 'MINUTES'
+    TimeoutUnit unit = TimeoutUnit.MINUTES
 
     String toString() {
         return "${time} ${unit}"
     }
+
+//    BigInteger rawValue() {
+//
+//    }
 }

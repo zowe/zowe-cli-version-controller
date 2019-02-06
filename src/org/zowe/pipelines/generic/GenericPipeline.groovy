@@ -2,6 +2,7 @@ package org.zowe.pipelines.generic
 
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.TimeoutUnit
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -260,7 +261,7 @@ class GenericPipeline extends Pipeline {
                 _shouldSkipRemainingStages = true
                 setResult(ResultEnum.NOT_BUILT)
             }
-        }, timeout: [time: 1, unit: 'MINUTES'])
+        }, timeout: [time: 1, unit: TimeoutUnit.MINUTES])
     }
 
     /**

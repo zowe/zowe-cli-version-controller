@@ -500,11 +500,11 @@ class Pipeline {
             } else {
                 steps.echo "No problems with preinitialization of pipeline :)"
             }
-        }, isSkipable: false, timeout: [time: 10, unit: 'SECONDS'])
+        }, isSkipable: false, timeout: [time: 10, unit: TimeoutUnit.SECONDS])
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkipable: false, timeout: [time: 1, unit: 'MINUTES'])
+        }, isSkipable: false, timeout: [time: 1, unit: TimeoutUnit.MINUTES])
     }
 
     /**

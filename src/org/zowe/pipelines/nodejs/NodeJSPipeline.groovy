@@ -2,6 +2,7 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.TimeoutUnit
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
@@ -391,7 +392,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkipable: false, timeout: [time: 10, unit: 'MINUTES'])
+        }, isSkipable: false, timeout: [time: 10, unit: TimeoutUnit.MINUTES])
     }
 
     /**
