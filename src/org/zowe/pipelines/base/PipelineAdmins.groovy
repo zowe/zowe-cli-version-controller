@@ -13,10 +13,11 @@ class PipelineAdmins {
     void add(String... admins) {
         for (String admin : admins) {
             User u = User.getById(admin, false)
-            String emailAddress = u?.getProperty(Mailer.UserProperty.class)?.address
+            String emailAddress = u.getProperty(Mailer.UserProperty.class).address
+            String name = u.getFullName()
 
             if (emailAddress) {
-                _admins.add(new PipelineAdmin(admin, emailAddress))
+                _admins.add(new PipelineAdmin(admin, emailAddress, name))
             } else {
                 throw new IllegalArgumentException("Email address is null for \"$admin\"")
             }
