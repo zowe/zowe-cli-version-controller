@@ -2,6 +2,7 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.StageArgs
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
@@ -125,10 +126,10 @@ class NodeJSPipeline extends GenericPipeline {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        buildGeneric(arguments + [operation: {
+        buildGeneric(arguments + [operation: { StageArgs stageArgs ->
             // Either use a custom build script or the default npm run build
             if (arguments.operation) {
-                arguments.operation()
+                arguments.operation(stageArgs)
             } else {
                 steps.sh 'npm run build'
             }
@@ -157,7 +158,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // Set the deploy operation for an npm pipeline
-        deployArguments.operation = {
+        deployArguments.operation = { StageArgs stageArgs ->
             if (deployException) {
                 throw deployException
             }
@@ -179,7 +180,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // Set the version operation for an npm pipeline
-        versionArguments.operation = { // @TODO the stage and operation should be pass itself so that users can have access to the properties
+        versionArguments.operation = { StageArgs stageArgs ->
             if (versionException) {
                 throw versionException
             }

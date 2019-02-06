@@ -74,8 +74,8 @@ class StageArgs {
      * The operation to execute for the stage.
      *
      * <p>When the closure is called, it will be passed a single parameter. This parameter is a
-     * reference to the {@link Stage} object that represents the stage. Modifying any items in
-     * this stage will not be reflected in the main stage object.
+     * reference to the {@link StageArgs} object that represents the stage. Modifying any items in
+     * this stage will not be reflected in the main stage object.</p>
      *
      * <p>This operation will be executed inside of a Jenkins stage. Failure to provide this
      * attribute will result in an {@link java.lang.NullPointerException}.</p>

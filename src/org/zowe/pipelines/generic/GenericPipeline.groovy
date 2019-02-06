@@ -3,6 +3,7 @@ package org.zowe.pipelines.generic
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
+import org.zowe.pipelines.base.models.StageArgs
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -116,7 +117,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Build: ${args.name}"
-        args.stage = { Stage stage ->
+        args.stage = { StageArgs stageArgs ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {
@@ -127,7 +128,7 @@ class GenericPipeline extends Pipeline {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
-            args.operation(stage)
+            args.operation(stageArgs)
 
             _didBuild = true
         }
@@ -190,7 +191,7 @@ class GenericPipeline extends Pipeline {
                 return shouldExecute && _isProtectedBranch
             }
 
-            args.stage = { Stage stage ->
+            args.stage = { StageArgs stageArgs ->
                 // If there were any exceptions during the setup, throw them here so proper email notifications
                 // can be sent.
                 if (preSetupException) {
@@ -201,7 +202,7 @@ class GenericPipeline extends Pipeline {
                     throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
                 }
 
-                args.operation(stage)
+                args.operation(stageArgs)
             }
 
             createStage(args)
@@ -213,7 +214,7 @@ class GenericPipeline extends Pipeline {
             createSubStage(versionArguments)
         }
 
-        createSubStage(deployArguments + [operation: { Stage stage ->
+        createSubStage(deployArguments + [operation: { StageArgs stage ->
             // TODO Check if we need to push any commits here and see if that would be a fast forward
 
             steps.sh "git status"
@@ -352,7 +353,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Test: ${args.name}"
-        args.stage = { Stage stage ->
+        args.stage = { StageArgs stageArgs ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {
@@ -387,7 +388,7 @@ class GenericPipeline extends Pipeline {
             }
 
             try {
-                args.operation()
+                args.operation(stageArgs)
             } catch (e) {
                 steps.echo "Exception: ${e.getMessage()}"
             }
