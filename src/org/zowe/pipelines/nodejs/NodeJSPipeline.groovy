@@ -191,6 +191,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             // First retrieve the version string
             def baseVersion = steps.sh returnStdout: true, script: 'node -e "console.log(require(\'./package.json\').version.split(\'-\')[0])"'
+            baseVersion = baseVersion.trim()
 
             steps.echo baseVersion
 
@@ -223,14 +224,14 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
+            // Check if my logic is flawed
+            steps.echo availableVersions.join("\n")
+
             steps.input message: "Version information needed"
                 parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions.join("\n"), description: "What version should be used?")]
 
             steps.echo steps.env.RELEASE_VERSION
             // @TODO Send out the email test tomorrow
-
-            // Check if my logic is flawed
-            steps.echo availableVersions.join("\n")
         }
 
         super.deployGeneric(deployArguments, versionArguments)
