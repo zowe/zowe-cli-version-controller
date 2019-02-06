@@ -261,7 +261,7 @@ class NodeJSPipeline extends GenericPipeline {
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
                         // TODO send out email notifications
-                        steps.env.DEPLOY_VERSION = steps.input message: "Version Information Required", ok: "Publish",
+                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
                                 submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
                                 parameters: [
                                         steps.choice(
@@ -270,6 +270,9 @@ class NodeJSPipeline extends GenericPipeline {
                                                 description: "What version should be used?"
                                         )
                                 ]
+
+                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
                     if (exception.causes[0].user.toString() == SYSTEM_ABORT_ID) {
