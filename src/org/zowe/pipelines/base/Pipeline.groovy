@@ -630,7 +630,7 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
-        def buildStatus = "${steps.currentBuild.currentResult}"
+        String buildStatus = "${steps.currentBuild.currentResult}"
 
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
