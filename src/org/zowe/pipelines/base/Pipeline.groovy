@@ -631,17 +631,24 @@ class Pipeline {
      */
     protected void _sendEmailNotification() {
         String buildStatus = "${steps.currentBuild.currentResult}"
+        String emailText = buildStatus
 
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
+
+            if (buildStatus == "ABORTED") {
+                emailText += " by ${((FlowInterruptedException) firstFailingStage.exception).getCauses()[0].user}"
+            }
         }
+
+        // @TODO if status is aborted, indicate who aborted it
 
         steps.echo "Sending email notification..."
         def subject = "$buildStatus Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
-                        <p><b>$buildStatus</b></p>
+                        <p><b>$emailText</b></p>
                         <hr>
                         <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
             steps.env.BUILD_NUMBER
