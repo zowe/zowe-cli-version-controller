@@ -250,12 +250,12 @@ class NodeJSPipeline extends GenericPipeline {
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 15, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
-                            "Unable to wait for input. Timeout for $stageName, must be greater than 1 minute." +
-                                    "Timeout was ${currentStage.args.timeout.toString()}", stageName
+                            "Unable to wait for input! Timeout for $stageName, must be greater than 1 minute." +
+                                    " Timeout was ${currentStage.args.timeout.toString()}", stageName
                     )
                 }
 
