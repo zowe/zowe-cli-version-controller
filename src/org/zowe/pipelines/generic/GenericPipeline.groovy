@@ -117,7 +117,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Build: ${args.name}"
-        args.stage = { StageArgs stageArgs ->
+        args.stage = { String stageName ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {
@@ -128,7 +128,7 @@ class GenericPipeline extends Pipeline {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
-            args.operation(stageArgs)
+            args.operation(stageName)
 
             _didBuild = true
         }
@@ -191,7 +191,7 @@ class GenericPipeline extends Pipeline {
                 return shouldExecute && _isProtectedBranch
             }
 
-            args.stage = { StageArgs stageArgs ->
+            args.stage = { String stageName ->
                 // If there were any exceptions during the setup, throw them here so proper email notifications
                 // can be sent.
                 if (preSetupException) {
@@ -202,7 +202,7 @@ class GenericPipeline extends Pipeline {
                     throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
                 }
 
-                args.operation(stageArgs)
+                args.operation(stageName)
             }
 
             createStage(args)
@@ -214,14 +214,14 @@ class GenericPipeline extends Pipeline {
             createSubStage(versionArguments)
         }
 
-        createSubStage(deployArguments + [operation: { StageArgs stage ->
+        createSubStage(deployArguments + [operation: { String stageName ->
             // TODO Check if we need to push any commits here and see if that would be a fast forward
 
             steps.sh "git status"
 
             // Ask user if no response default to using semver present in branch with proper prerelease branding
 
-            deployArguments.operation(stage)
+            deployArguments.operation(stageName)
         }])
     }
 
@@ -353,7 +353,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Test: ${args.name}"
-        args.stage = { StageArgs stageArgs ->
+        args.stage = { String stageName ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {
@@ -388,7 +388,7 @@ class GenericPipeline extends Pipeline {
             }
 
             try {
-                args.operation(stageArgs)
+                args.operation(stageName)
             } catch (e) {
                 steps.echo "Exception: ${e.getMessage()}"
             }

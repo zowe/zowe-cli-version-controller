@@ -126,10 +126,10 @@ class NodeJSPipeline extends GenericPipeline {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        buildGeneric(arguments + [operation: { StageArgs stageArgs ->
+        buildGeneric(arguments + [operation: { String stageName ->
             // Either use a custom build script or the default npm run build
             if (arguments.operation) {
-                arguments.operation(stageArgs)
+                arguments.operation(stageName)
             } else {
                 steps.sh 'npm run build'
             }
@@ -158,7 +158,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // Set the deploy operation for an npm pipeline
-        deployArguments.operation = { StageArgs stageArgs ->
+        deployArguments.operation = { String stageName ->
             if (deployException) {
                 throw deployException
             }
@@ -180,7 +180,9 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // Set the version operation for an npm pipeline
-        versionArguments.operation = { StageArgs stageArgs ->
+        versionArguments.operation = { String stageName ->
+            // @TODO handle auto deploy if set
+
             if (versionException) {
                 throw versionException
             }
@@ -221,6 +223,10 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
+            steps.input message: "Version information needed"
+                parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions.join("\n"), description: "What version should be used?")]
+
+            steps.echo steps.env.RELEASE_VERSION
             // @TODO Send out the email test tomorrow
 
             // Check if my logic is flawed

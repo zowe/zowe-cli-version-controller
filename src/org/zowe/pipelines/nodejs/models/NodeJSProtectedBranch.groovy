@@ -1,11 +1,11 @@
 package org.zowe.pipelines.nodejs.models
 
-import org.zowe.pipelines.base.models.ProtectedBranch
+import org.zowe.pipelines.generic.models.GenericProtectedBranch
 
 /**
  * @see org.zowe.pipelines.base.models.ProtectedBranch
  */
-class NodeJSProtectedBranch extends ProtectedBranch {
+class NodeJSProtectedBranch extends GenericProtectedBranch {
     /**
      * This is the npm tag in which the branch will be published with. If this
      * property is left null, then the branch will not be published.

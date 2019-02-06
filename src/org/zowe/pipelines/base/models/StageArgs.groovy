@@ -5,7 +5,7 @@ package org.zowe.pipelines.base.models
  * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
  * method.
  */
-class StageArgs implements Cloneable {
+class StageArgs {
     /**
      * Can the stage ignore a skip all condition.
      *
@@ -73,9 +73,10 @@ class StageArgs implements Cloneable {
     /**
      * The operation to execute for the stage.
      *
-     * <p>When the closure is called, it will be passed a single parameter. This parameter is a
-     * reference to the {@link StageArgs} object that represents the stage. Modifying any items in
-     * this stage will not be reflected in the main stage object.</p>
+     * <p>When the closure is called, it will be passed a single parameter. This parameter is the
+     * evaluated string name of the stage. This name can be used to obtain the stage object if
+     * desired. If the stage object is accessed, avoid making any changes to the internal state.
+     * Changes to the internal state may cause instabilities in your pipeline.</p>
      *
      * <p>This operation will be executed inside of a Jenkins stage. Failure to provide this
      * attribute will result in an {@link java.lang.NullPointerException}.</p>
@@ -86,19 +87,4 @@ class StageArgs implements Cloneable {
      * The timeout options for the stage.
      */
     StageTimeout timeout = [:]
-
-    @Override
-    Object clone() throws CloneNotSupportedException {
-        environment = [test: "string"]
-
-        StageArgs args = super.clone()
-
-        args.environment = args.environment.clone()
-
-        if (environment == args.environment) {
-            throw new CloneNotSupportedException("THE CLONE DIDN'T WORK")
-        }
-
-        return args
-    }
 }
