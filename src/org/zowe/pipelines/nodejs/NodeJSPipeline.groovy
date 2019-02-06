@@ -257,7 +257,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Add a timeout of one minute less than the available stage execution time
                 // This will allow the versioning task at least 1 minute to update the files and
                 // move on to the next step.
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
@@ -292,6 +292,8 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by ${steps.env.DEPLOY_APPROVER}"
+
+            // @TODO Send out email of approval
 
             packageJSON.version = steps.env.DEPLOY_VERSION
             steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
