@@ -2,6 +2,7 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.base.models.TimeUnit
 import org.zowe.pipelines.generic.GenericPipeline
@@ -246,8 +247,17 @@ class NodeJSPipeline extends GenericPipeline {
                         stageName
                 )
             } else {
+                Stage currentStage = getStage(stageName)
+
                 // Add a timeout of one minute less than the available stage execution time
-                StageTimeout timeout = getStage(stageName).args.timeout.subtract(time: 15, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 15, unit: TimeUnit.MINUTES)
+
+                if (timeout.time <= 0) {
+                    throw new DeployStageException(
+                            "Unable to wait for input. Timeout for $stageName, must be greater than 1 Minute." +
+                                    "Timeout was ${currentStage.args.timeout}", stageName
+                    )
+                }
 
                 steps.echo timeout.toString()
 
