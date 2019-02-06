@@ -89,6 +89,8 @@ class StageArgs implements Cloneable {
 
     @Override
     Object clone() throws CloneNotSupportedException {
+        environment = [test: "string"]
+
         StageArgs args = super.clone()
 
         args.environment = args.environment.clone()
