@@ -253,6 +253,8 @@ class NodeJSPipeline extends GenericPipeline {
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
+                // This will allow the versioning task at least 1 minute to update the files and
+                // move on to the next step.
                 StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
@@ -276,7 +278,7 @@ class NodeJSPipeline extends GenericPipeline {
                                 ]
                     }
                 } catch (FlowInterruptedException exception) {
-                    if (exception.causes[0].user == SYSTEM_ABORT_ID) {
+                    if (exception.causes[0].user.toString() == SYSTEM_ABORT_ID) {
                         steps.env.DEPLOY_APPROVER = SYSTEM_ABORT_ID
                         steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     } else {
