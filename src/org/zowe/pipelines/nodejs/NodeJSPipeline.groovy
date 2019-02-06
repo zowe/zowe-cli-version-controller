@@ -236,6 +236,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
             } else if (approverIds.size() == 0) {
+                steps.echo "ERROR"
                 throw new DeployStageException(
                         "No approvers available! Please specify at least one approver in NodeJSPipeline.approverIds",
                         stageName
