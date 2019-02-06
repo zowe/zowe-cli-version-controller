@@ -2,7 +2,7 @@ package org.zowe.pipelines.generic
 
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
-
+import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -116,7 +116,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Build: ${args.name}"
-        args.stage = {
+        args.stage = { Stage stage ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {
@@ -127,7 +127,7 @@ class GenericPipeline extends Pipeline {
                 throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
             }
 
-            args.operation()
+            args.operation(stage)
 
             _didBuild = true
         }
@@ -190,7 +190,7 @@ class GenericPipeline extends Pipeline {
                 return shouldExecute && _isProtectedBranch
             }
 
-            args.stage = {
+            args.stage = { Stage stage ->
                 // If there were any exceptions during the setup, throw them here so proper email notifications
                 // can be sent.
                 if (preSetupException) {
@@ -201,7 +201,7 @@ class GenericPipeline extends Pipeline {
                     throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
                 }
 
-                args.operation()
+                args.operation(stage)
             }
 
             createStage(args)
@@ -213,14 +213,14 @@ class GenericPipeline extends Pipeline {
             createSubStage(versionArguments)
         }
 
-        createSubStage(deployArguments + [operation: {
+        createSubStage(deployArguments + [operation: { Stage stage ->
             // TODO Check if we need to push any commits here and see if that would be a fast forward
 
             steps.sh "git status"
 
             // Ask user if no response default to using semver present in branch with proper prerelease branding
 
-            deployArguments.operation()
+            deployArguments.operation(stage)
         }])
     }
 
@@ -352,7 +352,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Test: ${args.name}"
-        args.stage = {
+        args.stage = { Stage stage ->
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {

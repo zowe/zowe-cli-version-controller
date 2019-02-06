@@ -280,7 +280,7 @@ class Pipeline {
                             // Run the passed stage with the proper environment variables
                             steps.withEnv(environment) {
                                 _closureWrapper(stage) {
-                                    args.stage()
+                                    args.stage(stage.clone())
                                 }
                             }
                         }

@@ -1,10 +1,14 @@
 package org.zowe.pipelines.base.models
 
+import groovy.transform.AutoClone
+import static groovy.transform.AutoCloneStyle.SIMPLE
+
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
  * method.
  */
+@AutoClone(style = SIMPLE)
 class StageArgs {
     /**
      * Can the stage ignore a skip all condition.
@@ -73,8 +77,12 @@ class StageArgs {
     /**
      * The operation to execute for the stage.
      *
+     * <p>When the closure is called, it will be passed a single parameter. This parameter is a
+     * reference to the {@link Stage} object that represents the stage. Modifying any items in
+     * this stage will not be reflected in the main stage object.
+     *
      * <p>This operation will be executed inside of a Jenkins stage. Failure to provide this
-     * attribute will result in an {@link java.lang.NullPointerException}.
+     * attribute will result in an {@link java.lang.NullPointerException}.</p>
      */
     Closure stage
 

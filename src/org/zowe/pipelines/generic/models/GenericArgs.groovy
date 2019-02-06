@@ -1,12 +1,16 @@
 package org.zowe.pipelines.generic.models
 
+import groovy.transform.AutoClone
 import org.zowe.pipelines.base.models.StageArgs
+
+import static groovy.transform.AutoCloneStyle.SIMPLE
 
 //TODO change the documentation
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map)} method.
  */
+@AutoClone(style = SIMPLE)
 class GenericArgs extends StageArgs{
     /**
      * The deploy operation.

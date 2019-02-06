@@ -1,8 +1,13 @@
 package org.zowe.pipelines.generic.models
 
+import groovy.transform.AutoClone
+
+import static groovy.transform.AutoCloneStyle.SIMPLE
+
 /**
  * Test report archive information.
  */
+@AutoClone(style = SIMPLE)
 class TestReport {
     /**
      * The directory containing the report.
