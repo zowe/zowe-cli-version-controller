@@ -1,5 +1,6 @@
 package org.zowe.pipelines.base
 
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
@@ -626,8 +627,12 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
+        if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
+            steps.echo "${((FlowInterruptedException) firstFailingStage.exception).result}"
+        }
+
         steps.echo "Sending email notification..."
-        def subject = "${steps.currentBuild.result}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
