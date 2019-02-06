@@ -333,8 +333,6 @@ class Pipeline {
             // First setup the build properties
             def history = defaultBuildHistory
 
-            buildParameters.push(steps.choice(choices: ['a', 'b', 'c'], description: 'test', name: 'test'))
-
             // Add protected branch to build options
             if (protectedBranches.isProtected(steps.BRANCH_NAME)) {
                 _isProtectedBranch = true
