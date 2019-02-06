@@ -96,7 +96,7 @@ class Pipeline {
      * This is a list of administrator emails addresses that will receive emails when a build
      * happens on a protected branch.
      */
-    String[] adminEmails = []
+    final PipelineAdmins admins = new PipelineAdmins()
 
     /**
      * The number of historical builds kept for a non-protected branch.
@@ -688,19 +688,18 @@ class Pipeline {
             bodyText += "</table>"
         }
 
-        List<String> ccList = new ArrayList<String>()
+        String ccList = ""
         if (_isProtectedBranch) {
             // only CC administrators if we are on a protected branch
-            for (String email : adminEmails) {
-                ccList.add("cc: " + email)
-            }
+            ccList = admins.getCCList()
+            steps.echo ccList
         }
         try {
             steps.echo bodyText // log out the exception too
             // send the email
             steps.emailext(
                     subject: subject,
-                    to: ccList.join(","),
+                    to: ccList,
                     body: bodyText,
                     mimeType: "text/html",
                     recipientProviders: [[$class: 'DevelopersRecipientProvider'],
