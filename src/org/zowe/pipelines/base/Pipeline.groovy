@@ -687,19 +687,13 @@ class Pipeline {
             bodyText += "</div></td></tr>"
             bodyText += "</table>"
         }
-
-        String ccList = ""
-        if (_isProtectedBranch) {
-            // only CC administrators if we are on a protected branch
-            ccList = admins.getCCList()
-            steps.echo ccList
-        }
+        
         try {
             steps.echo bodyText // log out the exception too
             // send the email
             steps.emailext(
                     subject: subject,
-                    to: ccList,
+                    to: _isProtectedBranch ? admins.getCCList() : "",
                     body: bodyText,
                     mimeType: "text/html",
                     recipientProviders: [[$class: 'DevelopersRecipientProvider'],
