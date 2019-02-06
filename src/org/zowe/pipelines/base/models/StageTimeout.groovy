@@ -33,7 +33,7 @@ class StageTimeout {
     StageTimeout add(StageTimeout value) {
         return new StageTimeout(
                 unit: value.unit,
-                time: unit.convert(time, value.unit) + time
+                time: unit.convert(time, value.unit) + value.time
         )
     }
 
@@ -57,7 +57,7 @@ class StageTimeout {
     StageTimeout subtract(StageTimeout value) {
         return new StageTimeout(
                 unit: value.unit,
-                time: unit.convert(time, value.unit) - time
+                time: unit.convert(time, value.unit) - value.time
         )
     }
 
