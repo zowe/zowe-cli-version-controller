@@ -16,7 +16,7 @@ class PipelineAdmins {
             String emailAddress = u?.getProperty(Mailer.UserProperty.class)?.address
 
             if (emailAddress) {
-                _admins.add(new PipelineAdmin(userID: admin, email: emailAddress))
+                _admins.add(new PipelineAdmin(admin, emailAddress))
             } else {
                 throw new IllegalArgumentException("Email address is null for \"$admin\"")
             }
