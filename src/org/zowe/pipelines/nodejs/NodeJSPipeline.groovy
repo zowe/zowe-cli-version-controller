@@ -1,5 +1,6 @@
 package org.zowe.pipelines.nodejs
 
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
@@ -239,8 +240,6 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
-            // @TODO USE THE STAGE TIMEOUT TO GATHER HOW MUCH TIME COULD BE WRAPPED IN THE TIMEOUT
-
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
@@ -254,7 +253,7 @@ class NodeJSPipeline extends GenericPipeline {
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
@@ -263,20 +262,32 @@ class NodeJSPipeline extends GenericPipeline {
                     )
                 }
 
-//                try
-                steps.input message: "Version Information Required", ok: "Publish",
-                        submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
-                        parameters: [
-                                steps.choice(
-                                        name: "DEPLOY_VERSION",
-                                        choices: availableVersions,
-                                        description: "What version should be used?"
-                                )
-                        ]
+                try {
+                    steps.timeout(time: timeout.time, unit: timeout.unit) {
+                        // TODO send out email notifications
+                        steps.input message: "Version Information Required", ok: "Publish",
+                                submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
+                                parameters: [
+                                        steps.choice(
+                                                name: "DEPLOY_VERSION",
+                                                choices: availableVersions,
+                                                description: "What version should be used?"
+                                        )
+                                ]
+                    }
+                } catch (FlowInterruptedException exception) {
+                    if (exception.causes[0].user == SYSTEM_ABORT_ID) {
+                        steps.env.DEPLOY_APPROVER = SYSTEM_ABORT_ID
+                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                    } else {
+                        // If the system didn't cancel the request, propogate the exception up the
+                        // callstack
+                        throw exception
+                    }
+                }
             }
 
-            steps.echo steps.env.DEPLOY_APPROVER
-            steps.echo steps.env.DEPLOY_VERSION
+            steps.echo "${steps.env.DEPLOY_VERSION} approved by ${steps.env.DEPLOY_APPROVER}"
 
             // @TODO send out confirmation email in deploy step
         }
