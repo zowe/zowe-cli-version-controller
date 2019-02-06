@@ -116,6 +116,9 @@ class Pipeline {
             FAILURE : [
                     'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
                     'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
+            ],
+            ABORTED : [
+                    'https://i.imgur.com/Zq0iBJK.jpg' /* surprised pikachu */
             ]
     ]
 
@@ -627,16 +630,18 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
+        def buildStatus = "${steps.currentBuild.currentResult}"
+
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
-            steps.echo "${((FlowInterruptedException) firstFailingStage.exception).result}"
+            buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
         }
 
         steps.echo "Sending email notification..."
-        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def subject = "$buildStatus Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
-                        <p><b>${steps.currentBuild.currentResult}</b></p>
+                        <p><b>$buildStatus</b></p>
                         <hr>
                         <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
             steps.env.BUILD_NUMBER
@@ -644,9 +649,9 @@ class Pipeline {
                         """
 
         // add an image reflecting the result
-        if (notificationImages.containsKey(steps.currentBuild.currentResult) &&
-                notificationImages[steps.currentBuild.currentResult].size() > 0) {
-            def imageList = notificationImages[steps.currentBuild.currentResult]
+        if (notificationImages.containsKey(buildStatus) &&
+                notificationImages[buildStatus].size() > 0) {
+            def imageList = notificationImages[buildStatus]
             def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
             bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
         }
