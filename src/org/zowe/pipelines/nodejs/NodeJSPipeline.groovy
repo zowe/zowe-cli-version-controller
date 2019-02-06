@@ -77,14 +77,6 @@ class NodeJSPipeline extends GenericPipeline {
     static final String SYSTEM_ABORT_ID = "SYSTEM"
 
     /**
-     * The list of user ids that can approve the build.
-     *
-     * <p>If no approverIds are provided, the pipeline will not be able to ask for input in the
-     * versioning step.</p>
-     */
-    List<String> approverIds = []
-
-    /**
      * This is the connection information for the registry where code is published
      * to.
      *
@@ -245,7 +237,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-            } else if (approverIds.size() == 0) {
+            } else if (admins.size() == 0) {
                 steps.echo "ERROR"
                 throw new DeployStageException(
                         "No approvers available! Please specify at least one approver in NodeJSPipeline.approverIds",
@@ -269,8 +261,8 @@ class NodeJSPipeline extends GenericPipeline {
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
                         // TODO send out email notifications
-                        steps.input message: "Version Information Required", ok: "Publish",
-                                submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
+                        steps.env.DEPLOY_VERSION = steps.input message: "Version Information Required", ok: "Publish",
+                                submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
                                 parameters: [
                                         steps.choice(
                                                 name: "DEPLOY_VERSION",

@@ -23,12 +23,30 @@ class PipelineAdmins {
         }
     }
 
+    String getApproverList() {
+        String approverList = ""
+        for (PipelineAdmin admin : _admins) {
+            approverList += admin.userID
+
+            // If the current iteration isn't the last element, add a comma separator
+            if (!admin.is(_admins.last())) {
+                approverList += ","
+            }
+        }
+
+        return approverList
+    }
+
     String getCCList() {
         _getEmailList("cc")
     }
 
     String getEmailList() {
         return _getEmailList()
+    }
+
+    int size() {
+        return _admins.size()
     }
 
     private String _getEmailList(String prefix = null) {
@@ -42,7 +60,6 @@ class PipelineAdmins {
             }
         }
 
-        // Could be more efficient about the comma. Come back to this later, maybe?
         return ccList
     }
 }

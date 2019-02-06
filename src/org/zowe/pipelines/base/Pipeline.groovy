@@ -687,7 +687,7 @@ class Pipeline {
             bodyText += "</div></td></tr>"
             bodyText += "</table>"
         }
-        
+
         try {
             steps.echo bodyText // log out the exception too
             // send the email
