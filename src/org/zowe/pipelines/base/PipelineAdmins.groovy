@@ -31,8 +31,8 @@ class PipelineAdmins {
     String getApproverList() {
         String approverList = ""
         boolean first = true
-        for (PipelineAdmin admin : _admins) {
-            approverList += (!first ? "," : "") + admin.userID
+        _admins.each { key, value ->
+            approverList += (!first ? "," : "") + value.userID
             first = false
         }
 
@@ -54,8 +54,8 @@ class PipelineAdmins {
     private String _getEmailList(String prefix = null) {
         String ccList = ""
         boolean first = true
-        for (PipelineAdmin admin : _admins) {
-            ccList += (!first ? "," : "") + "${prefix ? "$prefix: " : ""}${admin.email}"
+        _admins.each { key, value ->
+            ccList += (!first ? "," : "") + "${prefix ? "$prefix: " : ""}${value.email}"
             first = false
         }
 
