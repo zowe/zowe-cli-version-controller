@@ -1,5 +1,7 @@
 package org.zowe.pipelines.base.models
 
+import java.util.concurrent.TimeUnit
+
 /**
  * Stage timeout information.
  */
@@ -9,20 +11,16 @@ class StageTimeout {
      *
      * <p><b>Default:</b> {@code 10}</p>
      */
-    int time = 10
+    long time = 10
 
     /**
      * The unit of measurement for {@link #time}
      *
      * <p><b>Default:</b> {@link TimeoutUnit#MINUTES}</p>
      */
-    TimeoutUnit unit = TimeoutUnit.MINUTES
+    TimeUnit unit = TimeUnit.MINUTES
 
     String toString() {
         return "${time} ${unit}"
     }
-
-//    BigInteger rawValue() {
-//
-//    }
 }

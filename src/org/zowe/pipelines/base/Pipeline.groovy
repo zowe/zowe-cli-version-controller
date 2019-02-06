@@ -4,6 +4,8 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
+import java.util.concurrent.TimeUnit
+
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
@@ -500,11 +502,11 @@ class Pipeline {
             } else {
                 steps.echo "No problems with preinitialization of pipeline :)"
             }
-        }, isSkipable: false, timeout: [time: 10, unit: TimeoutUnit.SECONDS])
+        }, isSkipable: false, timeout: [time: 10, unit: TimeUnit.SECONDS])
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkipable: false, timeout: [time: 1, unit: TimeoutUnit.MINUTES])
+        }, isSkipable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
     }
 
     /**

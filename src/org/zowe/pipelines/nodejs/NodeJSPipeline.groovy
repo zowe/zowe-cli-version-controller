@@ -2,11 +2,13 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
-import org.zowe.pipelines.base.models.TimeoutUnit
+import org.zowe.pipelines.base.models.TimeUnit
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
+
+import java.util.concurrent.TimeUnit
 
 /**
  * A stage executor for a NodeJSPipeline pipeline.
@@ -392,7 +394,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkipable: false, timeout: [time: 10, unit: TimeoutUnit.MINUTES])
+        }, isSkipable: false, timeout: [time: 10, unit: TimeUnit.MINUTES])
     }
 
     /**
