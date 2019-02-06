@@ -2,7 +2,6 @@ package org.zowe.pipelines.nodejs
 
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
-import org.zowe.pipelines.base.models.StageArgs
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
@@ -65,11 +64,22 @@ import org.zowe.pipelines.nodejs.exceptions.*
  * define the node where your pipeline will execute.</p>
  */
 class NodeJSPipeline extends GenericPipeline {
-    // @FUTURE part of the deploy story
+    static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
+
+    /**
+     * The list of user ids that can approve the build.
+     *
+     * <p>If no approverIds are provided, the pipeline will not be able to ask for input in the
+     * versioning step.</p>
+     */
+    List<String> approverIds = []
+
     /**
      * This is the connection information for the registry where code is published
-     * to. If URL is passed to publish config, it will be ignored in favor of the package.json file's
-     * publishConfig.registry property.
+     * to.
+     *
+     * <p>If URL is passed to publish config, it will be ignored in favor of the package.json file's
+     * publishConfig.registry property.</p>
      */
     RegistryConfig publishConfig
 
@@ -230,11 +240,30 @@ class NodeJSPipeline extends GenericPipeline {
             // @TODO USE THE STAGE TIMEOUT TO GATHER HOW MUCH TIME COULD BE WRAPPED IN THE TIMEOUT
             // @TODO Approver ids
 
-            steps.input message: "Version information needed", ok: "Publish",
-                parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions, description: "What version should be used?")]
+            if (protectedBranches.get(stageName).autoDeploy) {
+                steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+            } else if (approverIds.size() == 0) {
+                throw new DeployStageException(
+                        "No approvers available! Please specify at least one approver in NodeJSPipeline.approverIds",
+                        stageName
+                )
+            } else {
+                steps.input message: "Version Information Required", ok: "Publish",
+                        submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
+                        parameters: [
+                                steps.choice(
+                                        name: "DEPLOY_VERSION",
+                                        choices: availableVersions,
+                                        description: "What version should be used?"
+                                )
+                        ]
+            }
 
-            steps.echo steps.env.RELEASE_VERSION
-            // @TODO Send out the email test tomorrow
+            steps.echo steps.env.DEPLOY_APPROVER
+            steps.echo steps.env.DEPLOY_VERSION
+
+            // @TODO send out confirmation email in deploy step
         }
 
         super.deployGeneric(deployArguments, versionArguments)

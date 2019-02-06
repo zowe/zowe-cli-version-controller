@@ -2,8 +2,6 @@ package org.zowe.pipelines.generic
 
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
-import org.zowe.pipelines.base.models.Stage
-import org.zowe.pipelines.base.models.StageArgs
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -40,7 +38,6 @@ class GenericPipeline extends Pipeline {
      */
     protected static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
 
-    // @FUTURE Only relevant for CD story
     /**
      * Git user configuration, add more documentation in future story
      */
