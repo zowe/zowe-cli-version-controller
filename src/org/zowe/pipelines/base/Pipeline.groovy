@@ -640,6 +640,8 @@ class Pipeline {
 
             if (buildStatus == "ABORTED") {
                 emailText = "Aborted by ${((FlowInterruptedException) firstFailingStage.exception).causes[0]?.user}"
+            } else {
+                emailText = buildStatus
             }
         }
 

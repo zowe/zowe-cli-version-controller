@@ -254,12 +254,10 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
-                            "Unable to wait for input. Timeout for $stageName, must be greater than 1 Minute." +
-                                    "Timeout was ${currentStage.args.timeout}", stageName
+                            "Unable to wait for input. Timeout for $stageName, must be greater than 1 minute." +
+                                    "Timeout was ${currentStage.args.timeout.toString()}", stageName
                     )
                 }
-
-                steps.echo timeout.toString()
 
                 steps.input message: "Version Information Required", ok: "Publish",
                         submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
