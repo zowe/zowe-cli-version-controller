@@ -227,8 +227,11 @@ class NodeJSPipeline extends GenericPipeline {
             // Check if my logic is flawed
             steps.echo availableVersions.join("\n")
 
+            // @TODO USE THE STAGE TIMEOUT TO GATHER HOW MUCH TIME COULD BE WRAPPED IN THE TIMEOUT
+            // @TODO Approver ids
+
             steps.input message: "Version information needed"
-                parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions.join("\n"), description: "What version should be used?")]
+                parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions, description: "What version should be used?")]
 
             steps.echo steps.env.RELEASE_VERSION
             // @TODO Send out the email test tomorrow
