@@ -247,7 +247,7 @@ class NodeJSPipeline extends GenericPipeline {
                 )
             } else {
                 // Add a timeout of one minute less than the available stage execution time
-                StageTimeout timeout = getStage(stageName).args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = getStage(stageName).args.timeout.subtract(time: 15, unit: TimeUnit.MINUTES)
 
                 steps.echo timeout.toString()
 
