@@ -627,7 +627,7 @@ class Pipeline {
      */
     protected void _sendEmailNotification() {
         steps.echo "Sending email notification..."
-        def subject = "${steps.currentBuild.currentResult}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+        def subject = "${steps.currentBuild.result}: Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
         def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
