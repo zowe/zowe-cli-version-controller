@@ -10,7 +10,6 @@ import static groovy.transform.AutoCloneStyle.SIMPLE
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map)} method.
  */
-@AutoClone(style = SIMPLE)
 class GenericArgs extends StageArgs{
     /**
      * The deploy operation.

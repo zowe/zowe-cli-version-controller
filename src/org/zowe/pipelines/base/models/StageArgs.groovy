@@ -1,14 +1,10 @@
 package org.zowe.pipelines.base.models
 
-import groovy.transform.AutoClone
-import static groovy.transform.AutoCloneStyle.SIMPLE
-
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
  * method.
  */
-@AutoClone(style = SIMPLE)
 class StageArgs {
     /**
      * Can the stage ignore a skip all condition.
