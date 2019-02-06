@@ -91,6 +91,8 @@ class StageArgs implements Cloneable {
     Object clone() throws CloneNotSupportedException {
         StageArgs args = super.clone()
 
+        args.environment = args.environment.clone()
+
         if (environment == args.environment) {
             throw new CloneNotSupportedException("THE CLONE DIDN'T WORK")
         }
