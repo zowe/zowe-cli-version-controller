@@ -17,4 +17,8 @@ class StageTimeout {
      * <p><b>Default:</b> {@code "MINUTES"}</p>
      */
     String unit = 'MINUTES'
+
+    String toString() {
+
+    }
 }

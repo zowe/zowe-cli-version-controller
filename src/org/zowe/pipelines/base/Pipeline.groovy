@@ -637,7 +637,7 @@ class Pipeline {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
 
             if (buildStatus == "ABORTED") {
-                emailText += " by ${((FlowInterruptedException) firstFailingStage.exception).getCauses()[0].user}"
+                emailText = "Aborted by ${((FlowInterruptedException) firstFailingStage.exception).causes[0]?.user}"
             }
         }
 
