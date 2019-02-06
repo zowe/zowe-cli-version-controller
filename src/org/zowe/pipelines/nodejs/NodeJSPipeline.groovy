@@ -260,7 +260,16 @@ class NodeJSPipeline extends GenericPipeline {
 
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        // TODO send out email notifications
+                        sendHtmlEmail(
+                                subjectTag: "APPROVAL REQUIRED",
+                                body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                        "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                        "<p>Versioning information is required before the pipeline can continue. Please" +
+                                        "provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                                to: admins.emailList,
+                                addProviders: false
+                        )
+
                         def inputMap = steps.input message: "Version Information Required", ok: "Publish",
                                 submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
                                 parameters: [
@@ -297,7 +306,8 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "git add package.json"
             commit("Bump version to ${steps.env.DEPLOY_VERSION}")
 
-            // @TODO send out confirmation email in deploy step
+            // @TODO commit version bump to deploy step fail if any changes
+            // @TODO send out confirmation email of deploy success in deploy step
         }
 
         super.deployGeneric(deployArguments, versionArguments)
