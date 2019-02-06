@@ -230,7 +230,7 @@ class NodeJSPipeline extends GenericPipeline {
             // @TODO USE THE STAGE TIMEOUT TO GATHER HOW MUCH TIME COULD BE WRAPPED IN THE TIMEOUT
             // @TODO Approver ids
 
-            steps.input message: "Version information needed",
+            steps.input message: "Version information needed", ok: "Publish",
                 parameters: [steps.choice(name: "RELEASE_VERSION", choices: availableVersions, description: "What version should be used?")]
 
             steps.echo steps.env.RELEASE_VERSION
