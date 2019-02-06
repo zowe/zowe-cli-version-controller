@@ -453,16 +453,20 @@ class Pipeline {
         return _stages.getStage(stageName)
     }
 
-    final void sendHtmlEmail(String subjectTag, String bodyText, String toField = "", addRecipientProviders = true) {
-        def subject = "[$subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+    final void sendHtmlEmail(Map options) {
+        sendHtmlEmail(new EmailOptions(options))
+    }
+
+    final void sendHtmlEmail(EmailOptions options) {
+        def subject = "[$options.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
 
         // send the email
         steps.emailext(
                 subject: subject,
-                to: toField,
-                body: bodyText,
+                to: options.to,
+                body: options.body,
                 mimeType: "text/html",
-                recipientProviders: addRecipientProviders ? [[$class: 'DevelopersRecipientProvider'],
+                recipientProviders: options.addProviders ? [[$class: 'DevelopersRecipientProvider'],
                                      [$class: 'UpstreamComitterRecipientProvider'],
                                      [$class: 'CulpritsRecipientProvider'],
                                      [$class: 'RequesterRecipientProvider']] : []
@@ -662,8 +666,6 @@ class Pipeline {
             }
         }
 
-        // @TODO if status is aborted, indicate who aborted it
-
         steps.echo "Sending email notification..."
         def subject = buildStatus
         def bodyText = """
@@ -706,13 +708,13 @@ class Pipeline {
         }
 
         try {
-            steps.echo bodyText // log out the exception too
-            // send the email
+            steps.echo bodyText
 
+            // send the email
             sendHtmlEmail(
-                    subject,
-                    bodyText,
-                    _isProtectedBranch ? admins.getCCList() : ""
+                    subjectTag: subject,
+                    body: bodyText,
+                    to: _isProtectedBranch ? admins.getCCList() : ""
             )
         }
         catch (emailException) {
