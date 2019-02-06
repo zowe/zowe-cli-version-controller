@@ -74,7 +74,7 @@ class NodeJSPipeline extends GenericPipeline {
      */
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
 
-    static final String SYSTEM_ABORT_ID = "SYSTEM"
+    static final String SYSTEM_ID = "SYSTEM"
 
     /**
      * This is the connection information for the registry where code is published
@@ -275,8 +275,8 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
-                    if (exception.causes[0].user.toString() == SYSTEM_ABORT_ID) {
-                        steps.env.DEPLOY_APPROVER = SYSTEM_ABORT_ID
+                    if (exception.causes[0].user.toString() == SYSTEM_ID) {
+                        steps.env.DEPLOY_APPROVER = SYSTEM_ID
                         steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     } else {
                         // If the system didn't cancel the request, propogate the exception up the
@@ -286,7 +286,9 @@ class NodeJSPipeline extends GenericPipeline {
                 }
             }
 
-            steps.echo "${steps.env.DEPLOY_VERSION} approved by ${steps.env.DEPLOY_APPROVER}"
+            String approveName = steps.env.DEPLOY_APPROVER == SYSTEM_ID ? SYSTEM_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+
+            steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
 
             // @TODO Send out email of approval
 

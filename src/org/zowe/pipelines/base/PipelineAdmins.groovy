@@ -8,7 +8,7 @@ import hudson.model.User
  * @TODO DOCUMENT
  */
 class PipelineAdmins {
-    private final List<PipelineAdmin> _admins = []
+    private final Map<String,PipelineAdmin> _admins = [:]
 
     void add(String... admins) {
         for (String admin : admins) {
@@ -17,22 +17,23 @@ class PipelineAdmins {
             String name = u.getFullName()
 
             if (emailAddress) {
-                _admins.add(new PipelineAdmin(admin, emailAddress, name))
+                _admins.putAt(admin, new PipelineAdmin(admin, emailAddress, name))
             } else {
                 throw new IllegalArgumentException("Email address is null for \"$admin\"")
             }
         }
     }
 
+    PipelineAdmin get(String id) {
+        return _admins.get(id)
+    }
+
     String getApproverList() {
         String approverList = ""
+        boolean first = true
         for (PipelineAdmin admin : _admins) {
-            approverList += admin.userID
-
-            // If the current iteration isn't the last element, add a comma separator
-            if (!admin.is(_admins.last())) {
-                approverList += ","
-            }
+            approverList += (!first ? "," : "") + admin.userID
+            first = false
         }
 
         return approverList
@@ -52,13 +53,10 @@ class PipelineAdmins {
 
     private String _getEmailList(String prefix = null) {
         String ccList = ""
+        boolean first = true
         for (PipelineAdmin admin : _admins) {
-            ccList += "${prefix ? "$prefix: " : ""}${admin.email}"
-
-            // If the current iteration isn't the last element, add a comma separator
-            if (!admin.is(_admins.last())) {
-                ccList += ","
-            }
+            ccList += (!first ? "," : "") + "${prefix ? "$prefix: " : ""}${admin.email}"
+            first = false
         }
 
         return ccList
