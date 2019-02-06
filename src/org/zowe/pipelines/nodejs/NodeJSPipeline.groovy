@@ -4,7 +4,6 @@ import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
-import org.zowe.pipelines.base.models.TimeUnit
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
@@ -69,7 +68,12 @@ import java.util.concurrent.TimeUnit
  * define the node where your pipeline will execute.</p>
  */
 class NodeJSPipeline extends GenericPipeline {
+    /**
+     * This is the id of the approver saved when the pipeline auto approves the deploy.
+     */
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
+
+    static final String SYSTEM_ABORT_ID = "SYSTEM"
 
     /**
      * The list of user ids that can approve the build.
@@ -259,6 +263,7 @@ class NodeJSPipeline extends GenericPipeline {
                     )
                 }
 
+//                try
                 steps.input message: "Version Information Required", ok: "Publish",
                         submitter: approverIds.join(","), submitterParameter: "DEPLOY_APPROVER",
                         parameters: [
