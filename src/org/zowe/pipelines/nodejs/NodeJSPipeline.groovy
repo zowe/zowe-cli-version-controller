@@ -265,7 +265,7 @@ class NodeJSPipeline extends GenericPipeline {
                                 body: "<h3>${steps.env.JOB_NAME}</h3>" +
                                         "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
                                         "<p>Versioning information is required before the pipeline can continue. Please" +
-                                        "provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                                        " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
                                 to: admins.emailList,
                                 addProviders: false
                         )
@@ -299,7 +299,15 @@ class NodeJSPipeline extends GenericPipeline {
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
 
-            // @TODO Send out email of approval
+            sendHtmlEmail(
+                    subjectTag: "APPROVED",
+                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                            "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                            "<p>Approved: <b>${packageJSON.name}@${packageJSON.version}</b></p>" +
+                            "<p>Approved By: <b>${approveName}</b></p>",
+                    to: admins.emailList,
+                    addProviders: false
+            )
 
             packageJSON.version = steps.env.DEPLOY_VERSION
             steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
