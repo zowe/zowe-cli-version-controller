@@ -241,6 +241,7 @@ class GenericPipeline extends Pipeline {
                 // Only execute the credential code if the url does not already contain credentials
                 String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://${steps.env.TOKEN}@")
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+                steps.sh "git remote set-url --delete origin $remoteUrl"
             }
         }
 
