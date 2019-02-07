@@ -303,10 +303,9 @@ class NodeJSPipeline extends GenericPipeline {
                         }
 
                         bodyText += "$versionList</ul></p>" +
-                            "<p>If no input is provided within ${timeout.toString()}, the default version (${availableVersions.get(0)})" +
-                            " will be the deployed version.</p>" +
-                            "<p>Versioning information is required before the pipeline can continue. Please" +
-                            " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
+                            "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
+                            "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
+                            "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
 
                         sendHtmlEmail(
                             subjectTag: "APPROVAL REQUIRED",
