@@ -1,6 +1,7 @@
 package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.omg.CORBA.TIMEOUT
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
@@ -74,7 +75,9 @@ class NodeJSPipeline extends GenericPipeline {
      */
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
 
-    static final String SYSTEM_ID = "SYSTEM"
+    static final String SYSTEM_ID = "SYSTEM" // TODO REMOVE THIS IF I FIGURE IT OUT
+
+    static final String TIMEOUT_APPROVE_ID = "[TIMEOUT_APPROVED]"
 
     /**
      * A map of protected branches.
@@ -311,13 +314,19 @@ class NodeJSPipeline extends GenericPipeline {
                     // WTF Jenkins?!?!?!?!?!?!
 
                     def cause = exception.causes[0]
+                    steps.echo cause.toString()
+                    steps.echo cause.class.toString()
 
-                    if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
-                        // Maybe this is how it is done
-                        steps.echo "DETECTED TIMEOUT"
-                    } else {
-                        steps.echo "DETECTED ABORT"
-                    }
+//                    if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
+//                        // Maybe this is how it is done
+//                        steps.echo "DETECTED TIMEOUT"
+//
+//                        steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
+//                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
+//                    } else {
+//                        steps.echo "DETECTED ABORT"
+//                        throw exception
+//                    }
 
                     steps.echo steps.currentBuild.currentResult
 
