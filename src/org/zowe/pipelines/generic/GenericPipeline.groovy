@@ -254,7 +254,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new GitException("Detected commits not part of build in: ${_changeInfo.branchName}!")
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --dry-run --verbose"
+            steps.sh "git push --verbose"
             return true
         } else {
             return false

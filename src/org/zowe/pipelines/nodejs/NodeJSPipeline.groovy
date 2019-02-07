@@ -187,7 +187,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             try {
                 gitPush()
-                steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag} --dry-run"
+                steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag}"
             } finally {
                 // Logout immediately
                 _logoutOfRegistry(publishConfig)
