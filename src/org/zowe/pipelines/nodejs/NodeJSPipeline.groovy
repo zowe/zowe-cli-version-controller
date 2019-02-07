@@ -258,7 +258,7 @@ class NodeJSPipeline extends GenericPipeline {
             } else if (admins.size() == 0) {
                 steps.echo "ERROR"
                 throw new DeployStageException(
-                        "No approvers available! Please specify at least one approver in NodeJSPipeline.approverIds",
+                        "No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.",
                         stageName
                 )
             } else {
@@ -304,14 +304,14 @@ class NodeJSPipeline extends GenericPipeline {
 
                         bodyText += "$versionList</ul></p>" +
                             "<p>If no input is provided within $timeout, the default version (${availableVersions.get(0)})" +
-                            " will be the deployed version.</p>"
+                            " will be the deployed version.</p>" +
+                            "<p>Versioning information is required before the pipeline can continue. Please" +
+                            " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
 
                         sendHtmlEmail(
                             subjectTag: "APPROVAL REQUIRED",
                             body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText +
-                                "<p>Versioning information is required before the pipeline can continue. Please" +
-                                " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText,
                             to: admins.emailList,
                             addProviders: false
                         )
