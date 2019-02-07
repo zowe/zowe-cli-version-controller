@@ -660,15 +660,10 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
-        // @TODO If not built don't send an email
         // @TODO Get list of commits that were built
 
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
-
-        if (firstFailingStage?.exception) {
-            steps.echo firstFailingStage.exception.cause.toString()
-        }
 
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
