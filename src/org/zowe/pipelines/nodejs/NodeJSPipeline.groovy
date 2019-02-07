@@ -11,7 +11,12 @@ import org.zowe.pipelines.generic.exceptions.DeployStageException
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * A stage executor for a NodeJSPipeline pipeline.
@@ -277,35 +282,72 @@ class NodeJSPipeline extends GenericPipeline {
                     )
                 }
 
+
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    final Future<Object> handler = executor.submit(new Callable() {
+                        @Override
+                        public Object call() throws Exception {
+                            // TODO specify the versions in the email with more detail before the redirect
+                            sendHtmlEmail(
+                                subjectTag: "APPROVAL REQUIRED",
+                                body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                    "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                    "<p>Versioning information is required before the pipeline can continue. Please" +
+                                    " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                                to: admins.emailList,
+                                addProviders: false
+                            )
+
+                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                                submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+                                parameters: [
+                                    steps.choice(
+                                        name: "DEPLOY_VERSION",
+                                        choices: availableVersions,
+                                        description: "What version should be used?"
+                                    )
+                                ]
+
+                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                            steps.env.DEPLOY_PACKAGE = packageJSON.name
+                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+
+                            return null
+                        }
+                    })
                 try {
-                    steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        // TODO specify the versions in the email with more detail before the redirect
-                        sendHtmlEmail(
-                            subjectTag: "APPROVAL REQUIRED",
-                            body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                                "<p>Versioning information is required before the pipeline can continue. Please" +
-                                " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
-                            to: admins.emailList,
-                            addProviders: false
-                        )
-
-                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
-                            parameters: [
-                                steps.choice(
-                                    name: "DEPLOY_VERSION",
-                                    choices: availableVersions,
-                                    description: "What version should be used?"
-                                )
-                            ]
-
-                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
-                    }
+                    handler.get(timeout.time, timeout.unit)
+                   // steps.timeout(time: timeout.time, unit: timeout.unit) {
+//                        // TODO specify the versions in the email with more detail before the redirect
+//                        sendHtmlEmail(
+//                            subjectTag: "APPROVAL REQUIRED",
+//                            body: "<h3>${steps.env.JOB_NAME}</h3>" +
+//                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+//                                "<p>Versioning information is required before the pipeline can continue. Please" +
+//                                " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+//                            to: admins.emailList,
+//                            addProviders: false
+//                        )
+//
+//                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+//                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+//                            parameters: [
+//                                steps.choice(
+//                                    name: "DEPLOY_VERSION",
+//                                    choices: availableVersions,
+//                                    description: "What version should be used?"
+//                                )
+//                            ]
+//
+//                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+//                        steps.env.DEPLOY_PACKAGE = packageJSON.name
+//                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+//                    }
+                } catch (TimeoutException e) {
+                    steps.echo "TIMEOUT CAUGHT!"
+                    handler.cancel()
+                    throw e
                 } catch (FlowInterruptedException exception) {
-
                     steps.echo exception.message
                     steps.echo exception.causes[0].shortDescription
 
