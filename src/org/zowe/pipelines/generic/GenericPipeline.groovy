@@ -240,12 +240,10 @@ class GenericPipeline extends Pipeline {
                 credentialsId: gitConfig.credentialsId, variable: "TOKEN"
             )]) {
                 // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://${steps.env.TOKEN}@")
-
-                steps.env.TOKEN = remoteUrlWithCreds
+                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", 'https://$TOKEN@')
 
                 // Set the push url to the correct one
-                steps.sh 'git remote set-url --add origin $TOKEN'
+                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
 
                 // Do the push in here for security reasons
