@@ -229,8 +229,6 @@ class GenericPipeline extends Pipeline {
      *
      */
     boolean gitPush() {
-        steps.sh "git status"
-
         // Get the remote url
         String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
         String pushCommand = "git push --dry-run --verbose"
