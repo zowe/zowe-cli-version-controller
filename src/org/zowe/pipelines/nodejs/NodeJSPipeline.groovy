@@ -344,7 +344,7 @@ class NodeJSPipeline extends GenericPipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    void end(Map options) {
+    void end(Map options = [:]) {
         List<String> archive = ["/home/jenkins/.npm/_logs"]
 
         if (options.archiveFolders) {
