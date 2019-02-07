@@ -1,7 +1,6 @@
 package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
-import org.omg.CORBA.TIMEOUT
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.Stage
@@ -279,12 +278,35 @@ class NodeJSPipeline extends GenericPipeline {
 
                 long startTime = System.currentTimeMillis()
                 try {
+                    // Sleep for 100 ms to ensure that the timeout catch logic will always work.
+                    // This implies that an abort within 100 ms of the timeout will result in
+                    // an ignore but who cares at this point.
+                    steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
+
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
                         // TODO specify the versions in the email with more detail before the redirect
+                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)}</b>: " +
+                            "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
+
+                        String versionList = ""
+                        List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
+
+                        // Work backwards because of how the versioning works.
+                        // patch is always the last element
+                        // minor is always the second to last element when present
+                        // major is always the third to last element when present
+                        // default is always at 0 and there can never be more than 4 items
+                        for (int i = availableVersions.size() - 1; i > 0; i--) {
+                            versionList = "<li><b>${availableVersions.get(i)}</b>: <i>[${versionText.removeAt(0)}]</i> version update with any " +
+                                "necessary prerelease strings attached.</li>$versionList"
+                        }
+
+                        bodyText += "$versionList</ul></p>"
+
                         sendHtmlEmail(
                             subjectTag: "APPROVAL REQUIRED",
                             body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText +
                                 "<p>Versioning information is required before the pipeline can continue. Please" +
                                 " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
                             to: admins.emailList,
@@ -306,56 +328,30 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
-                    // Do some bs math to determine if we had a timeout because there is no other way.
-                    // Don't even suggest to me that there might be another way unless you can provide
-                    // the code that I couldn't find in 5 hours.
-                    long ellapsedTime = System.currentTimeMillis() - startTime
-
-                    if (ellapsedTime >= timeout.unit.toMillis(timeout.time)) {
-                        steps.echo "DETECTED TIMEOUT"
-                    } else {
-                        steps.echo "DETECTED ABORT"
-                        throw exception
-                    }
-
-                    steps.echo exception.message
-                    steps.echo exception.causes[0].shortDescription
-
-                    // Hit stop indicates Rejected by SYSTEM
-                    // Timeout indicates Rejected by SYSTEM
-                    // WTF Jenkins?!?!?!?!?!?!
-
-                    // When timeout cause.class is
-                    // When abort cause.class is org.jenkinsci.plugins.workflow.support.steps.input.Rejection
-
-                    for (def x : exception.causes) {
-                        steps.echo "Cause: ${x.class.toString()}"
-                    }
-
-                    def cause = exception.causes[0]
-                    steps.echo cause.toString()
-                    steps.echo cause.class.toString()
-
-//                    if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
-//                        // Maybe this is how it is done
-//                        steps.echo "DETECTED TIMEOUT"
-//
-//                        steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-//                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
-//                    } else {
-//                        steps.echo "DETECTED ABORT"
-//                        throw exception
-//                    }
-
-                    steps.echo steps.currentBuild.currentResult
-
-                    // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
-                    if (exception.causes[0].user.toString() == SYSTEM_ID) {
-                        steps.env.DEPLOY_APPROVER = SYSTEM_ID
+                    /*
+                     * Do some bs math to determine if we had a timeout because there is no other way.
+                     * Don't even suggest to me that there might be another way unless you can provide
+                     * the code that I couldn't find in 5 hours.
+                     * The main problem is that when the timeout step kills the input step, the input
+                     * step fires out another FlowInterruptedException. This interrupted exception
+                     * takes precedent over the TimeoutException that should be thrown by the timeout step.
+                     *
+                     * Previously, I had checked to see if the exception.cause[0].user was SYSTEM and
+                     * would use that to indicate timeout. However this scenario happens for both a timeout
+                     * and a ui abort not on the input step. The consequence of this was that aborting
+                     * a build using the stop button would act like a timeout and the deploy would
+                     * auto-approve. This is not the desired behavior for an abort.
+                     *
+                     * It is because of these reasons that I have determined my cheeky timeout check
+                     * is the only feasible solution with the current state of Jenkins. If this
+                     * changes in the future, the logic can be revisited to adjust.
+                     *
+                     */
+                    if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
+                        steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
                         steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     } else {
-                        // If the system didn't cancel the request, propogate the exception up the
-                        // callstack
+                        steps.echo "DETECTED ABORT"
                         throw exception
                     }
                 }
