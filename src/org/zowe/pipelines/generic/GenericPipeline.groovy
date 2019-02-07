@@ -261,8 +261,8 @@ class GenericPipeline extends Pipeline {
 
 
             // Setup the branch to track it's remote
-            steps.sh "git branch ${_changeInfo.branchName}"
-            steps.sh "git branch --set-upstream-to origin ${_changeInfo.branchName}"
+//            steps.sh "git branch ${_changeInfo.branchName}"
+            steps.sh "git branch --set-upstream-to ${_changeInfo.branchName}"
 
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
