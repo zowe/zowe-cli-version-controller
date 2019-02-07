@@ -187,11 +187,11 @@ class NodeJSPipeline extends GenericPipeline {
             // Login to the publish registry
             _loginToRegistry(publishConfig)
 
+            NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+
             try {
                 gitPush()
-                steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag}"
-
-                NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+                steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
