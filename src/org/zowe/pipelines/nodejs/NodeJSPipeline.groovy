@@ -351,7 +351,6 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
                         steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     } else {
-                        steps.echo "DETECTED ABORT"
                         throw exception
                     }
                 }
