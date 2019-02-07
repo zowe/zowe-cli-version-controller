@@ -264,6 +264,7 @@ class GenericPipeline extends Pipeline {
 
             // Setup the branch to track it's remote
             steps.sh "git checkout ${_changeInfo.branchName}"
+            steps.sh "git status"
         }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
 
         createStage(name: 'Check for CI Skip', stage: {
