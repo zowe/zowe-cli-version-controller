@@ -265,7 +265,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Add a timeout of one minute less than the available stage execution time
                 // This will allow the versioning task at least 1 minute to update the files and
                 // move on to the next step.
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
@@ -304,6 +304,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                     steps.echo exception.message
                     steps.echo exception.causes[0].shortDescription
+
+                    // Hit stop indicates Rejected by SYSTEM
 
                     // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
