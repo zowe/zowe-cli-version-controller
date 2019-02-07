@@ -262,6 +262,7 @@ class GenericPipeline extends Pipeline {
 
             // Setup the branch to track it's remote
             steps.sh "git branch ${_changeInfo.branchName}"
+            steps.sh "git status"
             steps.sh "git branch --set-upstream-to ${_changeInfo.branchName}"
 
             // We need to keep track of the current commit revision. This is to prevent the condition where
