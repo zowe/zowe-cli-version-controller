@@ -267,7 +267,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Add a timeout of one minute less than the available stage execution time
                 // This will allow the versioning task at least 1 minute to update the files and
                 // move on to the next step.
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)  // TODO REVERT BACK TO 1 MINUTE
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
@@ -284,7 +284,6 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
 
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        // TODO specify the versions in the email with more detail before the redirect
                         String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
                             "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
 
