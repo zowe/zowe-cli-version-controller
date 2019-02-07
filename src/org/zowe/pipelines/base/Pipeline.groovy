@@ -669,7 +669,7 @@ class Pipeline {
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
 
-        if (firstFailingStage?.exception?.class instanceof FlowInterruptedException) {
+        if (firstFailingStage?.exception instanceof FlowInterruptedException) {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
 
             if (buildStatus == "ABORTED") {
