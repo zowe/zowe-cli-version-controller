@@ -722,8 +722,6 @@ class Pipeline {
             }
 
             try {
-                steps.echo bodyText
-
                 // send the email
                 sendHtmlEmail(
                     subjectTag: subject,
