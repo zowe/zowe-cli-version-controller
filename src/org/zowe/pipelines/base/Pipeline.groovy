@@ -666,6 +666,10 @@ class Pipeline {
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
 
+        if (firstFailingStage?.exception) {
+            steps.echo firstFailingStage.exception.cause[0].toString()
+        }
+
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
             buildStatus = "${((FlowInterruptedException) firstFailingStage.exception).result}"
 
@@ -676,61 +680,63 @@ class Pipeline {
             }
         }
 
-        steps.echo "Sending email notification..."
-        def subject = buildStatus
-        def bodyText = """
+        if (buildStatus != "NOT_BUILT") {
+            steps.echo "Sending email notification..."
+            def subject = buildStatus
+            def bodyText = """
                         <h3>${steps.env.JOB_NAME}</h3>
                         <p>Branch: <b>${steps.BRANCH_NAME}</b></p>
                         <p><b>$emailText</b></p>
                         <hr>
                         <p>Check console output at <a href="${steps.RUN_DISPLAY_URL}">${steps.env.JOB_NAME} [${
-            steps.env.BUILD_NUMBER
-        }]</a></p>
+                steps.env.BUILD_NUMBER
+            }]</a></p>
                         """
 
-        // add an image reflecting the result
-        if (notificationImages.containsKey(buildStatus) &&
+            // add an image reflecting the result
+            if (notificationImages.containsKey(buildStatus) &&
                 notificationImages[buildStatus].size() > 0) {
-            def imageList = notificationImages[buildStatus]
-            def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
-            bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
-        }
-
-        bodyText += _getTestSummary()
-
-        // Add any details of an exception, if encountered
-        if (_stages.firstFailingStage?.exception) { // Safe navigation is where the question mark comes from
-            bodyText += "<h3>Failure Details</h3>"
-            bodyText += "<table>"
-            bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_stages.firstFailingStage.name}</b></td></tr>"
-            bodyText += "<tr><td>Exception:</td><td>${_stages.firstFailingStage.exception.toString()}</td></tr>"
-            bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
-            bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
-            bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
-            def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
-
-            for (int i = 0; i < stackTrace.length; i++) {
-                bodyText += "at ${stackTrace[i]}<br/>"
+                def imageList = notificationImages[buildStatus]
+                def imageIndex = Math.abs(new Random().nextInt() % imageList.size())
+                bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
             }
 
-            bodyText += "</div></td></tr>"
-            bodyText += "</table>"
-        }
+            bodyText += _getTestSummary()
 
-        try {
-            steps.echo bodyText
+            // Add any details of an exception, if encountered
+            if (_stages.firstFailingStage?.exception) { // Safe navigation is where the question mark comes from
+                bodyText += "<h3>Failure Details</h3>"
+                bodyText += "<table>"
+                bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_stages.firstFailingStage.name}</b></td></tr>"
+                bodyText += "<tr><td>Exception:</td><td>${_stages.firstFailingStage.exception.toString()}</td></tr>"
+                bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
+                bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
+                bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
+                def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
 
-            // send the email
-            sendHtmlEmail(
+                for (int i = 0; i < stackTrace.length; i++) {
+                    bodyText += "at ${stackTrace[i]}<br/>"
+                }
+
+                bodyText += "</div></td></tr>"
+                bodyText += "</table>"
+            }
+
+            try {
+                steps.echo bodyText
+
+                // send the email
+                sendHtmlEmail(
                     subjectTag: subject,
                     body: bodyText,
                     to: _isProtectedBranch ? admins.getCCList() : ""
-            )
-        }
-        catch (emailException) {
-            steps.echo "Exception encountered while attempting to send email!"
-            steps.echo emailException.toString()
-            steps.echo emailException.getStackTrace().join("\n")
+                )
+            }
+            catch (emailException) {
+                steps.echo "Exception encountered while attempting to send email!"
+                steps.echo emailException.toString()
+                steps.echo emailException.getStackTrace().join("\n")
+            }
         }
     }
 }
