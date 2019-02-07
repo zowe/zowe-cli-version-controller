@@ -216,6 +216,7 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitCommit(String message) {
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
+        steps.sh "git status"
 
         if (ret == 0) {
             steps.sh "git commit -m \"$message $_CI_SKIP\""
@@ -230,6 +231,8 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitPush() {
         steps.sh "git status"
+
+        throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
     }
 
     /**
