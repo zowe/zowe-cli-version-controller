@@ -246,20 +246,20 @@ class GenericPipeline extends Pipeline {
         String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
         String pushCommand = "git push --dry-run --verbose"
 
-        if (!remoteUrl.matches("https://.*:.*@.*")) {
-                // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
-
-                // Set the push url to the correct one
-                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
-                steps.sh "git remote set-url --delete origin $remoteUrl"
+//        if (!remoteUrl.matches("https://.*:.*@.*")) {
+//                // Only execute the credential code if the url does not already contain credentials
+//                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
+//
+//                // Set the push url to the correct one
+//                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+//                steps.sh "git remote set-url --delete origin $remoteUrl"
 
 //                // Do the push in here for security reasons
 //                steps.sh pushCommand
 //
 //                steps.sh "git remote set-url --add origin $remoteUrl"
 //                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
-        }
+//        }
 
         steps.sh pushCommand
 
@@ -296,6 +296,18 @@ class GenericPipeline extends Pipeline {
             // Setup the branch to track it's remote
             steps.sh "git checkout ${_changeInfo.branchName}"
             steps.sh "git status"
+
+            // If the branch is protected, setup the proper configuration
+            if (_isProtectedBranch) {
+                String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+
+                // Only execute the credential code if the url does not already contain credentials
+                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
+
+                // Set the push url to the correct one
+                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+                steps.sh "git remote set-url --delete origin $remoteUrl"
+            }
         }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
 
         createStage(name: 'Check for CI Skip', stage: {
