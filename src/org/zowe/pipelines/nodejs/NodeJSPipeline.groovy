@@ -287,6 +287,8 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
+
+                    // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
                         steps.env.DEPLOY_APPROVER = SYSTEM_ID
                         steps.env.DEPLOY_VERSION = availableVersions.get(0)
@@ -358,8 +360,6 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
 
-    // @FUTURE a super class could define this method for setup and checkout and the nodejs
-    // @FUTURE class can extend it to add the npm install stuff
     /**
      * Calls {@link org.zowe.pipelines.generic.GenericPipeline#setupGeneric()} to setup the build.
      *
@@ -379,7 +379,6 @@ class NodeJSPipeline extends GenericPipeline {
      */
     void setup() {
         // @TODO all timeouts should be configurable do as part of next story
-        // @FUTURE Fail if version was manually changed (allow for an override if we need to for some reason) for DEPLOY
         super.setupGeneric()
 
         createStage(name: 'Install Node Package Dependencies', stage: {

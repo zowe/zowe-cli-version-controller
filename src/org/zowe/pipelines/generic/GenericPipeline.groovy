@@ -6,6 +6,7 @@ import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 /**
  * Extends the functionality available in the {@link Pipeline} class. This class adds methods for
@@ -250,9 +251,9 @@ class GenericPipeline extends Pipeline {
         //
         //and have 2 and 1 different commit each, respectively.
 
-        if (status.matches("Your branch and '.*' have diverged")) {
+        if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new GitException("Detected commits not part of build in: ${_changeInfo.branchName}!")
-        } else if (status.matches("Your branch is ahead of")) {
+        } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
             steps.sh "git push --dry-run --verbose"
             return true
         } else {
