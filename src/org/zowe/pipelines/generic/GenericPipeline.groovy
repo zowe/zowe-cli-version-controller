@@ -2,7 +2,6 @@ package org.zowe.pipelines.generic
 
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
-import org.zowe.pipelines.base.models.TimeUnit
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -40,6 +39,11 @@ class GenericPipeline extends Pipeline {
      * Shell command that gets the current git revision.
      */
     protected static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
+
+    /**
+     * The token id for git credentials
+     */
+    protected static final String _TOKEN = "TOKEN"
 
     /**
      * Git user configuration, add more documentation in future story
@@ -205,6 +209,15 @@ class GenericPipeline extends Pipeline {
         }])
     }
 
+    void endGeneric(Map options) {
+        // Wrap all this in a with credentials call for security purposes
+        steps.withCredentials([steps.usernameColonPassword(
+            credentialsId: gitConfig.credentialsId, variable: _TOKEN
+        )]) {
+            super.endBase(options)
+        }
+    }
+
     /**
      * Commit a code change during pipeline execution.
      *
@@ -234,25 +247,21 @@ class GenericPipeline extends Pipeline {
         String pushCommand = "git push --dry-run --verbose"
 
         if (!remoteUrl.matches("https://.*:.*@.*")) {
-            steps.withCredentials([steps.usernameColonPassword(
-                credentialsId: gitConfig.credentialsId, variable: "TOKEN"
-            )]) {
                 // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", 'https://\\$TOKEN@')
+                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
 
                 // Set the push url to the correct one
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
 
-                // Do the push in here for security reasons
-                steps.sh pushCommand
-
-                steps.sh "git remote set-url --add origin $remoteUrl"
-                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
-            }
-        } else {
-            steps.sh pushCommand
+//                // Do the push in here for security reasons
+//                steps.sh pushCommand
+//
+//                steps.sh "git remote set-url --add origin $remoteUrl"
+//                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
         }
+
+        steps.sh pushCommand
 
         throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
     }

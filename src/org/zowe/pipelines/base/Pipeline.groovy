@@ -311,63 +311,7 @@ class Pipeline {
         createStage(args)
     }
 
-    /**
-     * Call to inform the runner that no more stages are to be added and execution can begin.
-     *
-     * <p>The end method MUST be the last method called as part of your pipeline. The end method is
-     * responsible for executing all the stages previously created after setting the required build
-     * options and possible stage parameters. Failure to call this method will prevent your pipeline
-     * stages from executing.</p>
-     *
-     * <p>Prior to executing the stages, various build options are set. Some of these options include
-     * the build history and stage skip parameters. After this is done, the method will execute
-     * all of the created stages in the order they were defined.</p>
-     *
-     * <p>After stage execution, an email will be sent out to those that made the commit. If the build
-     * failed or returned to normal, all committers since the last successful build will also
-     * receive the email. Finally if this build is on a protected branch, all emails listed in the
-     * {@link #adminEmails} list will also receive a status email.</p>
-     *
-     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
-     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
-     *
-     * @param alwaysAction This is a closure that is always executed at the end of the pipeline prior
-     *                     prior to emails being sent out.
-     */
-    final void endBase(Closure alwaysAction) {
-        try {
-            // First setup the build properties
-            def history = defaultBuildHistory
-
-            // Add protected branch to build options
-            if (protectedBranches.isProtected(steps.BRANCH_NAME)) {
-                _isProtectedBranch = true
-                history = protectedBranchBuildHistory
-                buildOptions.push(steps.disableConcurrentBuilds())
-            }
-
-            // Add log rotator to build options
-            buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
-
-            // Add any parameters to the build here
-            buildOptions.push(steps.parameters(buildParameters))
-
-            steps.properties(buildOptions)
-
-            // Execute the pipeline
-            _stages.execute()
-        } finally {
-            steps.echo "------------------------------------------------------------------------------------------------" +
-                       "------------------------------------------------------------------------------------------------"
-            steps.echo "POST BUILD ACTIONS"
-
-            if (alwaysAction) {
-                alwaysAction()
-            }
-
-            _sendEmailNotification() // @FUTURE As part of the deploy story, extract email stuff into separate class
-        }
-    }
+    // @TODO MERGE THE TWO END ITEMS
 
     /**
      * End the pipeline and collect specified log files.
@@ -399,38 +343,69 @@ class Pipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    void endBase(String[] archiveFolders) {
-        endBase({
-            if (archiveFolders.length > 0) {
-                def archiveLocation = "postBuildArchive"
 
-                steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
-                steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
-                steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
-                steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
-                steps.sh "mkdir $archiveLocation"
+    /**
+     * Call to inform the runner that no more stages are to be added and execution can begin.
+     *
+     * <p>The end method MUST be the last method called as part of your pipeline. The end method is
+     * responsible for executing all the stages previously created after setting the required build
+     * options and possible stage parameters. Failure to call this method will prevent your pipeline
+     * stages from executing.</p>
+     *
+     * <p>Prior to executing the stages, various build options are set. Some of these options include
+     * the build history and stage skip parameters. After this is done, the method will execute
+     * all of the created stages in the order they were defined.</p>
+     *
+     * <p>After stage execution, an email will be sent out to those that made the commit. If the build
+     * failed or returned to normal, all committers since the last successful build will also
+     * receive the email. Finally if this build is on a protected branch, all emails listed in the
+     * {@link #adminEmails} list will also receive a status email.</p>
+     *
+     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
+     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
+     *
+     * @param alwaysAction This is a closure that is always executed at the end of the pipeline prior
+     *                     prior to emails being sent out.
+     */
+    final void endBase(EndArgs options) {
+        try {
+            // First setup the build properties
+            def history = defaultBuildHistory
 
-                for (int i = 0; i < archiveFolders.length; i++) {
-                    def directory = archiveFolders[i]
-
-                    try {
-                        if (directory.startsWith("/")) {
-                            steps.sh "mkdir -p ./${archiveLocation}${directory}"
-
-                            // It is an absolute path so try to copy everything into our work directory
-                            // always exit with 0 return code so the ui doesn't look broken
-                            steps.sh "cp -r $directory ./${archiveLocation}${directory} || exit 0"
-                        } else if (directory.startsWith("..")) {
-                            throw new PipelineException("Relative archives are not supported")
-                        }
-                    } catch (e) {
-                        steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
-                    }
-                }
-
-                steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*" // The weird concat because groovydoc blew up here
+            // Add protected branch to build options
+            if (protectedBranches.isProtected(steps.BRANCH_NAME)) {
+                _isProtectedBranch = true
+                history = protectedBranchBuildHistory
+                buildOptions.push(steps.disableConcurrentBuilds())
             }
-        })
+
+            // Add log rotator to build options
+            buildOptions.push(steps.buildDiscarder(steps.logRotator(numToKeepStr: history)))
+
+            // Add any parameters to the build here
+            buildOptions.push(steps.parameters(buildParameters))
+
+            steps.properties(buildOptions)
+
+            // Execute the pipeline
+            _stages.execute()
+        } finally {
+            steps.echo "------------------------------------------------------------------------------------------------" +
+                       "------------------------------------------------------------------------------------------------"
+            steps.echo "POST BUILD ACTIONS"
+
+            if (options.always) {
+                options.always()
+            }
+
+            // Gather the log folders here
+            _gatherLogs(options.archiveFolders)
+            _sendEmailNotification()
+        }
+    }
+
+    final void endBase(Map options) {
+        endBase(new EndArgs(options))
     }
 
     /**
@@ -557,6 +532,38 @@ class Pipeline {
                 stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
                 _stages.firstFailingStage = stage
             }
+        }
+    }
+
+    protected final void _gatherLogs(String[] archiveFolders) {
+        if (archiveFolders && archiveFolders.length > 0) {
+            def archiveLocation = "postBuildArchive"
+
+            steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
+            steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
+            steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
+            steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
+            steps.sh "mkdir $archiveLocation"
+
+            for (int i = 0; i < archiveFolders.length; i++) {
+                def directory = archiveFolders[i]
+
+                try {
+                    if (directory.startsWith("/")) {
+                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
+
+                        // It is an absolute path so try to copy everything into our work directory
+                        // always exit with 0 return code so the ui doesn't look broken
+                        steps.sh "cp -r $directory ./${archiveLocation}${directory} || exit 0"
+                    } else if (directory.startsWith("..")) {
+                        throw new PipelineException("Relative archives are not supported")
+                    }
+                } catch (e) {
+                    steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
+                }
+            }
+
+            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
         }
     }
 

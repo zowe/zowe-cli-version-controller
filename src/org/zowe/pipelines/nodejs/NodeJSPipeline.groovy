@@ -323,6 +323,7 @@ class NodeJSPipeline extends GenericPipeline {
         super.deployGeneric(deployArguments, versionArguments)
     }
 
+    // @TODO doc update
     /**
      * Call to inform the runner that no more stages are to be added and execution can begin.
      *
@@ -343,14 +344,16 @@ class NodeJSPipeline extends GenericPipeline {
      *                       with a {@literal ../}, the stage will abort access to that folder. This is because
      *                       Jenkins cannot archive files outside the workspace.
      */
-    void end(String[] archiveFolders) {
-        String[] archive = ["/home/jenkins/.npm/_logs"]
+    void end(Map options) {
+        List<String> archive = ["/home/jenkins/.npm/_logs"]
 
-        if (archiveFolders) {
-            archive = archive + archiveFolders
+        if (options.archiveFolders) {
+            options.archiveFolders = archive + options.archiveFolders
+        } else {
+            options.archiveFolders = archive
         }
 
-        endBase(archive)
+        super.endGeneric(options)
     }
 
 
