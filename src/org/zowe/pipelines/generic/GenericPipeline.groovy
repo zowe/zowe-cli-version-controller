@@ -216,7 +216,7 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitCommit(String message) {
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-
+//@TODO signoff
         if (ret == 0) {
             steps.sh "git commit -m \"$message $_CI_SKIP\""
             return true
@@ -230,7 +230,7 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitPush() {
         steps.sh "git status"
-        steps.sh "git push --dry-run"
+        steps.sh "git push --dry-run --verbose"
 
         throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
     }
