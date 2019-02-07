@@ -229,9 +229,8 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitCommit(String message) {
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-//@TODO signoff
         if (ret == 0) {
-            steps.sh "git commit -m \"$message $_CI_SKIP\""
+            steps.sh "git commit -m \"$message $_CI_SKIP\" --signoff"
             return true
         } else {
             return false
@@ -239,12 +238,14 @@ class GenericPipeline extends Pipeline {
     }
 
     /**
+     * Pushes any changes to the remote server
      *
+     * <p>If the remote server has any changes then this method will throw an error indicating that
+     * the branch is out of sync</p>
      */
     boolean gitPush() {
+        steps.sh "git status"
         steps.sh "git push --dry-run --verbose"
-
-        throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
     }
 
     /**
