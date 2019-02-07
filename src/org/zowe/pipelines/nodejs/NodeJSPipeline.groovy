@@ -191,6 +191,8 @@ class NodeJSPipeline extends GenericPipeline {
             } finally {
                 // Logout immediately
                 _logoutOfRegistry(publishConfig)
+
+                steps.echo "Deploy Complete, please check this step for errors"
             }
         }
 
