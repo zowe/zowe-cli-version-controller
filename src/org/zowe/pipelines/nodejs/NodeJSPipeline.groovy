@@ -188,6 +188,19 @@ class NodeJSPipeline extends GenericPipeline {
             try {
                 gitPush()
                 steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag}"
+
+                NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+
+                sendHtmlEmail(
+                    subjectTag: "DEPLOYED",
+                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                        "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                        "<p>Deployed Package: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>",
+                        "<p>Package Tag: <b>${branch.tag}</b></p>" +
+                        "<p>Registry: <b>{$publishConfig.url}</b></p>",
+                    to: admins.emailList,
+                    addProviders: false
+                )
             } finally {
                 // Logout immediately
                 _logoutOfRegistry(publishConfig)
@@ -286,6 +299,7 @@ class NodeJSPipeline extends GenericPipeline {
                                 ]
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                        steps.env.DEPLOY_PACKAGE = packageJSON.name
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
@@ -310,7 +324,7 @@ class NodeJSPipeline extends GenericPipeline {
                     subjectTag: "APPROVED",
                     body: "<h3>${steps.env.JOB_NAME}</h3>" +
                             "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                            "<p>Approved: <b>${packageJSON.name}@${packageJSON.version}</b></p>" +
+                            "<p>Approved: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
                             "<p>Approved By: <b>${approveName}</b></p>",
                     to: admins.emailList,
                     addProviders: false

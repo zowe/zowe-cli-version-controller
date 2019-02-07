@@ -200,12 +200,6 @@ class GenericPipeline extends Pipeline {
         }
 
         createSubStage(deployArguments + [operation: { String stageName ->
-            // TODO Check if we need to push any commits here and see if that would be a fast forward
-
-            steps.sh "git status"
-
-            // Ask user if no response default to using semver present in branch with proper prerelease branding
-
             deployArguments.operation(stageName)
         }])
     }
@@ -243,13 +237,13 @@ class GenericPipeline extends Pipeline {
      *
      * <p>If the remote server has any changes then this method will throw an error indicating that
      * the branch is out of sync</p>
+     *
+     * @return A boolean indicating if the push was made. True indicates a successful push
+     * @throw GitException when pushing to a branch that has forward commits from this build
      */
-    boolean gitPush() {
+    boolean gitPush() throws GitException {
         steps.sh "git fetch"
-        String status = steps.sh returnStdout: true, script: "git status" //Your branch is ahead of 'origin/zowe/zowe-cli/142' by 2 commits.
-                              //Your branch and 'origin/zowe/zowe-cli/142' have diverged,
-        //
-        //and have 2 and 1 different commit each, respectively.
+        String status = steps.sh returnStdout: true, script: "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new GitException("Detected commits not part of build in: ${_changeInfo.branchName}!")
