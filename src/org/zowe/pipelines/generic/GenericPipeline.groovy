@@ -136,26 +136,6 @@ class GenericPipeline extends Pipeline {
         createStage(args)
     }
 
-    /**
-     * Commit a code change during pipeline execution.
-     *
-     * <p>If no changes were detected, the commit will not happen. If a commit occurs, the end of
-     * of the commit message will be appended with the ci skip text.</p>
-     * @param message The commit message
-     * @return A boolean indicating if a commit was made. True indicates that a successful commit
-     *         has occurred.
-     */
-    boolean commit(String message) {
-        def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-
-        if (ret == 0) {
-            steps.sh "git commit -m \"$message $_CI_SKIP\""
-            return true
-        } else {
-            return false
-        }
-    }
-
     // @TODO DOCUMENT
     // Versioning op happens before commit op and happens before deploy op
     void deployGeneric(Map deployArguments = [:], Map versionArguments = [:]) {
@@ -223,6 +203,33 @@ class GenericPipeline extends Pipeline {
 
             deployArguments.operation(stageName)
         }])
+    }
+
+    /**
+     * Commit a code change during pipeline execution.
+     *
+     * <p>If no changes were detected, the commit will not happen. If a commit occurs, the end of
+     * of the commit message will be appended with the ci skip text.</p>
+     * @param message The commit message
+     * @return A boolean indicating if a commit was made. True indicates that a successful commit
+     *         has occurred.
+     */
+    boolean gitCommit(String message) {
+        def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
+
+        if (ret == 0) {
+            steps.sh "git commit -m \"$message $_CI_SKIP\""
+            return true
+        } else {
+            return false
+        }
+    }
+
+    /**
+     *
+     */
+    boolean gitPush() {
+        steps.sh "git status"
     }
 
     /**

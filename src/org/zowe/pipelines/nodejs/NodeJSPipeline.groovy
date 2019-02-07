@@ -175,6 +175,8 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
+            gitPush()
+
             // Login to the registry
             def npmRegistry = steps.sh returnStdout: true,
                     script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
@@ -312,7 +314,7 @@ class NodeJSPipeline extends GenericPipeline {
             packageJSON.version = steps.env.DEPLOY_VERSION
             steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
             steps.sh "git add package.json"
-            commit("Bump version to ${steps.env.DEPLOY_VERSION}")
+            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
 
             // @TODO commit version bump to deploy step fail if any changes
             // @TODO send out confirmation email of deploy success in deploy step
@@ -437,7 +439,7 @@ class NodeJSPipeline extends GenericPipeline {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
-                        commit("Updating dependencies")
+                        gitCommit("Updating dependencies")
                     }
                 }
             } finally {
