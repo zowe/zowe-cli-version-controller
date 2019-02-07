@@ -276,30 +276,35 @@ class NodeJSPipeline extends GenericPipeline {
 
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        // TODO specify the versions in the email with more detail before the redirect
-                        sendHtmlEmail(
+                        try {
+                            // TODO specify the versions in the email with more detail before the redirect
+                            sendHtmlEmail(
                                 subjectTag: "APPROVAL REQUIRED",
                                 body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                        "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                                        "<p>Versioning information is required before the pipeline can continue. Please" +
-                                        " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                                    "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                    "<p>Versioning information is required before the pipeline can continue. Please" +
+                                    " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
                                 to: admins.emailList,
                                 addProviders: false
-                        )
+                            )
 
-                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
                                 submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
                                 parameters: [
-                                        steps.choice(
-                                                name: "DEPLOY_VERSION",
-                                                choices: availableVersions,
-                                                description: "What version should be used?"
-                                        )
+                                    steps.choice(
+                                        name: "DEPLOY_VERSION",
+                                        choices: availableVersions,
+                                        description: "What version should be used?"
+                                    )
                                 ]
 
-                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                            steps.env.DEPLOY_PACKAGE = packageJSON.name
+                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                        } catch (Exception e) {
+                            steps.echo e.toString()
+                            throw e
+                        }
                     }
                 } catch (FlowInterruptedException exception) {
 
