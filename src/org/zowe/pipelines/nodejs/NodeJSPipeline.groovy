@@ -356,9 +356,6 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-
-            throw new Exception("Aborting")
-
             String approveName = steps.env.DEPLOY_APPROVER == SYSTEM_ID ? SYSTEM_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
