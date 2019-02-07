@@ -667,7 +667,7 @@ class Pipeline {
         String emailText = buildStatus
 
         if (firstFailingStage?.exception) {
-            steps.echo firstFailingStage.exception.cause[0].toString()
+            steps.echo firstFailingStage.exception.causes[0].toString()
         }
 
         if (firstFailingStage?.exception?.class == FlowInterruptedException.class) {
