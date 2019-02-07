@@ -159,7 +159,19 @@ class NodeJSPipeline extends GenericPipeline {
         }])
     }
 
-    void deploy(Map deployArguments = [:], Map versionArguments = [:]) {
+    void deploy(Map arguments = [:]) {
+        if (!arguments.versionArguments) {
+            arguments.versionArguments = [:]
+        }
+
+        if (!arguments.deployArguments) {
+            arguments.deployArguments = [:]
+        }
+
+        deploy(arguments.deployArguments, arguments.versionArguments)
+    }
+
+    protected void deploy(Map deployArguments, Map versionArguments) {
         IllegalArgumentException deployException
         IllegalArgumentException versionException
 
