@@ -265,7 +265,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Add a timeout of one minute less than the available stage execution time
                 // This will allow the versioning task at least 1 minute to update the files and
                 // move on to the next step.
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 9, unit: TimeUnit.MINUTES)  // TODO REVERT BACK TO 1 MINUTE
 
                 if (timeout.time <= 0) {
                     throw new DeployStageException(
@@ -276,35 +276,30 @@ class NodeJSPipeline extends GenericPipeline {
 
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        try {
-                            // TODO specify the versions in the email with more detail before the redirect
-                            sendHtmlEmail(
-                                subjectTag: "APPROVAL REQUIRED",
-                                body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                    "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                                    "<p>Versioning information is required before the pipeline can continue. Please" +
-                                    " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
-                                to: admins.emailList,
-                                addProviders: false
-                            )
+                        // TODO specify the versions in the email with more detail before the redirect
+                        sendHtmlEmail(
+                            subjectTag: "APPROVAL REQUIRED",
+                            body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                "<p>Versioning information is required before the pipeline can continue. Please" +
+                                " provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>",
+                            to: admins.emailList,
+                            addProviders: false
+                        )
 
-                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                                submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
-                                parameters: [
-                                    steps.choice(
-                                        name: "DEPLOY_VERSION",
-                                        choices: availableVersions,
-                                        description: "What version should be used?"
-                                    )
-                                ]
+                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+                            parameters: [
+                                steps.choice(
+                                    name: "DEPLOY_VERSION",
+                                    choices: availableVersions,
+                                    description: "What version should be used?"
+                                )
+                            ]
 
-                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                            steps.env.DEPLOY_PACKAGE = packageJSON.name
-                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
-                        } catch (Exception e) {
-                            steps.echo e.toString()
-                            throw e
-                        }
+                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                        steps.env.DEPLOY_PACKAGE = packageJSON.name
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
 
@@ -314,6 +309,15 @@ class NodeJSPipeline extends GenericPipeline {
                     // Hit stop indicates Rejected by SYSTEM
                     // Timeout indicates Rejected by SYSTEM
                     // WTF Jenkins?!?!?!?!?!?!
+
+                    def cause = exception.causes[0]
+
+                    if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
+                        // Maybe this is how it is done
+                        steps.echo "DETECTED TIMEOUT"
+                    } else {
+                        steps.echo "DETECTED ABORT"
+                    }
 
                     steps.echo steps.currentBuild.currentResult
 
