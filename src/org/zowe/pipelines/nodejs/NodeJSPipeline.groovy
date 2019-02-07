@@ -290,24 +290,19 @@ class NodeJSPipeline extends GenericPipeline {
                             addProviders: false
                         )
 
-                        try {
-                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                                submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
-                                parameters: [
-                                    steps.choice(
-                                        name: "DEPLOY_VERSION",
-                                        choices: availableVersions,
-                                        description: "What version should be used?"
-                                    )
-                                ]
+                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+                            parameters: [
+                                steps.choice(
+                                    name: "DEPLOY_VERSION",
+                                    choices: availableVersions,
+                                    description: "What version should be used?"
+                                )
+                            ]
 
-                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                            steps.env.DEPLOY_PACKAGE = packageJSON.name
-                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
-                        } catch (FlowInterruptedException e) {
-                            steps.echo e.causes[0].class.toString()
-                            steps.echo "Caught input exception ${e.toString()}"
-                        }
+                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                        steps.env.DEPLOY_PACKAGE = packageJSON.name
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
 
@@ -319,10 +314,11 @@ class NodeJSPipeline extends GenericPipeline {
                     // WTF Jenkins?!?!?!?!?!?!
 
                     // When timeout cause.class is
+                    // When abort cause.class is org.jenkinsci.plugins.workflow.support.steps.input.Rejection
 
-                    def cause = exception.causes[0]
-                    steps.echo cause.toString()
-                    steps.echo cause.class.toString()
+                    for (def x : exception.causes) {
+                        steps.echo "Cause: ${x.class.toString()}"
+                    }
 
 //                    if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
 //                        // Maybe this is how it is done
