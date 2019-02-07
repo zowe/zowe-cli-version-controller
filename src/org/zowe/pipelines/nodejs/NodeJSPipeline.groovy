@@ -276,6 +276,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                 try {
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
+                        // TODO specify the versions in the email with more detail before the redirect
                         sendHtmlEmail(
                                 subjectTag: "APPROVAL REQUIRED",
                                 body: "<h3>${steps.env.JOB_NAME}</h3>" +
@@ -306,6 +307,10 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.echo exception.causes[0].shortDescription
 
                     // Hit stop indicates Rejected by SYSTEM
+                    // Timeout indicates Rejected by SYSTEM
+                    // WTF Jenkins?!?!?!?!?!?!
+
+                    steps.echo steps.currentResult
 
                     // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
