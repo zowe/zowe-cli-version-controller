@@ -654,6 +654,7 @@ class Pipeline {
      */
     protected void _sendEmailNotification() {
         // @TODO If not built don't send an email
+        // @TODO Get list of commits that were built
 
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
