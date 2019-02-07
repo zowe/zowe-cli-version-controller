@@ -216,7 +216,7 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitCommit(String message) {
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-        steps.sh "git status"
+        steps.sh "git status -b"
 
         if (ret == 0) {
             steps.sh "git commit -m \"$message $_CI_SKIP\""
