@@ -231,6 +231,9 @@ class GenericPipeline extends Pipeline {
     boolean gitPush() {
         steps.sh "git status"
         steps.sh "printenv"
+        def remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+
+        steps.echo remoteUrl
         steps.sh "git config credential.helper cache"
         steps.sh "git push --dry-run --verbose"
 
