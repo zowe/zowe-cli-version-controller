@@ -302,6 +302,8 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } catch (FlowInterruptedException exception) {
 
+                    steps.echo exception.toString()
+
                     // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
                         steps.env.DEPLOY_APPROVER = SYSTEM_ID
