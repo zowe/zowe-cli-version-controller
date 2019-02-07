@@ -300,13 +300,14 @@ class NodeJSPipeline extends GenericPipeline {
                                         description: "What version should be used?"
                                     )
                                 ]
-                        } catch (e) {
+
+                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                            steps.env.DEPLOY_PACKAGE = packageJSON.name
+                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                        } catch (FlowInterruptedException e) {
+                            steps.echo e.causes[0].class.toString()
                             steps.echo "Caught input exception ${e.toString()}"
                         }
-
-                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
 
@@ -316,6 +317,8 @@ class NodeJSPipeline extends GenericPipeline {
                     // Hit stop indicates Rejected by SYSTEM
                     // Timeout indicates Rejected by SYSTEM
                     // WTF Jenkins?!?!?!?!?!?!
+
+                    // When timeout cause.class is
 
                     def cause = exception.causes[0]
                     steps.echo cause.toString()
