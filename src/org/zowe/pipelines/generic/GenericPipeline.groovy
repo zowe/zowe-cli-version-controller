@@ -230,11 +230,24 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitPush() {
         steps.sh "git status"
-        steps.sh "printenv"
-        def remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
 
-        steps.echo remoteUrl
-        steps.sh "git config credential.helper cache"
+        // Get the remote url
+        String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+
+        if (!remoteUrl.matches("https://.*:.*@.*")) {
+            steps.withCredentials([steps.usernameColonPassword(
+                credentialsId: gitConfig.credentialsId, variable: "TOKEN"
+            )]) {
+                // Only execute the credential code if the url does not already contain credentials
+                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://${steps.env.TOKEN}@")
+                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+            }
+        }
+
+//        def remoteUrlWithCreds =
+//
+//        steps.echo remoteUrl
+//        steps.sh "git config credential.helper cache"
         steps.sh "git push --dry-run --verbose"
 
         throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
