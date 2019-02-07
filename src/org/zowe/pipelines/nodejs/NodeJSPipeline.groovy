@@ -285,7 +285,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
                         // TODO specify the versions in the email with more detail before the redirect
-                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)}</b>: " +
+                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
                             "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
 
                         String versionList = ""
@@ -297,11 +297,14 @@ class NodeJSPipeline extends GenericPipeline {
                         // major is always the third to last element when present
                         // default is always at 0 and there can never be more than 4 items
                         for (int i = availableVersions.size() - 1; i > 0; i--) {
-                            versionList = "<li><b>${availableVersions.get(i)}</b>: <i>[${versionText.removeAt(0)}]</i> version update with any " +
+                            String version = versionText.removeAt(0)
+                            versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
                                 "necessary prerelease strings attached.</li>$versionList"
                         }
 
-                        bodyText += "$versionList</ul></p>"
+                        bodyText += "$versionList</ul></p>" +
+                            "<p>If no input is provided within $timeout, the default version (${availableVersions.get(0)})" +
+                            " will be the deployed version.</p>"
 
                         sendHtmlEmail(
                             subjectTag: "APPROVAL REQUIRED",
