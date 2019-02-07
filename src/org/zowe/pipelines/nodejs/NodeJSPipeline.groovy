@@ -175,8 +175,6 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            gitPush()
-
             // Login to the registry
             def npmRegistry = steps.sh returnStdout: true,
                     script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
@@ -187,10 +185,13 @@ class NodeJSPipeline extends GenericPipeline {
             // Login to the publish registry
             _loginToRegistry(publishConfig)
 
-            steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag} --dry-run"
-
-            // Logout immediately
-            _logoutOfRegistry(publishConfig)
+            try {
+                gitPush()
+                steps.sh "npm publish --tag ${protectedBranches.get(_changeInfo.branchName).tag} --dry-run"
+            } finally {
+                // Logout immediately
+                _logoutOfRegistry(publishConfig)
+            }
         }
 
         // Set the version operation for an npm pipeline
@@ -443,7 +444,6 @@ class NodeJSPipeline extends GenericPipeline {
                         // unable to add an item for any reasons.
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
                         gitCommit("Updating dependencies")
-                        gitPush() // @TODO REMOVE THIS LINE BECAUSE I AM TESTING RIGHT NOW
                     }
                 }
             } finally {
