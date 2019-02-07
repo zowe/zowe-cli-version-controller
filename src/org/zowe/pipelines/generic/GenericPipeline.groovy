@@ -245,9 +245,19 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitPush() {
         steps.sh "git fetch"
-        steps.sh "git status" //Your branch is ahead of 'origin/zowe/zowe-cli/142' by 2 commits.
-                              //
-        steps.sh "git push --dry-run --verbose"
+        String status = steps.sh returnStdout: true, script: "git status" //Your branch is ahead of 'origin/zowe/zowe-cli/142' by 2 commits.
+                              //Your branch and 'origin/zowe/zowe-cli/142' have diverged,
+        //
+        //and have 2 and 1 different commit each, respectively.
+
+        if (status.matches("Your branch and '.*' have diverged")) {
+            throw new GitException("Detected commits not part of build in: ${_changeInfo.branchName}!")
+        } else if (status.matches("Your branch is ahead of")) {
+            steps.sh "git push --dry-run --verbose"
+            return true
+        } else {
+            return false
+        }
     }
 
     /**
