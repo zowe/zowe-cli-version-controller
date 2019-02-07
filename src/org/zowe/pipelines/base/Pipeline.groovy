@@ -653,6 +653,8 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
+        // @TODO If not built don't send an email
+
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
 
