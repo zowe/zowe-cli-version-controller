@@ -310,7 +310,7 @@ class NodeJSPipeline extends GenericPipeline {
                     // Timeout indicates Rejected by SYSTEM
                     // WTF Jenkins?!?!?!?!?!?!
 
-                    steps.echo steps.currentResult
+                    steps.echo steps.currentBuild.currentResult
 
                     // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
