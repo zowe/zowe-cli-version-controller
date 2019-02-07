@@ -233,6 +233,7 @@ class GenericPipeline extends Pipeline {
 
         // Get the remote url
         String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+        String pushCommand = "git push --dry-run --verbose"
 
         if (!remoteUrl.matches("https://.*:.*@.*")) {
             steps.withCredentials([steps.usernameColonPassword(
@@ -240,8 +241,18 @@ class GenericPipeline extends Pipeline {
             )]) {
                 // Only execute the credential code if the url does not already contain credentials
                 String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://${steps.env.TOKEN}@")
-                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+
+                steps.env.TOKEN = remoteUrlWithCreds
+
+                // Set the push url to the correct one
+                steps.sh 'git remote set-url --add origin $TOKEN'
                 steps.sh "git remote set-url --delete origin $remoteUrl"
+
+                // Do the push in here for security reasons
+//                steps.sh pushCommand
+//
+//                steps.sh "git remote set-url --add origin $remoteUrl"
+//                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
             }
         }
 
