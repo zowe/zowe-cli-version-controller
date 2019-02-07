@@ -290,15 +290,19 @@ class NodeJSPipeline extends GenericPipeline {
                             addProviders: false
                         )
 
-                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
-                            parameters: [
-                                steps.choice(
-                                    name: "DEPLOY_VERSION",
-                                    choices: availableVersions,
-                                    description: "What version should be used?"
-                                )
-                            ]
+                        try {
+                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                                submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+                                parameters: [
+                                    steps.choice(
+                                        name: "DEPLOY_VERSION",
+                                        choices: availableVersions,
+                                        description: "What version should be used?"
+                                    )
+                                ]
+                        } catch (e) {
+                            steps.echo "Caught input exception ${e.toString()}"
+                        }
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
                         steps.env.DEPLOY_PACKAGE = packageJSON.name
