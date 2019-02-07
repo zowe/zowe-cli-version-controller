@@ -244,7 +244,9 @@ class GenericPipeline extends Pipeline {
      * the branch is out of sync</p>
      */
     boolean gitPush() {
-        steps.sh "git status"
+        steps.sh "git fetch"
+        steps.sh "git status" //Your branch is ahead of 'origin/zowe/zowe-cli/142' by 2 commits.
+                              //
         steps.sh "git push --dry-run --verbose"
     }
 
