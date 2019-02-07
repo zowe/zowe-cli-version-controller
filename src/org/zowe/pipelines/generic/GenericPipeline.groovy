@@ -263,7 +263,6 @@ class GenericPipeline extends Pipeline {
 
 
             // Setup the branch to track it's remote
-            steps.sh "git branch ${_changeInfo.branchName}"
             steps.sh "git checkout ${_changeInfo.branchName} --track"
         }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
 
