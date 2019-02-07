@@ -77,6 +77,14 @@ class NodeJSPipeline extends GenericPipeline {
     static final String SYSTEM_ID = "SYSTEM"
 
     /**
+     * A map of protected branches.
+     *
+     * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
+     * is to prevent issues with publishing.</p>
+     */
+    ProtectedBranches<NodeJSProtectedBranch> protectedBranches = new ProtectedBranches<>(NodeJSProtectedBranch.class)
+
+    /**
      * This is the connection information for the registry where code is published
      * to.
      *
@@ -91,14 +99,6 @@ class NodeJSPipeline extends GenericPipeline {
      * <p>These login operations will happen before the npm install in setup.</p>
      */
     RegistryConfig[] registryConfig
-
-    /**
-     * A map of protected branches.
-     *
-     * <p>Any branches that are specified as protected will also have concurrent builds disabled. This
-     * is to prevent issues with publishing.</p>
-     */
-    ProtectedBranches<NodeJSProtectedBranch> protectedBranches = new ProtectedBranches<>(NodeJSProtectedBranch.class)
 
     /**
      * Constructs the class.
@@ -215,8 +215,6 @@ class NodeJSPipeline extends GenericPipeline {
                 throw versionException
             }
 
-            steps.echo "TODO Fill this out"
-
             // Get the package.json
             def packageJSON = steps.readJSON file: 'package.json'
 
@@ -315,6 +313,8 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
+
+            throw new Exception("Aborting")
 
             String approveName = steps.env.DEPLOY_APPROVER == SYSTEM_ID ? SYSTEM_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 

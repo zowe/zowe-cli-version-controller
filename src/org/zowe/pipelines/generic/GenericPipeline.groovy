@@ -52,12 +52,6 @@ class GenericPipeline extends Pipeline {
     GitConfig gitConfig
 
     /**
-     * The git commit revision of the build. This is determined at the beginning of
-     * the build.
-     */
-    protected String _buildRevision
-
-    /**
      * Stores the change information for reference later.
      */
     protected ChangeInformation _changeInfo
@@ -300,12 +294,6 @@ class GenericPipeline extends Pipeline {
         }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
 
         createStage(name: 'Check for CI Skip', stage: {
-            // We need to keep track of the current commit revision. This is to prevent the condition where
-            // the build starts on master and another branch gets merged to master prior to version bump
-            // commit taking place. If left unhandled, the version bump could be done on latest master branch
-            // code which would already be ahead of this build.
-            _buildRevision = steps.sh returnStatus: true, script: _GIT_REVISION_LOOKUP //@TODO this probably isn't needed anymore since we can just see how far ahead/behind we are
-
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {
