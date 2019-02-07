@@ -374,9 +374,6 @@ class NodeJSPipeline extends GenericPipeline {
             steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
             steps.sh "git add package.json"
             gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
-
-            // @TODO commit version bump to deploy step fail if any changes
-            // @TODO send out confirmation email of deploy success in deploy step
         }
 
         super.deployGeneric(deployArguments, versionArguments)
