@@ -302,7 +302,8 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } catch (FlowInterruptedException exception) {
 
-                    steps.echo exception.message()
+                    steps.echo exception.message
+                    steps.echo exception.causes[0].shortDescription
 
                     // If the build is aborted at this point using the stop button, the build will continue @TODO FIX THIS PROBLEM
                     if (exception.causes[0].user.toString() == SYSTEM_ID) {
