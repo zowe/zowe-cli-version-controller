@@ -230,6 +230,7 @@ class GenericPipeline extends Pipeline {
      */
     boolean gitPush() {
         steps.sh "git status"
+        steps.sh "printenv"
         steps.sh "git push --dry-run --verbose"
 
         throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
