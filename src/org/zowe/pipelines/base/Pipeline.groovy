@@ -435,6 +435,10 @@ class Pipeline {
     final void sendHtmlEmail(EmailOptions options) {
         def subject = "[$options.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
 
+        steps.echo "Sending Email"
+        steps.echo "Subject: $subject"
+        steps.echo "Body:\n${options.body}"
+
         // send the email
         steps.emailext(
                 subject: subject,
