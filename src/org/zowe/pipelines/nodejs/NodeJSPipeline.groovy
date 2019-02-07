@@ -453,7 +453,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkipable: false, timeout: [time: 10, unit: TimeUnit.MINUTES])
+        }, isSkippable: false, timeout: [time: 10, unit: TimeUnit.MINUTES])
     }
 
     /**

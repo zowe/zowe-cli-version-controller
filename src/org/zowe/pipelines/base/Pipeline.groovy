@@ -224,7 +224,7 @@ class Pipeline {
 
         _stages.add(stage)
 
-        if (args.isSkipable) {
+        if (args.isSkippable) {
             // Add the option to the build, this will be called in setup
             buildParameters.push(
                     steps.booleanParam(
@@ -245,7 +245,7 @@ class Pipeline {
                     }
 
                     // If the stage is skippable
-                    if (stage.args.isSkipable) {
+                    if (stage.args.isSkippable) {
                         // Check if the stage was skipped by the build parameter
                         stage.isSkippedByParam = steps.params[_getStageSkipOption(stage)]
                     }
@@ -272,7 +272,7 @@ class Pipeline {
                             steps.echo "Executing stage ${args.name}"
 
                             stage.wasExecuted = true
-                            if (args.isSkipable) {
+                            if (args.isSkippable) {
                                 steps.echo "This step can be skipped by setting the `${_getStageSkipOption(stage)}` option to true"
                             }
 
@@ -523,11 +523,11 @@ class Pipeline {
             } else {
                 steps.echo "No problems with preinitialization of pipeline :)"
             }
-        }, isSkipable: false, timeout: [time: 10, unit: TimeUnit.SECONDS])
+        }, isSkippable: false, timeout: [time: 10, unit: TimeUnit.SECONDS])
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkipable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
+        }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
     }
 
     /**

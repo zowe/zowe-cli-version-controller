@@ -240,6 +240,7 @@ class GenericPipeline extends Pipeline {
      *
      * <p>Additionally, this method adds the following stage to the build:</p>
      *
+     * @TODO ADD DOC FOR CONFIGURE GIT STAGE
      * <h4>Check for CI Skip</h4>
      *
      * <p>Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
@@ -253,7 +254,7 @@ class GenericPipeline extends Pipeline {
         // Call setup from the super class
         super.setupBase()
 
-        createStage(name: 'Check for CI Skip', stage: {
+        createStage(name: 'Configure Git', stage: {
             _changeInfo = new ChangeInformation(steps)
 
             steps.sh "git config user.name \"${gitConfig.user}\""
@@ -264,7 +265,9 @@ class GenericPipeline extends Pipeline {
             // Setup the branch to track it's remote
             steps.sh "git branch ${_changeInfo.branchName}"
             steps.sh "git checkout ${_changeInfo.branchName}"
+        }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
 
+        createStage(name: 'Check for CI Skip', stage: {
             // We need to keep track of the current commit revision. This is to prevent the condition where
             // the build starts on master and another branch gets merged to master prior to version bump
             // commit taking place. If left unhandled, the version bump could be done on latest master branch

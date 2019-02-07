@@ -34,7 +34,7 @@ class StageArgs {
      *
      * <p><b>Default:</b> {@code true}</p>
      */
-    boolean isSkipable = true
+    boolean isSkippable = true
 
     /**
      * The name of the stage.
