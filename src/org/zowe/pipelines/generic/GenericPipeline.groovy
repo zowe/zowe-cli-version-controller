@@ -240,25 +240,21 @@ class GenericPipeline extends Pipeline {
                 credentialsId: gitConfig.credentialsId, variable: "TOKEN"
             )]) {
                 // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$TOKEN@")
+                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", 'https://\\$TOKEN@')
 
                 // Set the push url to the correct one
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
 
                 // Do the push in here for security reasons
-//                steps.sh pushCommand
-//
-//                steps.sh "git remote set-url --add origin $remoteUrl"
-//                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
-            }
-        }
+                steps.sh pushCommand
 
-//        def remoteUrlWithCreds =
-//
-//        steps.echo remoteUrl
-//        steps.sh "git config credential.helper cache"
-        steps.sh "git push --dry-run --verbose"
+                steps.sh "git remote set-url --add origin $remoteUrl"
+                steps.sh "git remote set-url --delete origin $remoteUrlWithCreds"
+            }
+        } else {
+            steps.sh pushCommand
+        }
 
         throw new Exception("ABORTING BUILD FOR TEST PURPOSES")
     }
