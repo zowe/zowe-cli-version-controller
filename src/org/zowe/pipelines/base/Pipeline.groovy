@@ -487,8 +487,7 @@ class Pipeline {
      * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
      * {@code setupBase} due to the issues described in {@link Pipeline}.</p>
      */
-    void setupBase() {
-        // @TODO all timeouts should be configurable do as part of next story
+    void setupBase(SetupTimeouts timeouts) {
         _setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
@@ -503,11 +502,15 @@ class Pipeline {
             } else {
                 steps.echo "No problems with preinitialization of pipeline :)"
             }
-        }, isSkippable: false, timeout: [time: 10, unit: TimeUnit.SECONDS])
+        }, isSkippable: false, timeout: timeouts.setup)
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
-        }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
+        }, isSkippable: false, timeout: timeouts.checkout)
+    }
+
+    void setupBase(Map timeouts = [:]) {
+        setupBase(timeouts as SetupTimeouts)
     }
 
     /**

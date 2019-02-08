@@ -442,9 +442,8 @@ class NodeJSPipeline extends GenericPipeline {
      * <li>Failure to logout of a registry will not fail the build.</li>
      * </ul>
      */
-    void setup() {
-        // @TODO all timeouts should be configurable do as part of next story
-        super.setupGeneric()
+    void setup(NodeJSSetupTimeouts timeouts) {
+        super.setupGeneric(timeouts)
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             try {
@@ -520,7 +519,11 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkippable: false, timeout: [time: 10, unit: TimeUnit.MINUTES])
+        }, isSkippable: false, timeout: timeouts.installDependencies)
+    }
+
+    void setup(Map timeouts = [:]) {
+        setup(timeouts as NodeJSSetupTimeouts)
     }
 
     /**

@@ -267,9 +267,9 @@ class GenericPipeline extends Pipeline {
      * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
      * {@code setupGeneric} due to the issues described in {@link Pipeline}.</p>
      */
-    void setupGeneric() {
+    void setupGeneric(GenericSetupTimeouts timeouts) {
         // Call setup from the super class
-        super.setupBase()
+        super.setupBase(timeouts)
 
         createStage(name: 'Configure Git', stage: {
             _changeInfo = new ChangeInformation(steps)
@@ -294,7 +294,7 @@ class GenericPipeline extends Pipeline {
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
             }
-        }, isSkippable: false, timeout: [time: 1, unit: TimeUnit.MINUTES])
+        }, isSkippable: false, timeout: timeouts.gitSetup)
 
         createStage(name: 'Check for CI Skip', stage: {
             // This checks for the [ci skip] text. If found, the status code is 0
@@ -304,7 +304,11 @@ class GenericPipeline extends Pipeline {
                 _shouldSkipRemainingStages = true
                 setResult(ResultEnum.NOT_BUILT)
             }
-        }, timeout: [time: 1, unit: TimeUnit.MINUTES])
+        }, timeout: timeouts.ciSkip)
+    }
+
+    void setupGeneric(Map timeouts = [:]) {
+        setupGeneric(timeouts as GenericSetupTimeouts)
     }
 
     /**
