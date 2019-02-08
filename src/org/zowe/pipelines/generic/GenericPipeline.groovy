@@ -274,16 +274,15 @@ class GenericPipeline extends Pipeline {
         createStage(name: 'Configure Git', stage: {
             _changeInfo = new ChangeInformation(steps)
 
-            steps.withCredentials(
-                [steps.usernamePassword(
-                    credentialsId: gitConfig.credentialsId,
-                    passwordVariable: "NOT_USED",
-                    usernameVariable: "GIT_USER_NAME"
-                )])
-            steps.sh "git config user.name \$GIT_USER_NAME"
-            steps.sh "git config user.email \"${gitConfig.email}\""
-            steps.sh "git config push.default simple"
-
+            steps.withCredentials([steps.usernamePassword(
+                credentialsId: gitConfig.credentialsId,
+                passwordVariable: "NOT_USED",
+                usernameVariable: "GIT_USER_NAME"
+            )]) {
+                steps.sh "git config user.name \$GIT_USER_NAME"
+                steps.sh "git config user.email \"${gitConfig.email}\""
+                steps.sh "git config push.default simple"
+            }
 
             // Setup the branch to track it's remote
             steps.sh "git checkout ${_changeInfo.branchName}"
