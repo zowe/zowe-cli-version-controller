@@ -590,6 +590,8 @@ class Pipeline {
         for (def changeLog : steps.currentBuild.changeSets) {
             def browser = changeLog.browser
 
+            steps.echo browser.class.toString()
+
             // Exclude any changes from the version controller project
             if (changeLog.items[0] && browser.getChangeSetLink(changeLog.items[0]).toString().contains(_VERSION_CONTROLLER_REPO)) {
                 continue
