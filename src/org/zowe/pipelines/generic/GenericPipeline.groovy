@@ -38,11 +38,6 @@ class GenericPipeline extends Pipeline {
     protected static final String _CI_SKIP = "[ci skip]"
 
     /**
-     * Shell command that gets the current git revision.
-     */
-    protected static final String _GIT_REVISION_LOOKUP = "git log -n 1 --pretty=format:%h"
-
-    /**
      * The token id for git credentials
      */
     protected static final String _TOKEN = "TOKEN"
