@@ -586,7 +586,7 @@ class Pipeline {
 
         for (def entries : steps.currentBuild.changeSets) {
             for (def entry : entries) {
-                changeString += "<li>${entry.msg.tage(MAX_MSG_LENGTH)} <b>[${entry.author}]</b></li>"
+                changeString += "<li>${entry.msg.take(MAX_MSG_LENGTH)} <b>[${entry.author}]</b></li>"
             }
         }
 
