@@ -74,8 +74,6 @@ class NodeJSPipeline extends GenericPipeline {
      */
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
 
-    static final String SYSTEM_ID = "SYSTEM" // TODO REMOVE THIS IF I FIGURE IT OUT
-
     static final String TIMEOUT_APPROVE_ID = "[TIMEOUT_APPROVED]"
 
     /**
@@ -368,7 +366,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-            String approveName = steps.env.DEPLOY_APPROVER == SYSTEM_ID ? SYSTEM_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+            String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
 
