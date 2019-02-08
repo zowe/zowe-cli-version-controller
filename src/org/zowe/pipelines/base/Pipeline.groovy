@@ -5,6 +5,8 @@ import org.zowe.pipelines.base.arguments.*
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
+import java.util.concurrent.TimeUnit
+
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
@@ -365,6 +367,20 @@ class Pipeline {
      *                     prior to emails being sent out.
      */
     final void endBase(EndArguments options) {
+        // Create this stage so that the pipeline has a place to log all the
+        // post build actions. If the build has not thrown an exception or been
+        // aborted, the stage should run.
+        createStage(
+            name: "Complete",
+            isSkippable: false,
+            doesIgnoreSkipAll: true,
+            stage: {
+                steps.echo "Pipeline Execution Complete"
+            },
+            timeout: [time: 10, unit: TimeUnit.SECONDS],
+            resultThreshold: ResultEnum.FAILURE
+        )
+
         try {
             // First setup the build properties
             def history = defaultBuildHistory
