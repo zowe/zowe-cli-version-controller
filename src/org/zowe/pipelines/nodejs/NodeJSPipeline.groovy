@@ -7,7 +7,6 @@ import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
-import org.zowe.pipelines.nodejs.args.NodeJSSetupArgs
 import org.zowe.pipelines.nodejs.arguments.NodeJSSetupArguments
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
