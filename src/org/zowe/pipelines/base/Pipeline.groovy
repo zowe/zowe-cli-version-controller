@@ -4,15 +4,13 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
-import java.util.concurrent.TimeUnit
-
 @Grab('org.apache.commons:commons-text:1.6')
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
-
+// @TODO list required plugins for this class
 /**
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
  * your pipeline.
@@ -430,10 +428,10 @@ class Pipeline {
     }
 
     final void sendHtmlEmail(Map options) {
-        sendHtmlEmail(new EmailOptions(options))
+        sendHtmlEmail(new EmailArgs(options))
     }
 
-    final void sendHtmlEmail(EmailOptions options) {
+    final void sendHtmlEmail(EmailArgs options) {
         def subject = "[$options.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
 
         steps.echo "Sending Email"
