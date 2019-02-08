@@ -321,7 +321,7 @@ class NodeJSPipeline extends GenericPipeline {
                         sendHtmlEmail(
                             subjectTag: "APPROVAL REQUIRED",
                             body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText,
+                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText + _getChangeSummary(),
                             to: admins.emailList,
                             addProviders: false
                         )

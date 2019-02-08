@@ -586,6 +586,7 @@ class Pipeline {
         String changeString = ""
         final int ID_LENGTH = 7 // The max length of the commit id
 
+        // Loop through each change present in the change set
         for (def changeLog : steps.currentBuild.changeSets) {
             def browser = changeLog.browser
 
@@ -594,6 +595,7 @@ class Pipeline {
                 continue
             }
 
+            // Add each item in the change set to the list
             for (def entry : changeLog.items) {
                 def link = browser.getChangeSetLink(entry).toString()
 
