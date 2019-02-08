@@ -474,7 +474,7 @@ class GenericPipeline extends Pipeline {
 
             // Collect cobertura coverage if specified
             if (args.cobertura) {
-                steps.cobertura(TestArgs.coberturaDefaults + args.cobertura)
+                steps.cobertura(TestStageArguments.coberturaDefaults + args.cobertura)
             } else if (args.coverageResults) {
                 steps.echo "WARNING: Cobertura file not detected, skipping"
             }
