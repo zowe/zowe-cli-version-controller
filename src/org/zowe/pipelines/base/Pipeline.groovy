@@ -1,6 +1,7 @@
 package org.zowe.pipelines.base
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.zowe.pipelines.base.arguments.*
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
@@ -208,7 +209,7 @@ class Pipeline {
      * be skipped.</li>
      * <li>If the remaining pipeline stages are to be skipped, then this stage will be skipped. This
      * can be overridden if the stage has set {@link StageArgs#doesIgnoreSkipAll} to true.</li>
-     * <li>Finally, if the call to {@link StageArgs#shouldExecute} returns false, the stage will be
+     * <li>Finally, if the call to {@link org.zowe.pipelines.base.arguments.StageArguments#shouldExecute} returns false, the stage will be
      * skipped.</li>
      * </ol>
      *
@@ -217,7 +218,7 @@ class Pipeline {
      *
      * @param args The arguments that define the stage.
      */
-    final void createStage(StageArgs args) {
+    final void createStage(StageArguments args) {
         // @FUTURE allow easy way for create stage to specify build parameters
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
@@ -300,14 +301,11 @@ class Pipeline {
      *
      * @param arguments A map of arguments that can be instantiated to a {@link StageArgs} instance.
      *
-     * @see #createStage(StageArgs)
+     * @see #createStage(org.zowe.pipelines.base.arguments.StageArguments)
      */
     final void createStage(Map arguments) {
-        // Parse arguments and initialize the stage
-        StageArgs args = new StageArgs(arguments)
-
         // Call the overloaded method
-        createStage(args)
+        createStage(arguments as StageArguments)
     }
 
     // @TODO MERGE THE TWO END ITEMS
@@ -366,7 +364,7 @@ class Pipeline {
      * @param alwaysAction This is a closure that is always executed at the end of the pipeline prior
      *                     prior to emails being sent out.
      */
-    final void endBase(EndArgs options) {
+    final void endBase(EndArguments options) {
         try {
             // First setup the build properties
             def history = defaultBuildHistory
@@ -404,7 +402,7 @@ class Pipeline {
     }
 
     final void endBase(Map options) {
-        endBase(new EndArgs(options))
+        endBase(options as EndArguments)
     }
 
     /**
@@ -428,10 +426,10 @@ class Pipeline {
     }
 
     final void sendHtmlEmail(Map options) {
-        sendHtmlEmail(new EmailArgs(options))
+        sendHtmlEmail(options as EmailArguments)
     }
 
-    final void sendHtmlEmail(EmailArgs options) {
+    final void sendHtmlEmail(EmailArguments options) {
         def subject = "[$options.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
 
         steps.echo "Sending Email"
@@ -485,7 +483,7 @@ class Pipeline {
      * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
      * {@code setupBase} due to the issues described in {@link Pipeline}.</p>
      */
-    void setupBase(SetupTimeouts timeouts) {
+    void setupBase(SetupArguments timeouts) {
         _setupCalled = true
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
@@ -508,7 +506,7 @@ class Pipeline {
     }
 
     void setupBase(Map timeouts = [:]) {
-        setupBase(timeouts as SetupTimeouts)
+        setupBase(timeouts as SetupArguments)
     }
 
     /**

@@ -1,10 +1,10 @@
-package org.zowe.pipelines.generic.models
+package org.zowe.pipelines.generic.arguments
 
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)} method.
  */
-class BuildArgs extends GenericArgs {
+class BuildStageArguments extends GenericStageArguments {
     /**
      * The name of the build step.
      *

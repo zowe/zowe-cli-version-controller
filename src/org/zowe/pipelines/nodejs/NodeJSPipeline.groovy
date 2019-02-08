@@ -7,6 +7,8 @@ import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.exceptions.DeployStageException
+import org.zowe.pipelines.nodejs.args.NodeJSSetupArgs
+import org.zowe.pipelines.nodejs.arguments.NodeJSSetupArguments
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
@@ -121,17 +123,17 @@ class NodeJSPipeline extends GenericPipeline {
      * Creates a stage that will build a NodeJSPipeline package.
      *
      * <p>Arguments passed to this function will map to the
-     * {@link org.zowe.pipelines.generic.models.BuildArgs} class.</p>
+     * {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} class.</p>
      *
      * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)}
      * method and will have the following additional operations. <ul>
-     *     <li>If {@link org.zowe.pipelines.generic.models.BuildArgs#buildOperation} is not
+     *     <li>If {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#buildOperation} is not
      *     provided, the stage will default to executing {@code npm run build}.</li>
      *     <li>After the buildOperation is complete, the stage will use npm pack to generate an
      *     installable artifact. This artifact is archived to the build for later access.</li>
      * </ul>
      *
-     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.BuildArgs} used to define
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} used to define
      *                  the stage.
      */
     void build(Map arguments = [:]) {
@@ -440,7 +442,7 @@ class NodeJSPipeline extends GenericPipeline {
      * <li>Failure to logout of a registry will not fail the build.</li>
      * </ul>
      */
-    void setup(NodeJSSetupTimeouts timeouts) {
+    void setup(NodeJSSetupArguments timeouts) {
         super.setupGeneric(timeouts)
 
         createStage(name: 'Install Node Package Dependencies', stage: {
@@ -521,22 +523,22 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     void setup(Map timeouts = [:]) {
-        setup(timeouts as NodeJSSetupTimeouts)
+        setup(timeouts as NodeJSSetupArguments)
     }
 
     /**
      * Creates a stage that will execute tests on your application.
      *
      * <p>Arguments passed to this function will map to the
-     * {@link org.zowe.pipelines.generic.models.TestArgs} class.</p>
+     * {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
      *
      * <p>The stage will be created with the
      * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method. If
-     * {@link org.zowe.pipelines.generic.models.TestArgs#testOperation} is not provided, this method
+     * {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testOperation} is not provided, this method
      * will default to executing {@code npm run test}</p>
      *
      *
-     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.models.TestArgs} used to define
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} used to define
      *                  the stage.
      */
     void test(Map arguments = [:]) {
@@ -573,7 +575,7 @@ class NodeJSPipeline extends GenericPipeline {
         // Bad formatting but this is probably the cleanest way to do the expect script
         def expectCommand = """/usr/bin/expect <<EOD
 set timeout 60
-#npm login command, add whatever command-line args are necessary
+#npm login command, add whatever command-line arguments are necessary
 spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
 match_max 100000
 

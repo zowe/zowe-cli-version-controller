@@ -1,12 +1,15 @@
 package org.zowe.pipelines.generic
 
-import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.generic.arguments.BuildStageArguments
+import org.zowe.pipelines.generic.arguments.GenericSetupArguments
+import org.zowe.pipelines.generic.arguments.GenericStageArguments
+import org.zowe.pipelines.generic.arguments.TestStageArguments
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 /**
@@ -85,12 +88,12 @@ class GenericPipeline extends Pipeline {
      * Creates a stage that will build a generic package.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link BuildArgs} class.</p>
+     * to this function will map to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} class.</p>
      *
-     * <h4>Build: {@link BuildArgs#name}</h4>
+     * <h4>Build: {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#name}</h4>
      * <p>Runs the build of your application.</p>
      *
-     * <p>The build stage also ignores any {@link BuildArgs#resultThreshold} provided and only runs
+     * <p>The build stage also ignores any {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#resultThreshold} provided and only runs
      * on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
      *
      * <p>This stage will throw a {@link BuildStageException} if called more than once in your pipeline.</p>
@@ -98,19 +101,19 @@ class GenericPipeline extends Pipeline {
      * <p><b>Note:</b> This method was intended to be called {@code build} but had to be named
      * {@code buildGeneric} due to the issues described in {@link Pipeline}.</p>
      *
-     * @param arguments A map of arguments to be applied to the {@link BuildArgs} used to define
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} used to define
      *                  the stage.
      */
     void buildGeneric(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        BuildArgs args = arguments
+        BuildStageArguments args = arguments
 
         BuildStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new BuildStageException("args.stage is an invalid option for buildGeneric", args.name)
+            preSetupException = new BuildStageException("arguments.stage is an invalid option for buildGeneric", args.name)
         }
 
         args.name = "Build: ${args.name}"
@@ -148,12 +151,12 @@ class GenericPipeline extends Pipeline {
         Closure createSubStage = { Map arguments ->
             arguments.resultThreshold = ResultEnum.SUCCESS
 
-            GenericArgs args = arguments
+            GenericStageArguments args = arguments
 
             DeployStageException preSetupException
 
             if (args.stage) {
-                preSetupException = new DeployStageException("args.stage is an invalid option for deployGeneric", args.name)
+                preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
             }
 
             // Execute the stage if this is a protected branch and the original should execute function
@@ -262,7 +265,7 @@ class GenericPipeline extends Pipeline {
      * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
      * {@code setupGeneric} due to the issues described in {@link Pipeline}.</p>
      */
-    void setupGeneric(GenericSetupTimeouts timeouts) {
+    void setupGeneric(GenericSetupArguments timeouts) {
         // Call setup from the super class
         super.setupBase(timeouts)
 
@@ -308,18 +311,18 @@ class GenericPipeline extends Pipeline {
     }
 
     void setupGeneric(Map timeouts = [:]) {
-        setupGeneric(timeouts as GenericSetupTimeouts)
+        setupGeneric(timeouts as GenericSetupArguments)
     }
 
     /**
      * Creates a stage that will execute tests on your application.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link TestArgs} class.</p>
+     * to this function will map to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
      *
-     * <h4>Test: {@link TestArgs#name}</h4>
+     * <h4>Test: {@link org.zowe.pipelines.generic.arguments.TestStageArguments#name}</h4>
      *
-     * <p>Runs one of your application tests. If {@link TestArgs#testOperation}, the stage will execute
+     * <p>Runs one of your application tests. If {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testOperation}, the stage will execute
      * `npm run test` as the default operation. If the test operation throws an error, that error is
      * ignored and  will be assumed to be caught in the junit processing. Some test functions may
      * exit with a non-zero return code on a test failure but may still capture junit output. In
@@ -333,23 +336,23 @@ class GenericPipeline extends Pipeline {
      * <h5>Test Results HTML Report (REQUIRED)</h5>
      *
      * <p>This is an html report that contains the result of the build. The report must be defined to
-     * the method in the {@link TestArgs#testResults} variable.</p>
+     * the method in the {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} variable.</p>
      *
      * <h5>Code Coverage HTML Report</h5>
      *
      * <p>This is an HTML report generated from code coverage output from your build. The report can
-     * be omitted by omitting {@link TestArgs#coverageResults}</p>
+     * be omitted by omitting {@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults}</p>
      *
      * <h5>JUnit report (REQUIRED)</h5>
      *
      * <p>This report feeds Jenkins the data about the current test run. It can be used to mark a build
-     * as failed or unstable. The report location must be present in {@link TestArgs#junitOutput}</p>
+     * as failed or unstable. The report location must be present in {@link org.zowe.pipelines.generic.arguments.TestStageArguments#junitOutput}</p>
      *
      * <h5>Cobertura Report</h5>
      *
      * <p>This report feeds Jenkins the data about the coverage results for the current test run. If
      * no Cobertura options are passed, then no coverage data will be collected. For more
-     * information, see {@link TestArgs#cobertura}</p>
+     * information, see {@link org.zowe.pipelines.generic.arguments.TestStageArguments#cobertura}</p>
      *
      * <p>The test stage will execute by default if the current build result is greater than or
      * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
@@ -361,7 +364,7 @@ class GenericPipeline extends Pipeline {
      * these reports are to be collected and were missing.</p>
      *
      * <p>Some tests may also require the use of the gnome-keyring. The stage can be configured to
-     * unlock the keyring prior to the tests by passing {@link TestArgs#shouldUnlockKeyring} as true.</p>
+     * unlock the keyring prior to the tests by passing {@link org.zowe.pipelines.generic.arguments.TestStageArguments#shouldUnlockKeyring} as true.</p>
      *
      * <h5>Stage Exceptions</h5>
      *
@@ -370,16 +373,16 @@ class GenericPipeline extends Pipeline {
      *
      * <ul>
      * <li>A test stage was created before a call to {@link #buildGeneric(Map)}</li>
-     * <li>{@link TestArgs#testResults} was missing</li>
-     * <li>Invalid options specified for {@link TestArgs#testResults}</li>
-     * <li>{@link TestArgs#coverageResults} was provided but had an invalid format</li>
-     * <li>{@link TestArgs#junitOutput} is missing.</li>
+     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} was missing</li>
+     * <li>Invalid options specified for {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults}</li>
+     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults} was provided but had an invalid format</li>
+     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#junitOutput} is missing.</li>
      * </ul>
      *
      * <p><b>Note:</b> This method was intended to be called {@code test} but had to be named
      * {@code testGeneric} due to the issues described in {@link Pipeline}.</p>
      *
-     * @param arguments A map of arguments to be applied to the {@link TestArgs} used to define
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} used to define
      *                  the stage.
      */
     void testGeneric(Map arguments = [:]) {
@@ -389,12 +392,12 @@ class GenericPipeline extends Pipeline {
             arguments.resultThreshold = ResultEnum.UNSTABLE
         }
 
-        TestArgs args = arguments
+        TestStageArguments args = arguments
 
         TestStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new TestStageException("args.stage is an invalid option for testGeneric", args.name)
+            preSetupException = new TestStageException("arguments.stage is an invalid option for testGeneric", args.name)
         }
 
         args.name = "Test: ${args.name}"

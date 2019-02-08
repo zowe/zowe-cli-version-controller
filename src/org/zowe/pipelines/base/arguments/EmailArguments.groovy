@@ -1,10 +1,10 @@
-package org.zowe.pipelines.base.models
+package org.zowe.pipelines.base.arguments
 
 /**
- * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#sendHtmlEmail(org.zowe.pipelines.base.models.EmailArgs)}
+ * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#sendHtmlEmail(EmailArguments)}
  * method.
  */
-class EmailArgs {
+class EmailArguments {
     /**
      * Should the recipient providers be added?
      */

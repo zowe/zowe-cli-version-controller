@@ -1,11 +1,14 @@
-package org.zowe.pipelines.base.models
+package org.zowe.pipelines.base.arguments
+
+import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.models.StageTimeout
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
+ * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
  * method.
  */
-class StageArgs {
+class StageArguments {
     /**
      * Can the stage ignore a skip all condition.
      *
@@ -51,10 +54,10 @@ class StageArgs {
      *
      * <p>If the current build health is less than the value specified, the stage will be skipped.</p>
      *
-     * <p><b>Default:</b> {@link ResultEnum#SUCCESS}</p>
+     * <p><b>Default:</b> {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}</p>
      *
      * <p>For more information about the skip precedent, see
-     * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
+     * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
      */
     ResultEnum resultThreshold = ResultEnum.SUCCESS
 
@@ -66,7 +69,7 @@ class StageArgs {
      * be skipped.</p>
      *
      * <p>For more information about the skip precedent, see
-     * {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.models.StageArgs)}
+     * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
      */
     Closure shouldExecute = { -> true }
 

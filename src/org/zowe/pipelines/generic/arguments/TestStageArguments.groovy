@@ -1,10 +1,12 @@
-package org.zowe.pipelines.generic.models
+package org.zowe.pipelines.generic.arguments
+
+import org.zowe.pipelines.generic.models.TestReport
 
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method.
  */
-class TestArgs extends GenericArgs {
+class TestStageArguments extends GenericStageArguments {
     /**
      * Default values provided to cobertura.
      *

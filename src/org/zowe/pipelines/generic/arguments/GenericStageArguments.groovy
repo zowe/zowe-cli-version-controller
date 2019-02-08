@@ -1,13 +1,13 @@
-package org.zowe.pipelines.generic.models
+package org.zowe.pipelines.generic.arguments
 
-import org.zowe.pipelines.base.models.StageArgs
+import org.zowe.pipelines.base.arguments.StageArguments
 
 //TODO change the documentation
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map)} method.
  */
-class GenericArgs extends StageArgs{
+class GenericStageArguments extends StageArguments{
     /**
      * The deploy operation.
      *

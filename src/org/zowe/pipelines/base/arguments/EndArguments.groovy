@@ -1,6 +1,6 @@
-package org.zowe.pipelines.base.models
+package org.zowe.pipelines.base.arguments
 
-class EndArgs {
+class EndArguments {
     /**
      * A closure that always is executed pipeline completion
      */
