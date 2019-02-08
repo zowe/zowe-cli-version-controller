@@ -32,7 +32,7 @@ class ChangeInformation {
      * Construct the class.
      * @param steps This is the workflow context that is used to determine the change status.
      */
-    ChangeInformation(def steps) {
+    ChangeInformation(steps) {
         branchName = steps.BRANCH_NAME
 
         if (steps.env.CHANGE_BRANCH) {

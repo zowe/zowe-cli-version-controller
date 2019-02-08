@@ -5,13 +5,6 @@ package org.zowe.pipelines.generic.models
  */
 class GitConfig {
     /**
-     * The git username
-     *
-     * @todo extract this from the credentialsId
-     */
-    String user
-
-    /**
      * The git email
      */
     String email
