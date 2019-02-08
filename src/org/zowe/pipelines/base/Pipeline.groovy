@@ -588,8 +588,16 @@ class Pipeline {
             def browser = changeLog.browser
 
             for (def entry : changeLog.items) {
-                steps.echo browser.getChangeSetLink(entry).toString()
-                changeString += "<li>${entry.msg.take(MAX_MSG_LENGTH)} <b>[${entry.author}]</b></li>"
+                steps.echo entry.msgAnnotated
+                steps.echo entry.msgEscaped
+                
+                def link = browser.getChangeSetLink(entry).toString()
+                changeString += "<li><b>${entry.author}</b>: ${entry.msg.take(MAX_MSG_LENGTH)}"
+
+                if (link) {
+                    changeString += "<a href=\"$link\">${entry.commitId}</a>"
+                }
+                changeString += "</li>"
             }
         }
 
