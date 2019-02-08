@@ -582,20 +582,17 @@ class Pipeline {
 
     protected final String _getChangeSummary() {
         String changeString = ""
-        final int MAX_MSG_LENGTH = 100 // Max characters allowed for an scm message
+        final int ID_LENGTH = 6 // The max length of the commit id
 
         for (def changeLog : steps.currentBuild.changeSets) {
             def browser = changeLog.browser
 
             for (def entry : changeLog.items) {
-                steps.echo entry.msgAnnotated
-                steps.echo entry.msgEscaped
-                
                 def link = browser.getChangeSetLink(entry).toString()
-                changeString += "<li><b>${entry.author}</b>: ${entry.msg.take(MAX_MSG_LENGTH)}"
+                changeString += "<li><b>${entry.author}</b>: ${entry.msgEscaped} "
 
                 if (link) {
-                    changeString += "<a href=\"$link\">${entry.commitId}</a>"
+                    changeString += "(<a href=\"$link\">${entry.commitId.take(ID_LENGTH)}</a>)"
                 }
                 changeString += "</li>"
             }
