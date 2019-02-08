@@ -87,6 +87,8 @@ import com.cloudbees.groovy.cps.NonCPS
  * {@link https://issues.jenkins-ci.org/browse/JENKINS-47355?jql=text%20~%20%22inherit%20class%22}</p>
  */
 class Pipeline {
+    protected static final String _VERSION_CONTROLLER_REPO = "zowe/zowe-cli-version-controller"
+
     /**
      * The name of the root setup stage.
      */
@@ -582,13 +584,19 @@ class Pipeline {
 
     protected final String _getChangeSummary() {
         String changeString = ""
-        final int ID_LENGTH = 6 // The max length of the commit id
+        final int ID_LENGTH = 7 // The max length of the commit id
 
         for (def changeLog : steps.currentBuild.changeSets) {
             def browser = changeLog.browser
 
+            // Exclude any changes from the version controller project
+            if (changeLog.items[0] && browser.getChangeSetLink(changeLog.items[0]).toString().contains(_VERSION_CONTROLLER_REPO)) {
+                continue
+            }
+
             for (def entry : changeLog.items) {
                 def link = browser.getChangeSetLink(entry).toString()
+
                 changeString += "<li><b>${entry.author}</b>: ${entry.msgEscaped} "
 
                 if (link) {
