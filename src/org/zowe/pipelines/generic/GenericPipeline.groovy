@@ -1,5 +1,6 @@
 package org.zowe.pipelines.generic
 
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.generic.models.*
@@ -48,6 +49,8 @@ class GenericPipeline extends Pipeline {
 
     /**
      * Git user configuration, add more documentation in future story
+     *
+     * @TODO DOCUMENT
      */
     GitConfig gitConfig
 
@@ -427,8 +430,14 @@ class GenericPipeline extends Pipeline {
 
             try {
                 args.operation(stageName)
-            } catch (e) {
-                steps.echo "Exception: ${e.getMessage()}"
+            } catch (Exception exception) {
+                // If the script exited with code 143, that indicates a SIGTERM event was
+                // captured. If this is the case then the process was killed by Jenkins.
+                if (exception.message == "script returned exit code 143") {
+                    throw exception
+                }
+
+                steps.echo "Exception: ${exception.message}"
             }
 
             // Collect junit report

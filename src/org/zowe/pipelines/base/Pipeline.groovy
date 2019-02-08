@@ -129,7 +129,6 @@ class Pipeline {
      */
     String protectedBranchBuildHistory = '20'
 
-    // @FUTURE will be use heavily in the deploy story
     /**
      * A map of protected branches.
      *
@@ -193,7 +192,6 @@ class Pipeline {
         this.steps = steps
     }
 
-    // @FUTURE allow easy way for create stage to specify build parameters
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
@@ -220,6 +218,7 @@ class Pipeline {
      * @param args The arguments that define the stage.
      */
     final void createStage(StageArgs args) {
+        // @FUTURE allow easy way for create stage to specify build parameters
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
         _stages.add(stage)
