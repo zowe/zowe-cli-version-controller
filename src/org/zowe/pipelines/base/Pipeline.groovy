@@ -586,7 +586,6 @@ class Pipeline {
 
         for (def changeLog : steps.currentBuild.changeSets) {
             def browser = changeLog.browser
-            steps.echo browser.getChangeSetLink(changeLog).toString()
 
             for (def entry : changeLog.items) {
                 steps.echo browser.getChangeSetLink(entry).toString()
