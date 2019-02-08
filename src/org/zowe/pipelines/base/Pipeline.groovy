@@ -580,6 +580,25 @@ class Pipeline {
         return "Skip Stage: ${stage.name}"
     }
 
+    protected final String _getChangeSummary() {
+        String changeString = ""
+        final int MAX_MSG_LENGTH = 100 // Max characters allowed for an scm message
+
+        for (def entries : steps.currentBuild.changeSets) {
+            for (def entry : entries) {
+                changeString += "<li>${entry.msg.tage(MAX_MSG_LENGTH)} <b>[${entry.author}]</b></li>"
+            }
+        }
+
+        if (changeString.length() == 0) {
+            changeString = "No new changes"
+        } else {
+            changeString = "<ul>$changeString</ul>"
+        }
+
+        return "<h3>Change Summary</h3><p>$changeString</p>"
+    }
+
     // NonCPS informs jenkins to not save variable state that would resolve in a
     // java.io.NotSerializableException on the TestResults class
     /**
@@ -691,6 +710,7 @@ class Pipeline {
             }]</a></p>
                         """
 
+
             // add an image reflecting the result
             if (notificationImages.containsKey(buildStatus) &&
                 notificationImages[buildStatus].size() > 0) {
@@ -699,6 +719,7 @@ class Pipeline {
                 bodyText += "<p><img src=\"" + imageList[imageIndex] + "\" width=\"500\"/></p>"
             }
 
+            bodyText += _getChangeSummary()
             bodyText += _getTestSummary()
 
             // Add any details of an exception, if encountered
