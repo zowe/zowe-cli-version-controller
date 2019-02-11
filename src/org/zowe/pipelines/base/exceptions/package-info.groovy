@@ -8,16 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-package org.zowe.pipelines.base.interfaces
-
 /**
- * Required properties of a model used in the {@link org.zowe.pipelines.base.ProtectedBranches}
- * class.
+ * A collections of exceptions that can be thrown out of the main package.
  */
-interface ProtectedBranchProperties {
-    /**
-     * The branch must have a name associated with it.
-     * @return The name of the branch
-     */
-    String getName()
-}
+package org.zowe.pipelines.base.exceptions
