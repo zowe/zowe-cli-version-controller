@@ -152,6 +152,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             steps.dir("temp") {
                 steps.sh "ARCHIVE_NAME=\$(npm pack ../ | tail -1)"
+                steps.sh "printenv"
                 steps.archiveArtifacts steps.env.ARCHIVE_NAME
                 steps.sh "rm -f \$ARCHIVE_NAME"
             }
