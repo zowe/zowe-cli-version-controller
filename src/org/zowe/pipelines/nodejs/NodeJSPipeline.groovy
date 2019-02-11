@@ -151,10 +151,14 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "mkdir temp"
 
             steps.dir("temp") {
-                steps.sh "export ARCHIVE_NAME=\$(npm pack ../ | tail -1)"
-                steps.sh "printenv"
-                steps.archiveArtifacts steps.env.ARCHIVE_NAME
-                steps.sh "rm -f \$ARCHIVE_NAME"
+                def json = steps.readJson "../package.json"
+                def revision = steps.sh returnStdout: true, script: "git rev-parse HEAD"
+
+                def archiveName = "${json.name}.revision-$revision.tgz"
+
+                steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && cp \$PACK_NAME $archiveName "
+                steps.archiveArtifacts archiveName
+                steps.sh "rm -f $archiveName"
             }
         }])
     }
