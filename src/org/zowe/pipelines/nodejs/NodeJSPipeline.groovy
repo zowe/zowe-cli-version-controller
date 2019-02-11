@@ -147,14 +147,14 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh 'npm run build'
             }
 
-            steps.sh "npm pack"
-            // determine the file name of the produced .tgz file
-            def buildArchiveName = steps.sh(
-                    script: 'ls *.tgz',
-                    returnStdout: true
-            )
-            steps.archiveArtifacts "${buildArchiveName}"
-            steps.sh "rm -f ${buildArchiveName}"
+            // archive the build
+            steps.sh "mkdir temp"
+
+            steps.dir("temp") {
+                steps.sh "ARCHIVE_NAME=\$(npm pack ../ | tail -1)"
+                steps.archiveArtifacts steps.env.ARCHIVE_NAME
+                steps.sh "rm -f \$ARCHIVE_NAME"
+            }
         }])
     }
 
@@ -344,6 +344,7 @@ class NodeJSPipeline extends GenericPipeline {
                      * Do some bs math to determine if we had a timeout because there is no other way.
                      * Don't even suggest to me that there might be another way unless you can provide
                      * the code that I couldn't find in 5 hours.
+                     *
                      * The main problem is that when the timeout step kills the input step, the input
                      * step fires out another FlowInterruptedException. This interrupted exception
                      * takes precedent over the TimeoutException that should be thrown by the timeout step.

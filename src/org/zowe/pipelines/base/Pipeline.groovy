@@ -557,7 +557,7 @@ class Pipeline {
 
     protected final void _gatherLogs(String[] archiveFolders) {
         if (archiveFolders && archiveFolders.length > 0) {
-            def archiveLocation = "postBuildArchive"
+            def archiveLocation = "temp"
 
             steps.echo "NOTE: If a directory was not able to be archived, the build will result in a success."
             steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
