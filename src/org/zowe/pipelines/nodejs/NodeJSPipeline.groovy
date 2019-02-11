@@ -151,7 +151,7 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "mkdir temp"
 
             steps.dir("temp") {
-                def json = steps.readJSON "../package.json"
+                def json = steps.readJSON file: "../package.json"
                 def revision = steps.sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 
                 def archiveName = "${json.name}.revision-${revision}.tgz"
