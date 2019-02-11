@@ -148,7 +148,7 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             // archive the build
-            steps.sh "mkdir temp"
+            steps.sh "mkdir -p temp"
 
             steps.dir("temp") {
                 def json = steps.readJSON file: "../package.json"

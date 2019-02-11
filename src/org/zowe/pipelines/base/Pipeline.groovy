@@ -563,7 +563,7 @@ class Pipeline {
             steps.echo "NOTE: It works like this because it is easier to catch an archive error than logically determine when each specific archive directory is to be captured."
             steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
             steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
-            steps.sh "mkdir $archiveLocation"
+            steps.sh "mkdir -p $archiveLocation"
 
             for (int i = 0; i < archiveFolders.length; i++) {
                 def directory = archiveFolders[i]
