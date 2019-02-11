@@ -159,7 +159,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                 def archiveName = "${name}.revision.${revision}.tgz"
 
-                steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && cp \$PACK_NAME $archiveName "
+                steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName "
                 steps.archiveArtifacts archiveName
                 steps.sh "rm -f $archiveName"
             }
