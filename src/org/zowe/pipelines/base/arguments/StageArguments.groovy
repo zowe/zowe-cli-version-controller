@@ -4,8 +4,7 @@ import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.StageTimeout
 
 /**
- * Represents the arguments available to the
- * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
+ * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
  * method.
  */
 class StageArguments {
@@ -14,10 +13,10 @@ class StageArguments {
      *
      * <p>There are some scenarios that will cause the pipeline to internally skip all remaining
      * stages. If this option is set to true, the stage will be allowed to execute under this
-     * condition. This will not negate any skip criteria defined by {@link #shouldSkip} or
+     * condition. This will not negate any skip criteria defined by {@link #shouldExecute} or
      * {@link #resultThreshold}</p>
      *
-     * <p><b>Default:</b> {@code false}</p>
+     * @default false
      */
     boolean doesIgnoreSkipAll = false
 
@@ -35,7 +34,7 @@ class StageArguments {
      * <p>If this option is true, then a build parameter will be created that controls if this
      * stage is skipped for the current run.</p>
      *
-     * <p><b>Default:</b> {@code true}</p>
+     * @default true
      */
     boolean isSkippable = true
 
@@ -54,10 +53,10 @@ class StageArguments {
      *
      * <p>If the current build health is less than the value specified, the stage will be skipped.</p>
      *
-     * <p><b>Default:</b> {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}</p>
-     *
      * <p>For more information about the skip precedent, see
-     * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
+     * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}</p>
+     *
+     * @default {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}
      */
     ResultEnum resultThreshold = ResultEnum.SUCCESS
 
@@ -65,11 +64,13 @@ class StageArguments {
      * A custom closure function that has the ability to skip the stage if it returns false.
      *
      * <p>The purpose of this function is to give you more control over how stage execution occurs
-     * in your pipeline. If the closure provided evaluates to true, the stage it is applied to will
+     * in your pipeline. If the closure provided evaluates to false, the stage it is applied to will
      * be skipped.</p>
      *
      * <p>For more information about the skip precedent, see
      * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
+     *
+     * @default <pre>{ {@code -> true}}</pre>
      */
     Closure shouldExecute = { -> true }
 
@@ -87,7 +88,10 @@ class StageArguments {
     Closure stage
 
     /**
-     * The timeout options for the stage.
+     * Amount of time allowed for this stage.
+     *
+     * <p>If no value is provided, the timeout will be the default values of
+     * {@link org.zowe.pipelines.base.models.StageTimeout}</p>
      */
     StageTimeout timeout = [:]
 }
