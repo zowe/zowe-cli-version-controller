@@ -11,7 +11,7 @@
 package org.zowe.pipelines.base.exceptions
 
 /**
- * An exception class for errors that occur within the {@link org.zowe.pipelines.base.ProtectedBranches}
+ * An exception that can be thrown from the {@link org.zowe.pipelines.base.ProtectedBranches}
  * class.
  */
 class ProtectedBranchException extends Exception {
