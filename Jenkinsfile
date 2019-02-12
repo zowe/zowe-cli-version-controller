@@ -21,11 +21,11 @@ node('ca-jenkins-agent') {
     
     def nodejs = lib.NodeJSPipeline.new(this)
 
-    nodejs.admins.add("christopher.wright@broadcom.com")
-    nodejs.admins.add("fernando.rijocedeno@broadcom.com")
-    nodejs.admins.add("michael.bauer2@broadcom.com")
-    nodejs.admins.add("mark.ackert@broadcom.com")
-    nodejs.admins.add("daniel.kelosky@broadcom.com")
+    nodejs.admins.add("christopher.wright@broadcom.com",
+    "fernando.rijocedeno@broadcom.com"
+    "michael.bauer2@broadcom.com",
+    "mark.ackert@broadcom.com",
+    "daniel.kelosky@broadcom.com")
 
 
     nodejs.protectedBranches.add([
