@@ -50,7 +50,7 @@ node('ca-jenkins-agent') {
         ]
     )
 
-    nodejs.buildStage(timeout: [
+    nodejs.build(timeout: [
         time: 5,
         unit: 'MINUTES',
     ],  buildOperation:
@@ -60,7 +60,7 @@ node('ca-jenkins-agent') {
 
     def UNIT_TEST_ROOT = "__tests__/__results__/unit"
 
-    nodejs.testStage(
+    nodejs.test(
         name: "Unit",
         testOperation: {
             sh "npm run test:unit"
