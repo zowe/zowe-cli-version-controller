@@ -22,7 +22,7 @@ node('ca-jenkins-agent') {
     def nodejs = lib.NodeJSPipeline.new(this)
 
     nodejs.admins.add("christopher.wright@broadcom.com",
-    "fernando.rijocedeno@broadcom.com"
+    "fernando.rijocedeno@broadcom.com",
     "michael.bauer2@broadcom.com",
     "mark.ackert@broadcom.com",
     "daniel.kelosky@broadcom.com")
