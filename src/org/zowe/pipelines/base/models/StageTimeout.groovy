@@ -19,20 +19,16 @@ class StageTimeout {
     /**
      * The amount of time a stage is allowed to execute.
      *
-     * <p><b>Default:</b> {@code 10}</p>
+     * @default 10
      */
     long time = 10
 
     /**
      * The unit of measurement for {@link #time}
      *
-     * <p><b>Default:</b> {@link java.util.concurrent.TimeUnit#MINUTES}</p>
+     * @default {@link java.util.concurrent.TimeUnit#MINUTES}
      */
     TimeUnit unit = TimeUnit.MINUTES
-
-    String toString() {
-        return "${time} ${unit}"
-    }
 
     /**
      * Add a timeout to a timeout
@@ -80,5 +76,14 @@ class StageTimeout {
      */
     StageTimeout subtract(Map value) {
         return subtract(new StageTimeout(value))
+    }
+
+    /**
+     * Outputs the timeout in the form of "{@link #time} {@link #unit}"
+     * @return The string representation of this object.
+     */
+    @Override
+    String toString() {
+        return "${time} ${unit}"
     }
 }

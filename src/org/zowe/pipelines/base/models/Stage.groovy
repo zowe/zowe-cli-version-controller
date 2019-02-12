@@ -46,7 +46,7 @@ class Stage {
      * <p>If the stage skip build parameter is true for this stage, then this variable will become
      * true before stage execution.</p>
      *
-     * <p><b>Default:</b> {@code false}</p>
+     * @default false
      */
     boolean isSkippedByParam = false
 
@@ -73,7 +73,7 @@ class Stage {
      * <p>This variable will become true when {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.arguments.StageArguments)}
      * calls the {@link org.zowe.pipelines.base.arguments.StageArguments#stage} operation.</p>
      *
-     * <p><b>Default:</b> {@code false}</p>
+     * @default false
      */
     boolean wasExecuted = false
 }

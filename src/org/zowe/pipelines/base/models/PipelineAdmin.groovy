@@ -18,7 +18,7 @@ import org.zowe.pipelines.base.exceptions.AdminInitializationException
  * An admin of the pipeline.
  *
  * <p>This should be a user that is trusted to perform admin operations of a pipeline, such as
- * approving a deploy. An admin user will always receive an email on completion of a {@link org.zowe.pipelines.base.models.ProtectedBranch}
+ * approving a deploy. An admin user will always receive an email on completion of a {@link ProtectedBranch}
  * build.</p>
  */
 final class PipelineAdmin {
