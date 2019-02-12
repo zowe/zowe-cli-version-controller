@@ -37,6 +37,8 @@ import java.util.concurrent.TimeUnit
  *     <li><a href="https://plugins.jenkins.io/pipeline-input-step">Pipeline: Input Step</a></li>
  * </ul>
  *
+ * @TODO Executor machine requires expect to be available
+ *
  * <h5>Basic Usage</h5>
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline

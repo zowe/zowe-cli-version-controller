@@ -37,6 +37,8 @@ import java.util.regex.Pattern
  *     <li><a href="https://plugins.jenkins.io/cobertura">Cobertura</a></li>
  * </ul>
  *
+ * @TODO executor machine requires gnome-keyring if the test needs access to a keyring
+ *
  * <h5>Basic Usage</h5>
  *
  * <pre>
