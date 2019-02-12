@@ -24,7 +24,7 @@ node('ca-jenkins-agent') {
     nodejs.admins.add("wrich04", "zfernand0","markackert")
 
     nodejs.protectedBranches.add(
-       lib.models.NodeJSProtectedBranch.new(name: "master")
+       name: "master"
     )
 
     nodejs.gitConfig = [
