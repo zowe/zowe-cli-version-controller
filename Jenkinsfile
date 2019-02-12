@@ -53,7 +53,7 @@ node('ca-jenkins-agent') {
     nodejs.build(timeout: [
         time: 5,
         unit: 'MINUTES',
-    ],  buildOperation:
+    ], operation:
        {
              sh "npm run build"
        })
@@ -62,7 +62,7 @@ node('ca-jenkins-agent') {
 
     nodejs.test(
         name: "Unit",
-        testOperation: {
+        operation: {
             sh "npm run test:unit"
         },
         shouldUnlockKeyring: true,
