@@ -9,6 +9,6 @@
  */
 
 /**
- * A collections of exceptions that can be thrown out of <b>org.zowe.pipelines.base</b>
+ * A collection of interfaces used by <b>org.zowe.pipelines.base</b>
  */
-package org.zowe.pipelines.base.exceptions
+package org.zowe.pipelines.base.interfaces
