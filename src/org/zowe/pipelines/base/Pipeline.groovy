@@ -45,15 +45,18 @@ import com.cloudbees.groovy.cps.NonCPS
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.base.Pipeline
  *
- * import org.zowe.pipelines.base.models.ProtectedBranch
- *
  * node('pipeline-node') {
  *   Pipeline pipeline = new Pipeline(this)
  *
  *   // Set your config up before calling setup
  *   pipeline.admins.add("userid1", "userid2", "userid3")
  *
- *   pipeline.protectedBranches.add(new ProtectedBranch(name: "master"))
+ *   // Define some protected branches
+ *   pipeline.protectedBranches.addMap([
+ *       [name: "master"],
+ *       [name: "beta"],
+ *       [name: "rc"]
+ *   ])
  *
  *   // MUST BE CALLED FIRST
  *   pipeline.setupBase()
