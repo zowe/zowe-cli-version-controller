@@ -10,10 +10,9 @@
 
 package org.zowe.pipelines.base
 
-import hudson.tasks.Mailer
+import org.zowe.pipelines.base.exceptions.AdminInitializationException
 import org.zowe.pipelines.base.exceptions.PipelineException
 import org.zowe.pipelines.base.models.PipelineAdmin
-import hudson.model.User
 
 /**
  * @TODO DOCUMENT
@@ -21,22 +20,9 @@ import hudson.model.User
 class PipelineAdmins {
     private final Map<String,PipelineAdmin> _admins = [:]
 
-    void add(String... admins) throws PipelineException {
+    void add(String... admins) throws AdminInitializationException {
         for (String admin : admins) {
-            User u = User.getById(admin, false)
-
-            if (!u) {
-                throw new PipelineException("User \"$admin\" was not found. Please create this user and try again.")
-            }
-
-            String emailAddress = u.getProperty(Mailer.UserProperty.class).address
-            String name = u.getFullName()
-
-            if (emailAddress) {
-                _admins.putAt(admin, new PipelineAdmin(admin, emailAddress, name))
-            } else {
-                throw new IllegalArgumentException("Email address is null for \"$admin\"")
-            }
+            _admins.putAt(admin, new PipelineAdmin(admin))
         }
     }
 

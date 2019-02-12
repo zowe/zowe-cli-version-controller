@@ -10,14 +10,53 @@
 
 package org.zowe.pipelines.base.models
 
+import hudson.model.User
+import hudson.tasks.Mailer
+import org.zowe.pipelines.base.exceptions.AdminInitializationException
+
+/**
+ * An admin of the pipeline.
+ *
+ * <p>This should be a user that is trusted to perform admin operations of a pipeline, such as
+ * approving a deploy. An admin user will always receive an email on completion of a {@link org.zowe.pipelines.base.models.ProtectedBranch}
+ * build.</p>
+ */
 final class PipelineAdmin {
+    /**
+     * The id of the user in Jenkins
+     */
     final String userID
+
+    /**
+     * The email address of the user
+     */
     final String email
+
+    /**
+     * The full name of the user
+     */
     final String name
 
-    PipelineAdmin(String userId, String email, String name) {
+    /**
+     * Initializes a pipeline admin.
+     * @param userId The userId of the admin in Jenkins.
+     * @throws AdminInitializationException when an error occurs during initialization.
+     */
+    PipelineAdmin(String userId) throws AdminInitializationException {
         this.userID = userId
-        this.email = email
-        this.name = name
+
+        User u = User.getById(userId, false)
+
+        if (!u) {
+            throw new AdminInitializationException("Unable to find user!", userId)
+        }
+
+        name = u.getFullName()
+
+        email = u.getProperty(Mailer.UserProperty.class).address
+
+        if (!email) {
+            throw new AdminInitializationException("Email address is not defined!", userId)
+        }
     }
 }
