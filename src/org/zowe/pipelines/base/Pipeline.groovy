@@ -23,10 +23,22 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4
 import hudson.tasks.test.AbstractTestResultAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.cloudbees.groovy.cps.NonCPS
-// @TODO list required plugins for this class
+
 /**
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
  * your pipeline.
+ *
+ * <h5>Required Plugins</h5>
+ * The following plugins are required:
+ *
+ * <ul>
+ *     <li><a href="https://plugins.jenkins.io/workflow-support">Pipeline: Supporting APIs</a></li>
+ *     <li><a href="https://plugins.jenkins.io/pipeline-stage-step">Pipeline: Stage Step</a></li>
+ *     <li><a href="https://plugins.jenkins.io/workflow-basic-steps">Pipeline: Basic Steps</a></li>
+ *     <li><a href="https://plugins.jenkins.io/email-ext">Email Extension</a></li>
+ *     <li><a href="https://plugins.jenkins.io/workflow-scm-step">Pipeline: SCM Step</a></li>
+ *     <li><a href="https://plugins.jenkins.io/workflow-durable-task-step">Pipeline: Nodes and Processes</a></li>
+ * </ul>
  *
  * <h5>Basic Usage</h5>
  *
@@ -39,10 +51,7 @@ import com.cloudbees.groovy.cps.NonCPS
  *   Pipeline pipeline = new Pipeline(this)
  *
  *   // Set your config up before calling setup
- *   pipeline.adminEmails = [
- *       "email1@example.com",
- *       "email2@example.com"
- *   ]
+ *   pipeline.admins.add("userid1", "userid2", "userid3")
  *
  *   pipeline.protectedBranches.add(new ProtectedBranch(name: "master"))
  *
@@ -94,8 +103,8 @@ import com.cloudbees.groovy.cps.NonCPS
  * or method to protected or public, Jenkins doesn't complain anymore and operation acts as normal.
  * </p>
  *
- * <p>This issue seems to signify that they may never fix this problem.
- * {@link https://issues.jenkins-ci.org/browse/JENKINS-47355?jql=text%20~%20%22inherit%20class%22}</p>
+ * <p>This <a href="https://issues.jenkins-ci.org/browse/JENKINS-47355?jql=text%20~%20%22inherit%20class%22">issue</a>
+ * seems to signify that they may never fix this problem. </p>
  */
 class Pipeline {
     protected static final String _VERSION_CONTROLLER_REPO = "zowe/zowe-cli-version-controller"

@@ -26,6 +26,17 @@ import java.util.regex.Pattern
  * Extends the functionality available in the {@link Pipeline} class. This class adds methods for
  * building and testing your code.
  *
+ * <h5>Required Plugins</h5>
+ * The following plugins are required:
+ *
+ * <ul>
+ *     <li>All plugins listed at {@link org.zowe.pipelines.base.Pipeline}</li>
+ *     <li><a href="https://plugins.jenkins.io/credentials-binding">Credentials Binding</a></li>
+ *     <li><a href="https://plugins.jenkins.io/junit">JUnit</a></li>
+ *     <li><a href="https://plugins.jenkins.io/htmlpublisher">HTML Publisher</a></li>
+ *     <li><a href="https://plugins.jenkins.io/cobertura">Cobertura</a></li>
+ * </ul>
+ *
  * <h5>Basic Usage</h5>
  *
  * <pre>

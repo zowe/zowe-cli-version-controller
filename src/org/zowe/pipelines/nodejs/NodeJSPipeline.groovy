@@ -28,6 +28,15 @@ import java.util.concurrent.TimeUnit
  *
  * <p>This class provides methods that allow you to build, test, and deploy your NodeJSPipeline application.</p>
  *
+ * <h5>Required Plugins</h5>
+ * The following plugins are required:
+ *
+ * <ul>
+ *     <li>All plugins listed at {@link org.zowe.pipelines.generic.GenericPipeline}</li>
+ *     <li><a href="https://plugins.jenkins.io/pipeline-utility-steps">Pipeline Utility Steps</a></li>
+ *     <li><a href="https://plugins.jenkins.io/pipeline-input-step">Pipeline: Input Step</a></li>
+ * </ul>
+ *
  * <h5>Basic Usage</h5>
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline

@@ -66,7 +66,7 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * Adds a list of branches to the map.
      * @param branches The branches to add as protected.
      */
-    void addList(List<T> branches) {
+    void add(T[] branches) {
         for (T branch : branches) {
             add(branch)
         }
@@ -77,7 +77,7 @@ final class ProtectedBranches<T extends ProtectedBranchProperties> implements Se
      * of the Groovy Map Object Constructor.
      * @param branches The branches to add as protected.
      */
-    void addListMap(List<Map> branches) {
+    void add(Map[] branches) {
         for (Map branch : branches) {
             add(branch)
         }

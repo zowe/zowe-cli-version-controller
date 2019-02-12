@@ -68,7 +68,7 @@ class StageTimeout {
     }
 
     /**
-     * Add using a map of a timeout.
+     * Subtract using a map of a timeout.
      *
      * @param value The StageTimeout map to construct
      * @return A new timeout object representing the operation
