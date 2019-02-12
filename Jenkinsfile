@@ -19,22 +19,15 @@ node('ca-jenkins-agent') {
     
     def lib = library("shared-pipelines@$branch").org.zowe.pipelines.nodejs
     
-    def nodejs = lib.NodeJSRunner.new(this)
+    def nodejs = lib.NodeJSPipeline.new(this)
 
-    nodejs.adminEmails = [
-        "christopher.wright@broadcom.com",
-        "fernando.rijocedeno@broadcom.com",
-        "michael.bauer2@broadcom.com",
-        "mark.ackert@broadcom.com",
-        "daniel.kelosky@broadcom.com"
-    ]
+    nodejs.admins.add("wrich04", "zfernand0","markackert")
 
-    nodejs.protectedBranches = [
-        master: 'daily'
-    ]
+    nodejs.protectedBranches.add(
+       name: "master"
+    )
 
     nodejs.gitConfig = [
-        user: 'zowe-robot',
         email: 'zowe.robot@gmail.com',
         credentialsId: 'zowe-robot-github'
     ]
