@@ -20,22 +20,22 @@ import org.zowe.pipelines.base.interfaces.ProtectedBranchProperties
  */
 final class ProtectedBranches<T extends ProtectedBranchProperties> implements Serializable {
     /**
-     * The property class of items that are instantiated in the map.
+     * The class object used to instantiate a new protected branch value.
      */
     final Class<T> propertyClass
 
     /**
-     * The mapping of protected branches
+     * The mapping of protected branches.
      */
     private HashMap<String, T> _protectedBranches = new HashMap()
 
     /**
      * Constructs the class with the specified factory class.
      *
-     * @param objectClass The class that is used to instantiate a new property object.
+     * @param propertyClass The class that is used to instantiate a new property object.
      */
-    ProtectedBranches(final Class<T> objectClass) {
-        this.propertyClass = objectClass
+    ProtectedBranches(final Class<T> propertyClass) {
+        this.propertyClass = propertyClass
     }
 
     /**

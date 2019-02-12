@@ -76,7 +76,7 @@ import com.cloudbees.groovy.cps.NonCPS
  *
  * <p>Stages are not executed until the {@link #endBase} method is called. This means that you can't
  * rely on stages being executed as soon as they are defined. If you need logic to help determine if
- * a stage should be executed, you must use the proper options allowed by {@link StageArgs}.</p>
+ * a stage should be executed, you must use the proper options allowed by {@link StageArguments}.</p>
  *
  * <p><b>Note:</b> Due to issues with how Jenkins loads a shared pipeline library, you might notice
  * that some methods that were meant to be overridden by subclasses are just named differently. This
@@ -107,18 +107,23 @@ import com.cloudbees.groovy.cps.NonCPS
  * </p>
  *
  * <p>This <a href="https://issues.jenkins-ci.org/browse/JENKINS-47355?jql=text%20~%20%22inherit%20class%22">issue</a>
- * seems to signify that they may never fix this problem. </p>
+ * seems to signify that they may never fix this problem.</p>
  */
 class Pipeline {
-    protected static final String _VERSION_CONTROLLER_REPO = "zowe/zowe-cli-version-controller"
-
     /**
-     * The name of the root setup stage.
+     * The name of the setup stage.
      */
     protected static final String _SETUP_STAGE_NAME = "Setup"
 
     /**
-     * This is a list of administrator emails addresses that will receive emails when a build
+     * The name of the version controller repo.
+     *
+     * <p>This value is used to filter out change logs from the controller project in the email.</p>
+     */
+    protected static final String _VERSION_CONTROLLER_REPO = "zowe/zowe-cli-version-controller"
+
+    /**
+     * This is a list of administrator ids that will receive notifications when a build
      * happens on a protected branch.
      */
     final PipelineAdmins admins = new PipelineAdmins()
@@ -201,6 +206,16 @@ class Pipeline {
     def buildParameters = []
 
     /**
+     * Gets the stage skip parameter name.
+     *
+     * @param stage The stage to skip.
+     * @return The name of the skip stage parameter.
+     */
+    protected static String _getStageSkipOption(Stage stage) {
+        return "Skip Stage: ${stage.name}"
+    }
+
+    /**
      * Constructs the class.
      *
      * <p>When invoking from a Jenkins pipeline script, the Pipeline must be passed
@@ -221,19 +236,19 @@ class Pipeline {
      * Creates a new stage to be run in the Jenkins pipeline.
      *
      * <p>Stages are executed in the order that they are created. For more details on what arguments
-     * can be sent into a stage, see the {@link StageArgs} class.</p>
+     * can be sent into a stage, see the {@link StageArguments} class.</p>
      *
      * <p>Stages can also encounter various conditions that will cause them to skip. The following
      * skip search order is used when determining if a stage should be skipped.</p>
      *
      * <ol>
-     * <li>If the {@link StageArgs#resultThreshold} value is greater than the current result, the
+     * <li>If the {@link StageArguments#resultThreshold} value is greater than the current result, the
      * stage will be skipped. There is no override for this operation.</li>
-     * <li>If the stage is skipable and the stage skip build option was passed, the stage will
+     * <li>If the stage is skippable and the stage skip build option was passed, the stage will
      * be skipped.</li>
      * <li>If the remaining pipeline stages are to be skipped, then this stage will be skipped. This
-     * can be overridden if the stage has set {@link StageArgs#doesIgnoreSkipAll} to true.</li>
-     * <li>Finally, if the call to {@link org.zowe.pipelines.base.arguments.StageArguments#shouldExecute} returns false, the stage will be
+     * can be overridden if the stage has set {@link StageArguments#doesIgnoreSkipAll} to true.</li>
+     * <li>Finally, if the call to {@link StageArguments#shouldExecute} returns false, the stage will be
      * skipped.</li>
      * </ol>
      *
@@ -289,7 +304,7 @@ class Pipeline {
                             // If doesIgnoreSkipAll is true then this check is ignored, all others are not though
                             skipStage("All remaining steps are skipped")
                         } else if (!args.shouldExecute()) {
-                            skipStage("Stage was not executed due to shouldExecute being false")
+                            skipStage("Stage was not executed due to shouldExecute returning false")
                         }
                         // Run the stage
                         else {
@@ -323,50 +338,17 @@ class Pipeline {
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
-     * @param arguments A map of arguments that can be instantiated to a {@link StageArgs} instance.
+     * @param arguments A map of arguments that can be instantiated to a {@link StageArguments} instance.
      *
-     * @see #createStage(org.zowe.pipelines.base.arguments.StageArguments)
+     * @see #createStage(StageArguments)
      */
     final void createStage(Map arguments) {
         // Call the overloaded method
         createStage(arguments as StageArguments)
     }
 
-    // @TODO MERGE THE TWO END ITEMS
-
     /**
-     * End the pipeline and collect specified log files.
-     *
-     * <p>The end method adds the following operations to the end of the pipeline to the pipeline:</p>
-     *
-     * <h5>Capture Logs</h5>
-     *
-     * <p>Any folders specified in archiveFolders will be archived. If a folder is not available, the
-     * archive will fail. In this scenario, the build will note the copy step as failed but will
-     * not modify the current build result. This allows you to list directories to archive that only
-     * appear under certain scenarios without the worry that they will affect the result of your
-     * build when missing.</p>
-     *
-     * <p>These operations are put into the alwaysAction closure that is passed to the {@link #endBase(Closure)}
-     * class method.</p>
-     *
-     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
-     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
-     *
-     * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
-     *                       build will ignore it and will not modify the current build result. See
-     *                       the notes in the log for the reasoning. If a folder in this array
-     *                       starts with a {@literal `/`}, the stage will copy the folder into a temp directory
-     *                       inside the project (retaining the folder structure). This is due to
-     *                       the fact that folders outside the workspace cannot be archived by
-     *                       Jenkins. The leading {@literal `/`} should be used for any logs that you wish to
-     *                       capture that are outside the workspace. Also if the directory starts
-     *                       with a {@literal ../}, the stage will abort access to that folder. This is because
-     *                       Jenkins cannot archive files outside the workspace.
-     */
-
-    /**
-     * Call to inform the runner that no more stages are to be added and execution can begin.
+     * Signal that no more stages will be added and begin pipeline execution.
      *
      * <p>The end method MUST be the last method called as part of your pipeline. The end method is
      * responsible for executing all the stages previously created after setting the required build
@@ -377,18 +359,19 @@ class Pipeline {
      * the build history and stage skip parameters. After this is done, the method will execute
      * all of the created stages in the order they were defined.</p>
      *
-     * <p>After stage execution, an email will be sent out to those that made the commit. If the build
-     * failed or returned to normal, all committers since the last successful build will also
-     * receive the email. Finally if this build is on a protected branch, all emails listed in the
-     * {@link #adminEmails} list will also receive a status email.</p>
+     * <p>After stage execution, desired logs will be captured and an email will be sent out to
+     * those that made the commit. If the build failed or returned to normal, all committers since
+     * the last successful build will also receive the email. Finally if this build is on a
+     * protected branch, all emails listed in the {@link #admins} list will also receive a status
+     * email.</p>
      *
-     * <p><b>Note:</b> This method was intended to be called {@code end} but had to be named
-     * {@code endBase} due to the issues described in {@link Pipeline}.</p>
+     * @Note This method was intended to be called {@code end} but had to be named
+     *       {@code endBase} due to the issues described in {@link Pipeline}.
      *
-     * @param alwaysAction This is a closure that is always executed at the end of the pipeline prior
-     *                     prior to emails being sent out.
+     * @param args Arguments for the end method.
+     *
      */
-    final void endBase(EndArguments options) {
+    final void endBase(EndArguments args) {
         // Create this stage so that the pipeline has a place to log all the
         // post build actions. If the build has not thrown an exception or been
         // aborted, the stage should run.
@@ -429,18 +412,24 @@ class Pipeline {
                        "------------------------------------------------------------------------------------------------"
             steps.echo "POST BUILD ACTIONS"
 
-            if (options.always) {
-                options.always()
+            if (args.always) {
+                args.always()
             }
 
             // Gather the log folders here
-            _gatherLogs(options.archiveFolders)
+            _gatherLogs(args.archiveFolders)
             _sendEmailNotification()
         }
     }
 
-    final void endBase(Map options) {
-        endBase(options as EndArguments)
+    /**
+     * Signal that no more stages will be added and begin pipeline execution.
+     *
+     * @param args A map that can be instantiated as {@link EndArguments}.
+     * @see #endBase(EndArguments)
+     */
+    final void endBase(Map args) {
+        endBase(args as EndArguments)
     }
 
     /**
@@ -463,29 +452,43 @@ class Pipeline {
         return _stages.getStage(stageName)
     }
 
-    final void sendHtmlEmail(Map options) {
-        sendHtmlEmail(options as EmailArguments)
-    }
-
-    final void sendHtmlEmail(EmailArguments options) {
-        def subject = "[$options.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
+    /**
+     * Send an HTML email.
+     *
+     * <p>The email will contain {@code [args.tag]} as the first string content followed by the
+     * job name and build number</p>
+     *
+     * @param args Arguments available to the email command.
+     */
+    final void sendHtmlEmail(EmailArguments args) {
+        def subject = "[$args.subjectTag] Job '${steps.env.JOB_NAME} [${steps.env.BUILD_NUMBER}]'"
 
         steps.echo "Sending Email"
         steps.echo "Subject: $subject"
-        steps.echo "Body:\n${options.body}"
+        steps.echo "Body:\n${args.body}"
 
         // send the email
         steps.emailext(
-                subject: subject,
-                to: options.to,
-                body: options.body,
-                mimeType: "text/html",
-                recipientProviders: options.addProviders ? [[$class: 'DevelopersRecipientProvider'],
-                                     [$class: 'UpstreamComitterRecipientProvider'],
-                                     [$class: 'CulpritsRecipientProvider'],
-                                     [$class: 'RequesterRecipientProvider']] : []
+            subject: subject,
+            to: args.to,
+            body: args.body,
+            mimeType: "text/html",
+            recipientProviders: args.addProviders ? [[$class: 'DevelopersRecipientProvider'],
+                                                     [$class: 'UpstreamComitterRecipientProvider'],
+                                                     [$class: 'CulpritsRecipientProvider'],
+                                                     [$class: 'RequesterRecipientProvider']] : []
         )
 
+    }
+
+    /**
+     * Send an HTML email.
+     *
+     * @param args A map that can be instantiated as {@link EmailArguments}.
+     * @see #sendHtmlEmail(EmailArguments)
+     */
+    final void sendHtmlEmail(Map args) {
+        sendHtmlEmail(args as EmailArguments)
     }
 
     /**
@@ -497,7 +500,7 @@ class Pipeline {
     }
 
     /**
-     * Creates the pipeline setup stages.
+     * Initialize the pipeline.
      *
      * <p>This method MUST be called before any other stages are created. If not called, your Jenkins
      * pipeline will fail. It is also recommended that any public properties of this class are set
@@ -518,8 +521,10 @@ class Pipeline {
      *
      * <p>Checks the source out for the pipeline.</p>
      *
-     * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
-     * {@code setupBase} due to the issues described in {@link Pipeline}.</p>
+     * @Note This method was intended to be called {@code setup} but had to be named
+     *       {@code setupBase} due to the issues described in {@link Pipeline}.
+     *
+     * @param timeouts The timeouts for the added stages.
      */
     void setupBase(SetupArguments timeouts) {
         _setupCalled = true
@@ -534,7 +539,7 @@ class Pipeline {
                     throw new StageException("Setup found a failing stage but there was no associated exception.", _stages.firstFailingStage.name)
                 }
             } else {
-                steps.echo "No problems with preinitialization of pipeline :)"
+                steps.echo "No problems with pre-initialization of pipeline :)"
             }
         }, isSkippable: false, timeout: timeouts.setup)
 
@@ -543,6 +548,12 @@ class Pipeline {
         }, isSkippable: false, timeout: timeouts.checkout)
     }
 
+    /**
+     * Initialize the pipeline.
+     *
+     * @param timeouts A map that can be instantiated as {@link SetupArguments}
+     * @see #setupBase(SetupArguments)
+     */
     void setupBase(Map timeouts = [:]) {
         setupBase(timeouts as SetupArguments)
     }
@@ -550,7 +561,7 @@ class Pipeline {
     /**
      * Wraps a closure function in a try catch.
      *
-     * <p>Used internally by {@link #createStage(StageArgs)} to handle errors thrown by timeouts and
+     * <p>Used internally by {@link #createStage(StageArguments)} to handle errors thrown by timeouts and
      * stage executions.</p>
      *
      * @param stage The stage that is currently executing
@@ -577,6 +588,15 @@ class Pipeline {
         }
     }
 
+    /**
+     * Gathers logs specified by the input array.
+     *
+     * <p>Logs that exist outside of the workspace will be copied into a "temp" folder. The copied
+     * path copied will contain the full original path in the temp directory.</p>
+     *
+     * @param archiveFolders The folders containing logs
+     * @see EndArguments#archiveFolders
+     */
     protected final void _gatherLogs(String[] archiveFolders) {
         if (archiveFolders && archiveFolders.length > 0) {
             def archiveLocation = "temp"
@@ -610,15 +630,13 @@ class Pipeline {
     }
 
     /**
-     * Gets the stage skip parameter name.
+     * Get the list of changes in this build.
      *
-     * @param stage The stage to skip.
-     * @return The name of the skip stage parameter.
+     * <p>This method will omit any changes reported from the shared pipeline library. These changes
+     * aren't relevant to dependent project builds so they provide no value to include.</p>
+     *
+     * @return An HTML string that can be added into the email contents.
      */
-    protected static String _getStageSkipOption(Stage stage) {
-        return "Skip Stage: ${stage.name}"
-    }
-
     protected final String _getChangeSummary() {
         String changeString = ""
         final int ID_LENGTH = 7 // The max length of the commit id
@@ -737,8 +755,6 @@ class Pipeline {
      * Send an email notification about the result of the build to the appropriate users
      */
     protected void _sendEmailNotification() {
-        // @TODO Get list of commits that were built
-
         String buildStatus = "${steps.currentBuild.currentResult}"
         String emailText = buildStatus
 

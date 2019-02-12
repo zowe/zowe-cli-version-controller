@@ -293,7 +293,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-            } else if (admins.size() == 0) {
+            } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new DeployStageException(
                         "No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.",
@@ -353,7 +353,7 @@ class NodeJSPipeline extends GenericPipeline {
                         )
 
                         def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                            submitter: admins.approverList, submitterParameter: "DEPLOY_APPROVER",
+                            submitter: admins.commaSeparated, submitterParameter: "DEPLOY_APPROVER",
                             parameters: [
                                 steps.choice(
                                     name: "DEPLOY_VERSION",
