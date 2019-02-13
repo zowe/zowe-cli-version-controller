@@ -12,7 +12,7 @@
  * Classes that extend the capability of a {@link org.zowe.pipelines.base.Pipeline}.
  *
  * <p>The main class of importance in this package is the {@link org.zowe.pipelines.generic.GenericPipeline} class. This class provides
- * various methods to create a generic scripted Jenkins pipeline. The other classes in this package
+ * various methods to create a scripted Generic Jenkins pipeline. The other classes in this package
  * provide supporting code for the main GenericPipeline class.</p>
  */
 package org.zowe.pipelines.generic
