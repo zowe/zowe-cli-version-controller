@@ -361,7 +361,7 @@ class GenericPipeline extends Pipeline {
      * @throw {@link GitException} when pushing to a branch that has forward commits from this build
      */
     boolean gitPush() throws GitException {
-        steps.sh "git fetch"
+        steps.sh "git fetch --no-tags"
         String status = steps.sh returnStdout: true, script: "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
