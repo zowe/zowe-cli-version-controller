@@ -232,9 +232,7 @@ class GenericPipeline extends Pipeline {
             createSubStage(versionArguments)
         }
 
-        createSubStage(deployArguments + [operation: { String stageName ->
-            deployArguments.operation(stageName)
-        }])
+        createSubStage(deployArguments)
     }
 
     void endGeneric(Map options) {
