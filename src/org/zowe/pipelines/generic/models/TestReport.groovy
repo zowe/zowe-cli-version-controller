@@ -27,7 +27,7 @@ class TestReport {
     /**
      * The name of the report
      *
-     * <p><b>Default:</b> {@code "Test Report"}</p>
+     * @default {@code "Test Report"}
      */
     String name = "Test Report"
 }

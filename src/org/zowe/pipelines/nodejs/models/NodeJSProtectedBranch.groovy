@@ -10,12 +10,14 @@
 
 package org.zowe.pipelines.nodejs.models
 
-import org.zowe.pipelines.generic.models.GenericProtectedBranch
+import org.zowe.pipelines.base.models.ProtectedBranch
 
 /**
  * @see org.zowe.pipelines.base.models.ProtectedBranch
  */
-class NodeJSProtectedBranch extends GenericProtectedBranch {
+class NodeJSProtectedBranch extends ProtectedBranch {
+    boolean autoDeploy = false
+
     /**
      * This is the npm tag in which the branch will be published with. If this
      * property is left null, then the branch will not be published.

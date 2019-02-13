@@ -15,7 +15,7 @@ import org.zowe.pipelines.base.interfaces.ProtectedBranchProperties
 /**
  * Properties of a protected branch
  *
- * <p>A protected branch is usually on that has some restrictions on what code
+ * <p>A protected branch is usually one that has some restrictions on what code
  * can be published to it. These are typically your release and forward development
  * branches.</p>
  *
