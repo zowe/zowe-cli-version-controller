@@ -28,7 +28,7 @@ import com.cloudbees.groovy.cps.NonCPS
  * This class represents a basic Jenkins pipeline. Use the methods of this class to add stages to
  * your pipeline.
  *
- * <h5>Required Plugins</h5>
+ * <dl><dt><b>Required Plugins:</b></dt><dd>
  * <p>The following plugins are required:
  *
  * <ul>
@@ -40,14 +40,15 @@ import com.cloudbees.groovy.cps.NonCPS
  *     <li><a href="https://plugins.jenkins.io/workflow-durable-task-step">Pipeline: Nodes and Processes</a></li>
  * </ul>
  * </p>
+ * </dd></dl>
  *
- * <h5>Setup</h5>
+ * @Setup
  * <ul>
  *     <li>Create a multibranch pipeline for your project. Any other type of build will fail.</li>
  * </ul>
  *
  *
- * <h5>Basic Usage</h5>
+ * @Example
  *
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.base.Pipeline
@@ -85,7 +86,7 @@ import com.cloudbees.groovy.cps.NonCPS
  * rely on stages being executed as soon as they are defined. If you need logic to help determine if
  * a stage should be executed, you must use the proper options allowed by {@link StageArguments}.</p>
  *
- * <p><b>Note:</b> Due to issues with how Jenkins loads a shared pipeline library, you might notice
+ * @Note Due to issues with how Jenkins loads a shared pipeline library, you might notice
  * that some methods that were meant to be overridden by subclasses are just named differently. This
  * is due to how the CPS Jenkins wrapper modifies classes and subclasses. See below for the full
  * explanation of the problem.</p>
@@ -228,7 +229,7 @@ class Pipeline {
      * <p>When invoking from a Jenkins pipeline script, the Pipeline must be passed
      * the current environment of the Jenkinsfile to have access to the steps.</p>
      *
-     * <h5>Example Setup:</h5>
+     * @Example
      * <pre>
      * def pipeline = new Pipeline(this)
      * </pre>
@@ -435,7 +436,7 @@ class Pipeline {
      * @param args A map that can be instantiated as {@link EndArguments}.
      * @see #endBase(EndArguments)
      */
-    final void endBase(Map args) {
+    final void endBase(Map args = [:]) {
         endBase(args as EndArguments)
     }
 
@@ -517,16 +518,16 @@ class Pipeline {
      * methods. Failure to do so will result in the pipeline indicating that setup was never called.
      * </p>
      *
+     * @Stages
      * <p>The setup method creates 2 stages in your Jenkins pipeline using the {@link #createStage(Map)}
      * function.</p>
      *
-     * <h4>Setup</h4>
-     *
-     * <p>Used internally to indicate that the Pipeline has been properly setup.</p>
-     *
-     * <h4>Checkout</h4>
-     *
-     * <p>Checks the source out for the pipeline.</p>
+     * <dl>
+     *     <dt><b>Setup</b></dt>
+     *     <dd>Used internally to indicate that the Pipeline has been properly setup.</dd>
+     *     <dt><b>Checkout</b></dt>
+     *     <dd>Checks the source out for the pipeline.</dd>
+     * </dl>
      *
      * @Note This method was intended to be called {@code setup} but had to be named
      *       {@code setupBase} due to the issues described in {@link Pipeline}.

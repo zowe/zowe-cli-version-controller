@@ -23,10 +23,10 @@ import org.zowe.pipelines.generic.exceptions.*
 import java.util.regex.Pattern
 
 /**
- * Extends the functionality available in the {@link Pipeline} class. This class adds methods for
+ * Extends the functionality available in the {@link org.zowe.pipelines.base.Pipeline} class. This class adds methods for
  * building and testing your code.
  *
- * <h5>Required Plugins</h5>
+ * <dl><dt><b>Required Plugins:</b></dt><dd>
  * The following plugins are required:
  *
  * <ul>
@@ -36,8 +36,9 @@ import java.util.regex.Pattern
  *     <li><a href="https://plugins.jenkins.io/htmlpublisher">HTML Publisher</a></li>
  *     <li><a href="https://plugins.jenkins.io/cobertura">Cobertura</a></li>
  * </ul>
+ * </dd></dl>
  *
- * <h5>Basic Usage</h5>
+ * @Example
  *
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.generic.GenericPipeline
@@ -79,14 +80,17 @@ class GenericPipeline extends Pipeline {
     protected static final String _CI_SKIP = "[ci skip]"
 
     /**
-     * The token id for git credentials
+     * The token id for git credentials.
      */
     protected static final String _TOKEN = "TOKEN"
 
     /**
-     * Git user configuration, add more documentation in future story
+     * Git user configuration.
      *
-     * @TODO DOCUMENT
+     * <p>The configuration will determine what user is responsible for committing and pushing
+     * code updates done by the pipeline. Failure to include this configuration will result in
+     * a {@link org.zowe.pipelines.generic.exceptions.GitException} being thrown in the pipeline
+     * setup.</p>
      */
     GitConfig gitConfig
 
@@ -111,7 +115,7 @@ class GenericPipeline extends Pipeline {
      * <p>When invoking from a Jenkins pipeline script, the GenericPipeline must be passed
      * the current environment of the Jenkinsfile to have access to the steps.</p>
      *
-     * <h5>Example Setup:</h5>
+     * @Example
      * <pre>
      * def pipeline = new GenericPipeline(this)
      * </pre>
@@ -126,20 +130,40 @@ class GenericPipeline extends Pipeline {
      * Creates a stage that will build a generic package.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} class.</p>
+     * to this function will map to the {@link BuildStageArguments} class. The
+     * {@link BuildStageArguments#operation} will be executed after all checks are complete. This must
+     * be provided or a {@link java.lang.NullPointerException} will be encountered.</p>
      *
-     * <h4>Build: {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#name}</h4>
-     * <p>Runs the build of your application.</p>
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Build: {@link BuildStageArguments#name}</b></dt>
+     *     <dd>
+     *         Runs the build of your application. The build stage also ignores any
+     *         {@link BuildStageArguments#resultThreshold} provided and only runs
+     *         on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
+     *     </dd>
+     * </dl>
      *
-     * <p>The build stage also ignores any {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#resultThreshold} provided and only runs
-     * on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
+     * @Exceptions
      *
-     * <p>This stage will throw a {@link BuildStageException} if called more than once in your pipeline.</p>
+     * <p>
+     *     The following exceptions can be thrown by the build stage:
      *
-     * <p><b>Note:</b> This method was intended to be called {@code build} but had to be named
-     * {@code buildGeneric} due to the issues described in {@link Pipeline}.</p>
+     *     <dl>
+     *         <dt><b>{@link BuildStageException}</b></dt>
+     *         <dd>When arguments.stage is provided. This is an invalid argument field for the operation.</dd>
+     *         <dd>When called more than once in your pipeline. Only one build may be present in a
+     *             pipeline.</dd>
+     *         <dt><b>{@link NullPointerException}</b></dt>
+     *         <dd>When arguments.operation is not provided.</dd>
+     *     </dl>
+     * </p>
      *
-     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} used to define
+     * @Note This method was intended to be called {@code build} but had to be named
+     * {@code buildGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.
+     *
+     * @param arguments A map of arguments to be applied to the {@link BuildStageArguments} used to define
      *                  the stage.
      */
     void buildGeneric(Map arguments = [:]) {
@@ -174,16 +198,65 @@ class GenericPipeline extends Pipeline {
         createStage(args)
     }
 
-    // @TODO DOCUMENT
-    // Versioning op happens before commit op and happens before deploy op
-    void deployGeneric(Map deployArguments = [:], Map versionArguments = [:]) {
+    /**
+     * Creates a stage that will execute a version bump and then deploy. test
+     *
+     * @Stages
+     * This method can add 2 stages to the build:
+     *
+     * <dl>
+     *     <dt><b>Versioning</b></dt>
+     *     <dd>This stage is responsible for bumping the version of your application source. It will only
+     *         be added if <b>versionArguments</b> is a non-empty map.</dd>
+     *     <dt><b>Deploy</b></dt>
+     *     <dd>This stage is responsible for deploying your application source. It will always execute
+     *         after Versioning (if present).</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     Both stages will adhere to the following conditions:
+     *
+     *     <ul>
+     *         <li>The stage will only execute if the current build result is
+     *         {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS} or higher.</li>
+     *         <li>The stage will only execute if the current branch is protected.</li>
+     *     </ul>
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     Both the Version stage and the Deploy stage will throw the following exceptions:
+     *
+     *     <dl>
+     *         <dt><b>{@link DeployStageException}</b></dt>
+     *         <dd>When stage is provided as an argument. This is an invalid parameter for both
+     *             stages</dd>
+     *         <dd>When a test stage has not executed. This prevents untested code from being
+     *             deployred</dd>
+     *         <dt><b>{@link NullPointerException}</b></dt>
+     *         <dd>When an operation is not provided for the stage.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @Note This method was intended to be called {@code deploy} but had to be named
+     * {@code deployGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.
+     *
+     * @param deployArguments The arguments for the deploy step. {@code deployArguments.operation} must be
+     *                        provided.
+     * @param versionArguments The arguments for the versioning step. If provided, then
+     *                         {@code versionArguments.operation} must be provided.
+     */
+    void deployGeneric(Map deployArguments, Map versionArguments = [:]) {
         if (deployArguments.name) {
             deployArguments.name = "Deploy: ${deployArguments.name}"
         } else {
             deployArguments.name = "Deploy"
         }
 
-        /**
+        /*
          * Creates the various stages for the deploy
          */
         Closure createSubStage = { Map arguments ->
@@ -235,7 +308,22 @@ class GenericPipeline extends Pipeline {
         createSubStage(deployArguments)
     }
 
-    void endGeneric(Map options) {
+    /**
+     * Signal that no more stages will be added and begin pipeline execution.
+     *
+     * <p>This method wraps the entire pipeline execution in a {@code withCredentials} block. The
+     * credentials that are loaded represent the credentials stored in {@link #gitConfig}. This
+     * will ensure that any pushes/commits don't expose the credentials in plaintext console output.
+     * </p>
+     *
+     * @param options Options to send to {@link org.zowe.pipelines.base.Pipeline#endBase(java.util.Map)}
+     * @throw {@link GitException} when {@link #gitConfig} was not provided.
+     */
+    void endGeneric(Map options = [:]) throws GitException {
+        if (!gitConfig?.credentialsId) {
+            throw new GitException("Git configuration not specified!")
+        }
+
         // Wrap all this in a with credentials call for security purposes
         steps.withCredentials([steps.usernameColonPassword(
             credentialsId: gitConfig.credentialsId, variable: _TOKEN
@@ -270,7 +358,7 @@ class GenericPipeline extends Pipeline {
      * the branch is out of sync</p>
      *
      * @return A boolean indicating if the push was made. True indicates a successful push
-     * @throw GitException when pushing to a branch that has forward commits from this build
+     * @throw {@link GitException} when pushing to a branch that has forward commits from this build
      */
     boolean gitPush() throws GitException {
         steps.sh "git fetch"
@@ -289,17 +377,26 @@ class GenericPipeline extends Pipeline {
     /**
      * Calls {@link org.zowe.pipelines.base.Pipeline#setupBase()} to setup the build.
      *
-     * <p>Additionally, this method adds the following stage to the build:</p>
+     * @Stages
+     * This method adds 2 stages to the build:
      *
-     * @TODO ADD DOC FOR CONFIGURE GIT STAGE
-     * <h4>Check for CI Skip</h4>
+     * <dl>
+     *     <dt><b>Configure Git</b></dt>
+     *     <dd>
+     *         This step configures the git environment for commits and pushes. The {@link #gitConfig}
+     *         provided will be injected into the git remote url and the head will point to the
+     *         proper remote branch. The username and email settings will also be set.
+     *     </dd>
+     *     <dt><b>Check for CI Skip</b></dt>
+     *     <dd>
+     *         Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
+     *         the skip commit, all remaining steps (except those explicitly set to ignore this condition)
+     *         will also be skipped. The build will also be marked as not built in this scenario.
+     *     </dd>
+     * </dl>
      *
-     * <p>Checks that the build commit doesn't contain the CI Skip indicator. If the pipeline finds
-     * the skip commit, all remaining steps (except those explicitly set to ignore this condition)
-     * will also be skipped. The build will also be marked as not built in this scenario.</p>
-     *
-     * <p><b>Note:</b> This method was intended to be called {@code setup} but had to be named
-     * {@code setupGeneric} due to the issues described in {@link Pipeline}.</p>
+     * @Note This method was intended to be called {@code setup} but had to be named
+     * {@code setupGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.
      */
     void setupGeneric(GenericSetupArguments timeouts) {
         // Call setup from the super class
@@ -346,6 +443,12 @@ class GenericPipeline extends Pipeline {
         }, timeout: timeouts.ciSkip)
     }
 
+    /**
+     * Initialize the pipeline.
+     *
+     * @param timeouts A map that can be instantiated as {@link GenericSetupArguments}
+     * @see #setupGeneric(GenericSetupArguments)
+     */
     void setupGeneric(Map timeouts = [:]) {
         setupGeneric(timeouts as GenericSetupArguments)
     }
@@ -356,67 +459,84 @@ class GenericPipeline extends Pipeline {
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
      * to this function will map to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
      *
-     * <h4>Test: {@link org.zowe.pipelines.generic.arguments.TestStageArguments#name}</h4>
+     * @Stages
+     * This method adds the following stage to the build:
      *
-     * <p>Runs one of your application tests. If {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testOperation}, the stage will execute
-     * `npm run test` as the default operation. If the test operation throws an error, that error is
-     * ignored and  will be assumed to be caught in the junit processing. Some test functions may
-     * exit with a non-zero return code on a test failure but may still capture junit output. In
-     * this scenario, it is assumed that the junit report is either missing or contains failing
-     * tests. In the case that it is missing, the build will fail on this report and relevant
-     * exceptions are printed. If the junit report contains failing tests, the build will be marked
-     * as unstable and a report of failing tests can be viewed.</p>
+     * <dl>
+     *     <dt><b>Test: {@link org.zowe.pipelines.generic.arguments.TestStageArguments#name}</b></dt>
+     *     <dd>
+     *         <p>Runs one of your application tests. If {@link TestStageArguments#operation} is omitted,
+     *         the stage will execute `npm run test` as the default operation. If the test operation throws an error, that error is
+     *         ignored and  will be assumed to be caught in the junit processing. Some test functions may
+     *         exit with a non-zero return code on a test failure but may still capture junit output. In
+     *         this scenario, it is assumed that the junit report is either missing or contains failing
+     *         tests. In the case that it is missing, the build will fail on this report and relevant
+     *         exceptions are printed. If the junit report contains failing tests, the build will be marked
+     *         as unstable and a report of failing tests can be viewed.</p>
      *
-     * <p>The following reports can be captured:</p>
+     *         <p>The following reports can be captured:</p>
+     *         <dl>
+     *             <dt><b>Test Results HTML Report (REQUIRED)</b></dt>
+     *             <dd>
+     *                 This is an html report that contains the result of the build. The report must be defined to
+     *                 the method in the {@link TestStageArguments#testResults} variable.
+     *             </dd>
+     *             <dt><b>Code Coverage HTML Report</b></dt>
+     *             <dd>
+     *                 This is an HTML report generated from code coverage output from your build. The report can
+     *                 be omitted by omitting {@link TestStageArguments#coverageResults}
+     *             </dd>
+     *             <dt><b>JUnit Report (REQUIRED)</b></dt>
+     *             <dd>
+     *                 This report feeds Jenkins the data about the current test run. It can be used to mark a build
+     *                 as failed or unstable. The report location must be present in
+     *                 {@link TestStageArguments#junitOutput}
+     *             </dd>
+     *             <dt><b>Cobertura Report</b></dt>
+     *             <dd>
+     *                 This report feeds Jenkins the data about the coverage results for the current test run. If
+     *                 no Cobertura options are passed, then no coverage data will be collected. For more
+     *                 information, see {@link TestStageArguments#cobertura}
+     *             </dd>
+     *         </dl>
      *
-     * <h5>Test Results HTML Report (REQUIRED)</h5>
+     *         <p>
+     *             The test stage will execute by default if the current build result is greater than or
+     *             equal to {@link org.zowe.pipelines.base.models.ResultEnum#UNSTABLE}. If a different status is passed, that will take
+     *             precedent.
+     *         </p>
      *
-     * <p>This is an html report that contains the result of the build. The report must be defined to
-     * the method in the {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} variable.</p>
+     *         <p>
+     *             After the test is complete, the stage will continue to collect the JUnit Report and the Test
+     *             Results HTML Report. The stage will fail if either of those are missing. If specified, the
+     *             Code Coverage HTML Report and the Cobertura Report are then captured. The build will fail if
+     *             these reports are to be collected and were missing.
+     *         </p>
      *
-     * <h5>Code Coverage HTML Report</h5>
+     *         <p>
+     *             Some tests may also require the use of the gnome-keyring. The stage can be configured to
+     *             unlock the keyring prior to the tests by passing
+     *             {@link org.zowe.pipelines.generic.arguments.TestStageArguments#shouldUnlockKeyring} as true.
+     *         </p>
+     *     </dd>
+     * </dl>
      *
-     * <p>This is an HTML report generated from code coverage output from your build. The report can
-     * be omitted by omitting {@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults}</p>
+     * @Exceptions
+     * <p>
+     *     The test stage can throw the following exceptions:
+     *     
+     *     <dl>
+     *         <dt><b>{@link TestStageException}</b></dt>
+     *         <dd>A test stage was created before a call to {@link #buildGeneric(Map)}</dd>
+     *         <dd>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} was missing</dd>
+     *         <dd>Invalid options specified for {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults}</dd>
+     *         <dd>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults} was provided but had an invalid format</dd>
+     *         <dd>{@link TestStageArguments#junitOutput} is missing.</dd>
+     *     </dl>
+     * </p>
      *
-     * <h5>JUnit report (REQUIRED)</h5>
-     *
-     * <p>This report feeds Jenkins the data about the current test run. It can be used to mark a build
-     * as failed or unstable. The report location must be present in {@link org.zowe.pipelines.generic.arguments.TestStageArguments#junitOutput}</p>
-     *
-     * <h5>Cobertura Report</h5>
-     *
-     * <p>This report feeds Jenkins the data about the coverage results for the current test run. If
-     * no Cobertura options are passed, then no coverage data will be collected. For more
-     * information, see {@link org.zowe.pipelines.generic.arguments.TestStageArguments#cobertura}</p>
-     *
-     * <p>The test stage will execute by default if the current build result is greater than or
-     * equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
-     * precedent.</p>
-     *
-     * <p>After the test is complete, the stage will continue to collect the JUnit Report and the Test
-     * Results HTML Report. The stage will fail if either of those are missing. If specified, the
-     * Code Coverage HTML Report and the Cobertura Report are then captured. The build will fail if
-     * these reports are to be collected and were missing.</p>
-     *
-     * <p>Some tests may also require the use of the gnome-keyring. The stage can be configured to
-     * unlock the keyring prior to the tests by passing {@link org.zowe.pipelines.generic.arguments.TestStageArguments#shouldUnlockKeyring} as true.</p>
-     *
-     * <h5>Stage Exceptions</h5>
-     *
-     * <p>The test stage can throw a {@link TestStageException} under any of the following
-     * circumstances:</p>
-     *
-     * <ul>
-     * <li>A test stage was created before a call to {@link #buildGeneric(Map)}</li>
-     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} was missing</li>
-     * <li>Invalid options specified for {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults}</li>
-     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults} was provided but had an invalid format</li>
-     * <li>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#junitOutput} is missing.</li>
-     * </ul>
-     *
-     * <p><b>Note:</b> This method was intended to be called {@code test} but had to be named
-     * {@code testGeneric} due to the issues described in {@link Pipeline}.</p>
+     * @Note This method was intended to be called {@code test} but had to be named
+     * {@code testGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.</p>
      *
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} used to define
      *                  the stage.
@@ -528,7 +648,7 @@ class GenericPipeline extends Pipeline {
      * @param reportName The name of the report being validated
      * @param stageName The name of the stage that is executing.
      *
-     * @throws TestStageException when any of the report properties are invalid.
+     * @throw {@link TestStageException} when any of the report properties are invalid.
      */
     protected static void _validateReportInfo(TestReport report, String reportName, String stageName) {
         if (!report.dir) {
