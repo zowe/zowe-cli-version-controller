@@ -29,7 +29,7 @@ import com.cloudbees.groovy.cps.NonCPS
  * your pipeline.
  *
  * <h5>Required Plugins</h5>
- * The following plugins are required:
+ * <p>The following plugins are required:
  *
  * <ul>
  *     <li><a href="https://plugins.jenkins.io/workflow-support">Pipeline: Supporting APIs</a></li>
@@ -39,6 +39,13 @@ import com.cloudbees.groovy.cps.NonCPS
  *     <li><a href="https://plugins.jenkins.io/workflow-scm-step">Pipeline: SCM Step</a></li>
  *     <li><a href="https://plugins.jenkins.io/workflow-durable-task-step">Pipeline: Nodes and Processes</a></li>
  * </ul>
+ * </p>
+ *
+ * <h5>Setup</h5>
+ * <ul>
+ *     <li>Create a multibranch pipeline for your project. Any other type of build will fail.</li>
+ * </ul>
+ *
  *
  * <h5>Basic Usage</h5>
  *
