@@ -37,24 +37,39 @@ import java.util.regex.Pattern
  *     <li><a href="https://plugins.jenkins.io/cobertura">Cobertura</a></li>
  * </ul>
  *
- * @TODO executor machine requires gnome-keyring if the test needs access to a keyring
- *
  * <h5>Basic Usage</h5>
  *
  * <pre>
- * // Setup is the same as the {@link Pipeline} class.
- * // ...
- * GenericPipeline pipeline = new GenericPipeline(this)
+ * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.generic.GenericPipeline
+ * node('pipeline-node') {
+ *     GenericPipeline pipeline = new GenericPipeline(this)
  *
- * // ...
+ *     // Set your config up before calling setup
+ *     pipeline.admins.add("userid1", "userid2", "userid3")
  *
- * pipeline.setupGeneric()
+ *     // Define some protected branches
+ *     pipeline.protectedBranches.addMap([
+ *         [name: "master"],
+ *         [name: "beta"],
+ *         [name: "rc"]
+ *     ])
  *
- * pipeline.buildGeneric()
- * pipeline.testGeneric() // Provide required parameters in your pipeline
+ *     // Define the git configuration
+ *     pipeline.gitConfig = [
+ *         email: 'git-user-email@example.com',
+ *         credentialsId: 'git-user-credentials-id'
+ *     ]
  *
- * // MUST BE CALLED LAST
- * pipeline.endGeneric()
+ *     // MUST BE CALLED FIRST
+ *     pipeline.setupGeneric()
+ *
+ *     pipeline.buildGeneric()  //////////////////////////////////////////////////
+ *     pipeline.testGeneric()   // Provide required parameters in your pipeline //
+ *     pipeline.deployGeneric() //////////////////////////////////////////////////
+ *
+ *     // MUST BE CALLED LAST
+ *     pipeline.endGeneric()
+ * }
  * </pre>
  */
 class GenericPipeline extends Pipeline {
