@@ -28,7 +28,7 @@ class GenericSetupArguments extends SetupArguments {
     StageTimeout gitSetup = [time: 1, unit: TimeUnit.MINUTES]
 
     /**
-     * Amount of time allowed for the CI Skip check
+     * Amount of time allowed for the CI Skip check.
      *
      * @default 1 Minute
      */

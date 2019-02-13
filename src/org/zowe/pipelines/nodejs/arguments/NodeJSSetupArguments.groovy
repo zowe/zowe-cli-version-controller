@@ -15,6 +15,16 @@ import org.zowe.pipelines.generic.arguments.GenericSetupArguments
 
 import java.util.concurrent.TimeUnit
 
+/**
+ * Arguments available to the
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#setup(org.zowe.pipelines.nodejs.arguments.NodeJSSetupArguments)}
+ * method.
+ */
 class NodeJSSetupArguments extends GenericSetupArguments {
+    /**
+     * Amount of time allowed to install dependencies.
+     *
+     * @default 5 Minutes
+     */
     StageTimeout installDependencies = [time: 5, unit: TimeUnit.MINUTES]
 }
