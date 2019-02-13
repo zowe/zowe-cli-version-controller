@@ -12,7 +12,14 @@ package org.zowe.pipelines.generic.exceptions
 
 import org.zowe.pipelines.base.exceptions.PipelineException
 
+/**
+ * An exception that is thrown when an error occurs during a git operation.
+ */
 class GitException extends PipelineException {
+    /**
+     * Construct the exception.
+     * @param message The exception message.
+     */
     GitException(String message) {
         super(message)
     }
