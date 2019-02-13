@@ -465,8 +465,7 @@ class GenericPipeline extends Pipeline {
      * <dl>
      *     <dt><b>Test: {@link org.zowe.pipelines.generic.arguments.TestStageArguments#name}</b></dt>
      *     <dd>
-     *         <p>Runs one of your application tests. If {@link TestStageArguments#operation} is omitted,
-     *         the stage will execute `npm run test` as the default operation. If the test operation throws an error, that error is
+     *         <p>Runs one of your application tests. If the test operation throws an error, that error is
      *         ignored and  will be assumed to be caught in the junit processing. Some test functions may
      *         exit with a non-zero return code on a test failure but may still capture junit output. In
      *         this scenario, it is assumed that the junit report is either missing or contains failing
@@ -527,11 +526,13 @@ class GenericPipeline extends Pipeline {
      *     
      *     <dl>
      *         <dt><b>{@link TestStageException}</b></dt>
-     *         <dd>A test stage was created before a call to {@link #buildGeneric(Map)}</dd>
-     *         <dd>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} was missing</dd>
-     *         <dd>Invalid options specified for {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults}</dd>
-     *         <dd>{@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults} was provided but had an invalid format</dd>
-     *         <dd>{@link TestStageArguments#junitOutput} is missing.</dd>
+     *         <dd>When a test stage is created before a call to {@link #buildGeneric(Map)}</dd>
+     *         <dd>When {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults} is missing</dd>
+     *         <dd>When invalid options are specified for {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testResults}</dd>
+     *         <dd>When {@link org.zowe.pipelines.generic.arguments.TestStageArguments#coverageResults} is provided but has an invalid format</dd>
+     *         <dd>When {@link TestStageArguments#junitOutput} is missing.</dd>
+     *         <dd>When {@link TestStageArguments#operation} is missing.</dd>
+     *         <dd>
      *     </dl>
      * </p>
      *
@@ -589,6 +590,10 @@ class GenericPipeline extends Pipeline {
             // Unlock the keyring for dbus
             if (args.shouldUnlockKeyring) {
                 steps.sh "echo 'jenkins' | gnome-keyring-daemon --unlock"
+            }
+
+            if (!args.operation) {
+                throw new DeployStageException("Missing test operation!", args.name)
             }
 
             try {
