@@ -10,7 +10,6 @@
 
 package org.zowe.pipelines.nodejs
 
-import com.sun.javaws.exceptions.InvalidArgumentException
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
@@ -201,10 +200,38 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
-     * Public facing deploy method.
+     * Deploy a Node JS package.
      *
-     * <p>This method accepts a map
-     * @param arguments
+     * <dl>
+     *     <dt><b>Argument Map:</b></dt>
+     *     <dd>
+     *         The following map objects are valid options for the arguments map.
+     *         <dl>
+     *             <dt><b>versionArguments</b></dt>
+     *             <dd>A map of {@link org.zowe.pipelines.generic.arguments.GenericStageArguments} to be
+     *             provided to the version command.</dd>
+     *             <dt><b>deployArguments</b></dt>
+     *             <dd>A map of {@link org.zowe.pipelines.generic.arguments.GenericStageArguments} to be
+     *                 provided to the version command.</dd>
+     *         </dl>
+     *     </dd>
+     * </dl>
+     *
+     * @Exceptions
+     * <p>
+     *     The following exceptions will be thrown from the Setup stage if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link IllegalArgumentException}</b></dt>
+     *         <dd>When an invalid map option is sent to this method.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments The arguments map.
+     *
+     * @see #deploy(java.util.Map, java.util.Map)
+     *
+     * @TODO TEST THIS
      */
     void deploy(Map arguments = [:]) {
         if (!arguments.versionArguments) {
@@ -228,12 +255,82 @@ class NodeJSPipeline extends GenericPipeline {
 
             _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
             _stages.firstFailingStage.exception =
-                new InvalidArgumentException("Invalid arguments passed to deploy. Unsupported arguments found: [$badArgs]")
+                new IllegalArgumentException("Invalid arguments passed to deploy. Unsupported arguments found: [$badArgs]")
         }
 
         deploy(arguments.deployArguments, arguments.versionArguments)
     }
 
+    /**
+     * Deploy a Node JS package.
+     *
+     * @Stages
+     * This will extend the stages provided by the {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map, java.util.Map)}
+     * method.
+     *
+     * <dl>
+     *     <dt><b>Versioning</b></dt>
+     *     <dd>
+     *          <p>In a Node JS Pipeline, this stage will always be executed on a protected branch.
+     *          When in this stage, the build will determine the possible versions based on the
+     *          {@link NodeJSProtectedBranch#prerelease} and {@link NodeJSProtectedBranch#level}
+     *          properties.</p>
+     *
+     *          <p>If the branch is set to {@link NodeJSProtectedBranch#autoDeploy}, then
+     *          the default version will be used to publish (with any prerelease strings needed/removed).
+     *          Otherwise, an email will be sent out asking what the new version should be. This
+     *          email will list the possible versions and give a link back to the build. The build
+     *          will wait for one of the {@link #admins} to open the link and select the version.
+     *          If the wait period expires, the build will continue as if it was autoDeployed and
+     *          will use the default version.</p>
+     *
+     *          <p>If the build is approved, this new version will be committed to <b>package.json</b>
+     *          and the build will continue. Otherwise, the build will stop at this step.</p>
+     *
+     *          <dl><dt><b>Exceptions:</b></dt><dd>
+     *          <dl>
+     *              <dt><b>{@link IllegalArgumentException}</b></dt>
+     *              <dd>When versionArguments.operation is provided. This is an invalid parameter.</dd>
+     *              <dt><b>{@link org.zowe.pipelines.generic.exceptions.DeployStageException}</b></dt>
+     *              <dd>
+     *                  When no pipeline admins are defined and auto deploy is false. Pipeline admins
+     *                  are used as approvers for the build. If there are none, the build can never be
+     *                  approved.
+     *              </dd>
+     *              <dd>
+     *                  A timeout of 1 Minute or less was specified. This would result in no wait for the
+     *                  version input and is most likely a programming mistake.
+     *              </dd>
+     *          </dl></dd>
+     *     </dd>
+     *     <dt><b>Deploy</b></dt>
+     *     <dd>
+     *         <p>In a Node JS Pipeline, this stage will always be executed on a protected branch.
+     *         This stage will execute after the version bump has been completed and is tasked
+     *         with doing an {@code npm publish} to the publish registry.</p>
+     *
+     *         <p>The publish registry is determined by looking in <b>package.json</b> for the
+     *         publishConfig.registry property. If this is absent, the deploy will fail. After the
+     *         registry is loaded, the pipeline will attempt to login using the specified
+     *         {@link #publishConfig}.</p>
+     *
+     *         <p>Prior to executing the deploy, changes will be pushed to
+     *         the remote server. If the pipeline is behind the branch's remote, the push will
+     *         fail and the deploy will stop. After changes are successfully pushed, the npm
+     *         publish command will be executed with the {@link NodeJSProtectedBranch#tag} specified.
+     *         On successful deploy, an email will be sent out to the {@link #admins}.</p>
+     *
+     *         <dl><dt><b>Exceptions:</b></dt><dd>
+     *         <dl>
+     *             <dt><b>{@link IllegalArgumentException}</b></dt>
+     *             <dd>When versionArguments.operation is provided. This is an invalid parameter.</dd>
+     *         </dl></dd>
+     *     </dd>
+     * </dl>
+     *
+     * @param deployArguments The arguments for the Deploy stage.
+     * @param versionArguments The arguments for the Version stage.
+     */
     protected void deploy(Map deployArguments, Map versionArguments) {
         IllegalArgumentException deployException
         IllegalArgumentException versionException
@@ -457,24 +554,13 @@ class NodeJSPipeline extends GenericPipeline {
 
     // @TODO doc update
     /**
-     * Call to inform the runner that no more stages are to be added and execution can begin.
+     * Signal that no more stages will be added and begin pipeline execution.
      *
      * <p>The following locations are always archived:</p>
      *
      * <ul>
      * <li>{@literal /home/jenkins/.npm/_logs}</li>
      * </ul>
-     *
-     * @param archiveFolders An array of folders to archive. If a specific folder doesn't exist, the
-     *                       build will ignore it and will not modify the current build result. See
-     *                       the notes in the log for the reasoning. If a folder in this array
-     *                       starts with a {@literal `/`}, the stage will copy the folder into a temp directory
-     *                       inside the project (retaining the folder structure). This is due to
-     *                       the fact that folders outside the workspace cannot be archived by
-     *                       Jenkins. The leading {@literal `/`} should be used for any logs that you wish to
-     *                       capture that are outside the workspace. Also if the directory starts
-     *                       with a {@literal ../}, the stage will abort access to that folder. This is because
-     *                       Jenkins cannot archive files outside the workspace.
      */
     void end(Map options = [:]) {
         List<String> archive = ["/home/jenkins/.npm/_logs"]
@@ -490,6 +576,7 @@ class NodeJSPipeline extends GenericPipeline {
 
 
     /**
+     * @TODO PICK UP HERE reformat to new standards
      * Calls {@link org.zowe.pipelines.generic.GenericPipeline#setupGeneric()} to setup the build.
      *
      * <p>Additionally, this method adds the following stage to the build:</p>

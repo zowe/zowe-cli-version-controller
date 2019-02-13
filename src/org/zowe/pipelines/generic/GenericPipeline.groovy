@@ -235,7 +235,7 @@ class GenericPipeline extends Pipeline {
      *         <dd>When stage is provided as an argument. This is an invalid parameter for both
      *             stages</dd>
      *         <dd>When a test stage has not executed. This prevents untested code from being
-     *             deployred</dd>
+     *             deployed</dd>
      *         <dt><b>{@link NullPointerException}</b></dt>
      *         <dd>When an operation is not provided for the stage.</dd>
      *     </dl>
