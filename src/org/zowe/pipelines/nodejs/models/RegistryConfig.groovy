@@ -22,7 +22,7 @@ class RegistryConfig {
     String url
 
     /**
-     * The email address of the user
+     * The email address of the user.
      */
     String email
 

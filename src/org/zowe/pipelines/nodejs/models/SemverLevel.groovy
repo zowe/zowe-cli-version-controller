@@ -11,21 +11,21 @@
 package org.zowe.pipelines.nodejs.models
 
 /**
- * The max semver level that the package can move.
+ * The semantic versioning level that can be changed within a branch.
  */
 enum SemverLevel {
     /**
-     * In x.y.z, allows x, y, and z to increment
+     * Allow a <b>MAJOR</b> or lower semantic versioning increase.
      */
     MAJOR,
 
     /**
-     * In x.y.z, allows only y and z to increment
+     * Allow a <b>MINOR</b> or lower semantic versioning increase.
      */
     MINOR,
 
     /**
-     * In x.y.z, allows only z to increment
+     * Allow a <b>PATCH</b> or lower semantic versioning increase.
      */
     PATCH
 }
