@@ -24,7 +24,7 @@ import java.util.regex.Pattern
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.base.Pipeline} class. This class adds methods for
- * building and testing your code.
+ * building and testing your application.
  *
  * <dl><dt><b>Required Plugins:</b></dt><dd>
  * The following plugins are required:

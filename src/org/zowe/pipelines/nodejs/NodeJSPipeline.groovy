@@ -10,6 +10,7 @@
 
 package org.zowe.pipelines.nodejs
 
+import com.sun.javaws.exceptions.InvalidArgumentException
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.ResultEnum
@@ -24,11 +25,10 @@ import org.zowe.pipelines.nodejs.exceptions.*
 import java.util.concurrent.TimeUnit
 
 /**
- * A stage executor for a NodeJSPipeline pipeline.
+ * Extends the functionality available in the {@link org.zowe.pipelines.generic.GenericPipeline} class.
+ * This class adds more advanced functionality to build, test, and deploy your application.
  *
- * <p>This class provides methods that allow you to build, test, and deploy your NodeJSPipeline application.</p>
- *
- * <h5>Required Plugins</h5>
+ * <dl><dt><b>Required Plugins:</b></dt><dd>
  * The following plugins are required:
  *
  * <ul>
@@ -36,10 +36,8 @@ import java.util.concurrent.TimeUnit
  *     <li><a href="https://plugins.jenkins.io/pipeline-utility-steps">Pipeline Utility Steps</a></li>
  *     <li><a href="https://plugins.jenkins.io/pipeline-input-step">Pipeline: Input Step</a></li>
  * </ul>
+ * </dd></dl>
  *
- * @TODO Executor machine requires expect to be available
- *
- * <h5>Basic Usage</h5>
  * <pre>
  * {@literal @}Library('fill this out according to your setup') import org.zowe.pipelines.nodejs.NodeJSPipeline
  *
@@ -48,17 +46,18 @@ import java.util.concurrent.TimeUnit
  *     NodeJSPipeline pipeline = new NodeJSPipeline(this)
  *
  *     // Set your config up before calling setup
- *     pipeline.adminEmails = [
- *         "email1@example.com",
- *         "email2@example.com"
- *     ]
+ *     pipeline.admins.add("userid1", "userid2", "userid3")
  *
- *     pipeline.protectedBranches = [
- *         master: 'daily'
- *     ]
+ *     pipeline.protectedBranches.addMap([
+ *         [name: "master", tag: "daily", prerelease: "alpha"],
+ *         [name: "beta", tag: "beta", prerelease: "beta"],
+ *         [name: "dummy", tag: "dummy", autoDeploy: true],
+ *         [name: "latest", tag: "latest"],
+ *         [name: "lts-incremental", tag: "lts-incremental", level: SemverLevel.MINOR],
+ *         [name: "lts-stable", tag: "lts-stable", level: SemverLevel.PATCH]
+ *     ])
  *
  *     pipeline.gitConfig = [
- *         user: 'robot-user',
  *         email: 'robot-user@example.com',
  *         credentialsId: 'robot-user'
  *     ]
@@ -66,6 +65,11 @@ import java.util.concurrent.TimeUnit
  *     pipeline.publishConfig = [
  *         email: nodejs.gitConfig.email,
  *         credentialsId: 'robot-user'
+ *     ]
+ *
+ *     pipeline.registryConfig = [
+ *         [email: 'email@example.com', credentialsId: 'credentials-id'],
+ *         [url: 'https://registry.com', email: 'email@example.com', credentialsId: 'credentials-id']
  *     ]
  *
  *     // MUST BE CALLED FIRST
@@ -77,10 +81,13 @@ import java.util.concurrent.TimeUnit
  *     })
  *
  *     // Run a build
- *     pipeline.build()
- *
- *     // Run a test
- *     pipeline.test() // Provide required parameters in your pipeline.
+ *     pipeline.build()               ///////////////////////////////////////////////////
+ *                                    //                                               //
+ *     // Run a test                  //                                               //
+ *     pipeline.test()                // Provide required parameters in your pipeline. //
+ *                                    //                                               //
+ *     // Deploy your application     //                                               //
+ *     pipeline.deploy()              ///////////////////////////////////////////////////
  *
  *     // MUST BE CALLED LAST
  *     pipeline.end()
@@ -88,7 +95,8 @@ import java.util.concurrent.TimeUnit
  * </pre>
  *
  * <p>In the example above, the stages will run on a node labeled {@code 'pipeline-node'}. You must
- * define the node where your pipeline will execute.</p>
+ * define the node where your pipeline will execute. This node must have the ability to execute an
+ * <a href="https://en.wikipedia.org/wiki/Expect">Expect Script</a>.</p>
  */
 class NodeJSPipeline extends GenericPipeline {
     /**
@@ -96,6 +104,10 @@ class NodeJSPipeline extends GenericPipeline {
      */
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
 
+    /**
+     * This is the id of the approver saved when the pipeline auto approves the deploy because
+     * of a timeout.
+     */
     static final String TIMEOUT_APPROVE_ID = "[TIMEOUT_APPROVED]"
 
     /**
@@ -128,7 +140,7 @@ class NodeJSPipeline extends GenericPipeline {
      * <p>When invoking from a Jenkins pipeline script, the NodeJSPipeline must be passed
      * the current environment of the Jenkinsfile to have access to the steps.</p>
      *
-     * <h5>Example Setup:</h5>
+     * @Example
      * <pre>
      * def pipeline = new NodeJSPipeline(this)
      * </pre>
@@ -147,11 +159,11 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)}
      * method and will have the following additional operations. <ul>
-     *     <li>If {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#buildOperation} is not
+     *     <li>If {@link org.zowe.pipelines.generic.arguments.BuildStageArguments#operation} is not
      *     provided, the stage will default to executing {@code npm run build}.</li>
-     *     <li>After the buildOperation is complete, the stage will use npm pack to generate an
+     *     <li>After the operation is complete, the stage will use npm pack to generate an
      *     installable artifact. This artifact is archived to the build for later access.</li>
-     * </ul>
+     * </ul></p>
      *
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.BuildStageArguments} used to define
      *                  the stage.
@@ -175,6 +187,7 @@ class NodeJSPipeline extends GenericPipeline {
                 def json = steps.readJSON file: "../package.json"
                 def revision = steps.sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 
+                // Replace special file character names
                 def name = json.name.replaceAll("@", "")
                     .replaceAll("/", "-")
 
@@ -187,6 +200,12 @@ class NodeJSPipeline extends GenericPipeline {
         }])
     }
 
+    /**
+     * Public facing deploy method.
+     *
+     * <p>This method accepts a map
+     * @param arguments
+     */
     void deploy(Map arguments = [:]) {
         if (!arguments.versionArguments) {
             arguments.versionArguments = [:]
@@ -194,6 +213,22 @@ class NodeJSPipeline extends GenericPipeline {
 
         if (!arguments.deployArguments) {
             arguments.deployArguments = [:]
+        }
+
+        // If the size is > than 2 at this point, that means there are invalid keys
+        // in the map. Gather them and print them out.
+        if (arguments.size() > 2) {
+            String badArgs = arguments.collect { key, value ->
+                if (key != "versionArguments" && key != "deployArguments") {
+                    return key
+                } else {
+                    return null
+                }
+            }.join(",")
+
+            _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
+            _stages.firstFailingStage.exception =
+                new InvalidArgumentException("Invalid arguments passed to deploy. Unsupported arguments found: [$badArgs]")
         }
 
         deploy(arguments.deployArguments, arguments.versionArguments)
