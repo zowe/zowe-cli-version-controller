@@ -15,8 +15,22 @@ import org.zowe.pipelines.base.models.StageTimeout
 
 import java.util.concurrent.TimeUnit
 
+/**
+ * Arguments available to the {@link org.zowe.pipelines.generic.GenericPipeline#setupGeneric(org.zowe.pipelines.generic.arguments.GenericSetupArguments)}
+ * method.
+ */
 class GenericSetupArguments extends SetupArguments {
+    /**
+     * Amount of time allowed for the git setup.
+     *
+     * @default 1 Minute
+     */
     StageTimeout gitSetup = [time: 1, unit: TimeUnit.MINUTES]
-    StageTimeout ciSkip = [time: 1, unit: TimeUnit.MINUTES]
 
+    /**
+     * Amount of time allowed for the CI Skip check
+     *
+     * @default 1 Minute
+     */
+    StageTimeout ciSkip = [time: 1, unit: TimeUnit.MINUTES]
 }

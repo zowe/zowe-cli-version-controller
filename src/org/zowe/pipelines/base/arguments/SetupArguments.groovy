@@ -15,7 +15,8 @@ import org.zowe.pipelines.base.models.StageTimeout
 import java.util.concurrent.TimeUnit
 
 /**
- * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#setupBase(SetupArguments)}
+ * Arguments available to the
+ * {@link org.zowe.pipelines.base.Pipeline#setupBase(org.zowe.pipelines.base.arguments.SetupArguments)}
  * method.
  */
 class SetupArguments {

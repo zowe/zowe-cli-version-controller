@@ -14,7 +14,7 @@ import org.zowe.pipelines.base.models.ResultEnum
 import org.zowe.pipelines.base.models.StageTimeout
 
 /**
- * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}
+ * Arguments available to the {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.arguments.StageArguments)}
  * method.
  */
 class StageArguments {

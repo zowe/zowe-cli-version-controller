@@ -12,17 +12,16 @@ package org.zowe.pipelines.generic.arguments
 
 import org.zowe.pipelines.base.arguments.StageArguments
 
-//TODO change the documentation
 /**
- * Represents the arguments available to the
- * {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map)} method.
+ * Arguments available to stage creation methods present in {@link org.zowe.pipelines.generic.GenericPipeline}
  */
 class GenericStageArguments extends StageArguments{
     /**
-     * The deploy operation.
+     * The stage operation.
      *
-     * <p>This must be passed by any function that calls the {@link org.zowe.pipelines.generic.GenericPipeline#deployGeneric(java.util.Map, jave.util.Map)}
-     * method. This operation is responsible for deploying your code</p>
+     * <p>This closure is used by the various stage methods to perform an operation for the
+     * stage in conjunction with some common pre and post operation steps. Additional documentation
+     * for this argument will be provided in each command.</p>
      */
     Closure operation
 }

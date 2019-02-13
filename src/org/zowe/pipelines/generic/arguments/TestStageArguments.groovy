@@ -23,7 +23,7 @@ class TestStageArguments extends GenericStageArguments {
      * <p>This map will be merged with {@link #cobertura}, preferring cobertura, as the final
      * object passed to the cobertura plugin</p>
      *
-     * <p><b>Defaults:</b></p>
+     * @default
      * <pre>
      * {@code
      * [
@@ -84,10 +84,16 @@ class TestStageArguments extends GenericStageArguments {
      */
     String junitOutput
 
+    // @FUTURE Support a wider variety
     /**
      * Should the gnome keyring be unlocked for this test.
      *
-     * <p><b>Default:</b> {@code false}</p>
+     * @Note Setting this option to true requires that the executor machine is running the gnome
+     *       keyring and the user password is jenkins. Failure to have this configuration will
+     *       result in a failure to unlock the keyring. In the future, this operation would become
+     *       more generic.
+     *
+     * @default false
      */
     boolean shouldUnlockKeyring = false
 
