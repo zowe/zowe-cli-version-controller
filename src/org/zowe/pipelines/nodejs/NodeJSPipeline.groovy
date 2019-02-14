@@ -241,8 +241,9 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         // If the size is > than 2 at this point, that means there are invalid keys
-        // in the map. Gather them and print them out.
-        if (arguments.size() > 2) {
+        // in the map. Gather them and print them out. Also only run if we don't
+        // already have a first failing stage.
+        if (arguments.size() > 2 && !_stages.firstFailingStage) {
             String badArgs = arguments.collectMany { key, value ->
                 if (key != "versionArguments" && key != "deployArguments") {
                     return [key]
