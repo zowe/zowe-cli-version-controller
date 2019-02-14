@@ -255,7 +255,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
             _stages.firstFailingStage.exception =
-                new IllegalArgumentException("Invalid arguments passed to deploy. Unsupported arguments found: [$badArgs]")
+                new IllegalArgumentException("Unsupported arguments for deploy(Map): [$badArgs]")
         }
 
         deploy(arguments.deployArguments, arguments.versionArguments)
