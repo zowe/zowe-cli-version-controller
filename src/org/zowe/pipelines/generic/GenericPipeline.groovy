@@ -320,8 +320,10 @@ class GenericPipeline extends Pipeline {
      */
     void endGeneric(Map options = [:]) {
         if (!gitConfig?.credentialsId) {
-            _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
-            _stages.firstFailingStage.exception = new GitException("Git configuration not specified!")
+            if (!_stages.firstFailingStage) {
+                _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
+                _stages.firstFailingStage.exception = new GitException("Git configuration not specified!")
+            }
             super.endBase(options)
         } else {
             // Wrap all this in a with credentials call for security purposes
