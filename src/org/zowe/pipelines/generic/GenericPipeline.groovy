@@ -317,18 +317,19 @@ class GenericPipeline extends Pipeline {
      * </p>
      *
      * @param options Options to send to {@link org.zowe.pipelines.base.Pipeline#endBase(java.util.Map)}
-     * @throw {@link GitException} when {@link #gitConfig} was not provided.
      */
-    void endGeneric(Map options = [:]) throws GitException {
+    void endGeneric(Map options = [:]) {
         if (!gitConfig?.credentialsId) {
-            throw new GitException("Git configuration not specified!")
-        }
-
-        // Wrap all this in a with credentials call for security purposes
-        steps.withCredentials([steps.usernameColonPassword(
-            credentialsId: gitConfig.credentialsId, variable: _TOKEN
-        )]) {
+            _stages.firstFailingStage = _stages.getStage(_SETUP_STAGE_NAME)
+            _stages.firstFailingStage.exception = new GitException("Git configuration not specified!")
             super.endBase(options)
+        } else {
+            // Wrap all this in a with credentials call for security purposes
+            steps.withCredentials([steps.usernameColonPassword(
+                credentialsId: gitConfig.credentialsId, variable: _TOKEN
+            )]) {
+                super.endBase(options)
+            }
         }
     }
 
