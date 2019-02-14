@@ -230,8 +230,6 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments The arguments map.
      *
      * @see #deploy(java.util.Map, java.util.Map)
-     *
-     * @TODO TEST THIS
      */
     void deploy(Map arguments = [:]) {
         if (!arguments.versionArguments) {
@@ -552,15 +550,15 @@ class NodeJSPipeline extends GenericPipeline {
         super.deployGeneric(deployArguments, versionArguments)
     }
 
-    // @TODO doc update
     /**
      * Signal that no more stages will be added and begin pipeline execution.
      *
      * <p>The following locations are always archived:</p>
      *
-     * <ul>
-     * <li>{@literal /home/jenkins/.npm/_logs}</li>
-     * </ul>
+     * <dl>
+     *     <dt><b>{@literal /home/jenkins/.npm/_logs}</b></dt>
+     *     <dd>This is the log output directory for any npm debug logs.</dd>
+     * </dl>
      */
     void end(Map options = [:]) {
         List<String> archive = ["/home/jenkins/.npm/_logs"]
@@ -576,22 +574,40 @@ class NodeJSPipeline extends GenericPipeline {
 
 
     /**
-     * @TODO PICK UP HERE reformat to new standards
      * Calls {@link org.zowe.pipelines.generic.GenericPipeline#setupGeneric()} to setup the build.
      *
-     * <p>Additionally, this method adds the following stage to the build:</p>
+     * @Stages
+     * This method adds one stage to the build:
      *
-     * <h4>Install Node Package Dependencies</h4>
-     *
-     * <p>This step will install all your package dependencies via `npm install`. Prior to install
-     * the stage will login to any registries specified in the {@link #registryConfig} array. On
-     * exit, the step will try to logout of the registries specified in {@link #registryConfig}.</p>
-     *
-     * <ul>
-     * <li>If two default registries, a registry that omits a url, are specified, this stage will fail</li>
-     * <li>Failure to login to a registry or install dependencies will result in a failed build.</li>
-     * <li>Failure to logout of a registry will not fail the build.</li>
-     * </ul>
+     * <dl>
+     *     <dt><b>Install Node Package Dependencies</b></dt>
+     *     <dd>
+     *         <p>
+     *             This step will install all your package dependencies via `npm install`. Prior to install
+     *             the stage will login to any registries specified in the {@link #registryConfig} array. On
+     *             exit, the step will try to logout of the registries specified in {@link #registryConfig}.
+     *         </p>
+     *         <dl>
+     *             <dt><b>Exceptions:</b></dt>
+     *             <dd>
+     *                 <dl>
+     *                     <dt><b>{@link NodeJSPipelineException}</b></dt>
+     *                     <dd>
+     *                         When two default registries, a registry that omits a url, are specified.
+     *                     </dd>
+     *                     <dd>
+     *                         When a login to a registry fails. <b>Note:</b> Failure to logout of a
+     *                         registry will not result in a failed build.
+     *                     </dd>
+     *                     <dt><b>{@link Exception}</b></dt>
+     *                     <dd>
+     *                         When a failure to install dependencies occurs.
+     *                     </dd>
+     *                 </dl>
+     *             </dd>
+     *         </dl>
+     *     </dd>
+     * </dl>
      */
     void setup(NodeJSSetupArguments timeouts) {
         super.setupGeneric(timeouts)
@@ -673,6 +689,12 @@ class NodeJSPipeline extends GenericPipeline {
         }, isSkippable: false, timeout: timeouts.installDependencies)
     }
 
+    /**
+     * Initialize the pipeline.
+     *
+     * @param timeouts A map that can be instantiated as {@link NodeJSSetupArguments}
+     * @see #setup(NodeJSSetupArguments)
+     */
     void setup(Map timeouts = [:]) {
         setup(timeouts as NodeJSSetupArguments)
     }
@@ -684,9 +706,12 @@ class NodeJSPipeline extends GenericPipeline {
      * {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
      *
      * <p>The stage will be created with the
-     * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method. If
-     * {@link org.zowe.pipelines.generic.arguments.TestStageArguments#testOperation} is not provided, this method
-     * will default to executing {@code npm run test}</p>
+     * {@link org.zowe.pipelines.generic.GenericPipeline#testGeneric(java.util.Map)} method and will
+     * have the following additional operations: <ul>
+     *     <li>If {@link org.zowe.pipelines.generic.arguments.TestStageArguments#operation} is not
+     *     provided, this method will default to executing {@code npm run test}</li>
+     * </ul>
+     * </p>
      *
      *
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} used to define
@@ -706,8 +731,8 @@ class NodeJSPipeline extends GenericPipeline {
      * Login to the specified registry.
      *
      * @param registry The registry to login to
-     * @throws NodeJSPipelineException when either the email address or credentials property is missing
-     *                               from the specified registry.
+     * @throw {@link NodeJSPipelineException} when either the email address or credentials property
+     *         is missing from the specified registry.
      */
     protected void _loginToRegistry(RegistryConfig registry) throws NodeJSPipelineException {
         if (!registry.email) {

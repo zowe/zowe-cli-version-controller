@@ -456,8 +456,8 @@ class GenericPipeline extends Pipeline {
     /**
      * Creates a stage that will execute tests on your application.
      *
-     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
+     * <p>Arguments passed to this function will map to the
+     * {@link org.zowe.pipelines.generic.arguments.TestStageArguments} class.</p>
      *
      * @Stages
      * This method adds the following stage to the build:
