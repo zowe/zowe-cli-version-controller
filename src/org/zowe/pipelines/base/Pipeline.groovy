@@ -627,12 +627,17 @@ class Pipeline {
                         steps.sh "cp -r $directory ./${archiveLocation}${directory} || exit 0"
                     } else if (directory.contains("..")) {
                         throw new PipelineException("Relative archives are not supported")
+                    } else {
+                        // We must be in an internal directory right now so archive it immediately
+                        steps.echo "Archiving folder: ${directory}"
+                        steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$directory/*" + "*/*.*"// The weird concat because groovydoc blew up here
                     }
                 } catch (e) {
                     steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
                 }
             }
 
+            steps.echo "Archiving absolute paths"
             steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
         }
     }
