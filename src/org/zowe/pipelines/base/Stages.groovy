@@ -89,13 +89,13 @@ final class Stages {
             if (_firstStageToExecute == null) {
                 // This is a condition that indicates that our logic is most likely broken
                 throw new StageException("First stage was not set but stages already had values in the map", stage.name)
-            } else if (!_firstFailingStage){
-                // The first stage should be setup, othewise a stage exception will be
-                // thrown before we get into here. So in setup, we should create the exception
-                // to be thrown later.
-                _firstFailingStage = _firstStageToExecute
-                _firstFailingStage.exception = new StageException("Duplicate stage name: \"${stage.name}\"", _firstFailingStage.name)
             }
+
+            // The first stage should be setup, othewise a stage exception will be
+            // thrown before we get into here. So in setup, we should create the exception
+            // to be thrown later.
+            firstFailingStage = firstStageToExecute
+            firstFailingStage.exception = new StageException("Duplicate stage name: \"${stage.name}\"", _firstFailingStage.name)
         } else {
             // Add stage to map
             _stages.put(stage.name, stage)
