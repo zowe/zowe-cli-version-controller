@@ -212,7 +212,7 @@ class NodeJSPipeline extends GenericPipeline {
      *             provided to the version command.</dd>
      *             <dt><b>deployArguments</b></dt>
      *             <dd>A map of {@link org.zowe.pipelines.generic.arguments.GenericStageArguments} to be
-     *                 provided to the version command.</dd>
+     *                 provided to the deploy command.</dd>
      *         </dl>
      *     </dd>
      * </dl>
