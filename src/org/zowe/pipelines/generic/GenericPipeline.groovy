@@ -148,6 +148,7 @@ class GenericPipeline extends Pipeline {
         changeInfo = new ChangeInformation(steps)
     }
 
+    @NonCPS
     protected static Map mergeFields(fields) {
         if (!fields._control) {
             fields._control = new GenericPipelineControl()
