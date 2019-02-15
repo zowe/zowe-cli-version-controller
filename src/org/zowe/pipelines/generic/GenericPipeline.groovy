@@ -142,15 +142,18 @@ class GenericPipeline extends Pipeline {
      * @param steps The workflow steps provided by the Jenkins pipeline.
      * @param inheritedProps A map of inherited properties.
      */
-    protected GenericPipeline(steps, Map inheritedProps) {
-        // Properly instantiate the control variable
-        if (!inheritedProps._control) {
-            inheritedProps._control = new GenericPipelineControl()
-        }
-
-        super(steps, inheritedProps)
+    protected GenericPipeline(steps, Map inheritedFields) {
+        super(steps, mergeFields(inheritedFields))
 
         changeInfo = new ChangeInformation(steps)
+    }
+
+    protected static Map mergeFields(fields) {
+        if (!fields._control) {
+            fields._control = new GenericPipelineControl()
+        }
+
+        return fields
     }
 
     /**
