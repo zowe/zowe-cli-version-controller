@@ -177,17 +177,15 @@ class Pipeline {
      */
     ProtectedBranches<ProtectedBranch> protectedBranches = new ProtectedBranches<ProtectedBranch>(ProtectedBranch.class)
 
-    protected PipelineControl _control = new PipelineControl()
+    /**
+     * This control variable represents internal states of items in the pipeline.
+     */
+    protected PipelineControl _control
 
     /**
      * Tracks if the current branch is protected.
      */
     protected boolean _isProtectedBranch = false
-
-    /**
-     * Tracks if the setup method was called.
-     */
-    protected boolean _setupCalled = false
 
     /**
      * Tracks if the remaining stages should be skipped.
@@ -241,7 +239,25 @@ class Pipeline {
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
     Pipeline(steps) {
+        this(steps, [:])
+    }
+
+    /**
+     * Construct the class and override properties.
+     *
+     * <p>Intended for subclass usage to properly maintain inherited properties.</p>
+     * @param steps The workflow steps provided by the Jenkins pipeline.
+     * @param inheritedProps A map of inherited properties.
+     */
+    protected Pipeline(steps, Map inheritedProps) {
         this.steps = steps
+
+        // Properly instantiate the control variable
+        if (inheritedProps._control) {
+            this._control = inheritedProps._control
+        } else {
+            this._control = new PipelineControl()
+        }
     }
 
     /**

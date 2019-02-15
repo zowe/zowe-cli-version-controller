@@ -10,10 +10,32 @@
 
 package org.zowe.pipelines.base.enums
 
+/**
+ * Status levels available for a stage type.
+ */
 enum StageStatus {
+    /**
+     * The stage was not present in the build.
+     */
     ABSENT,
+
+    /**
+     * The stage was created but hasn't executed yet.
+     */
     CREATE,
+
+    /**
+     * The stage is currently executing.
+     */
     EXECUTE,
+
+    /**
+     * The stage failed execution.
+     */
     FAIL,
+
+    /**
+     * The stage successfully executed.
+     */
     SUCCESS
 }

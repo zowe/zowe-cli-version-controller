@@ -104,6 +104,10 @@ class GenericPipeline extends Pipeline {
      */
     GitConfig gitConfig
 
+    protected GenericPipelineControl getTypedControl() {
+        return this._control
+    }
+
     /**
      * A boolean that tracks if the build step was run. When false, the build still hasn't completed
      */
@@ -128,7 +132,23 @@ class GenericPipeline extends Pipeline {
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
     GenericPipeline(steps) {
-        super(steps)
+        this(steps, [:])
+    }
+
+    /**
+     * Construct the class and override properties.
+     *
+     * <p>Intended for subclass usage to properly maintain inherited properties.</p>
+     * @param steps The workflow steps provided by the Jenkins pipeline.
+     * @param inheritedProps A map of inherited properties.
+     */
+    protected GenericPipeline(steps, Map inheritedProps) {
+        // Properly instantiate the control variable
+        if (!inheritedProps._control) {
+            inheritedProps._control = new GenericPipelineControl()
+        }
+
+        super(steps, inheritedProps)
 
         changeInfo = new ChangeInformation(steps)
     }
