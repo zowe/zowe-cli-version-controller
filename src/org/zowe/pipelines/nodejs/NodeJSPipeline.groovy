@@ -334,6 +334,8 @@ class NodeJSPipeline extends GenericPipeline {
         IllegalArgumentException deployException
         IllegalArgumentException versionException
 
+        // @TODO add dry run
+
         if (deployArguments.operation) {
             deployException = new IllegalArgumentException("operation is an invalid map object for deployArguments")
         }
@@ -362,7 +364,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             try {
                 gitPush()
-                steps.sh "npm publish --tag ${branch.tag}"
+                steps.sh "npm publish --tag ${branch.tag} --dry-run"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",

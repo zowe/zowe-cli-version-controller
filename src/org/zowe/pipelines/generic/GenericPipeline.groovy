@@ -401,6 +401,7 @@ class GenericPipeline extends Pipeline {
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      */
     boolean gitPush() throws GitException {
+        // @TODO add dry run flag
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
@@ -411,7 +412,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --verbose"
+            steps.sh "git push --verbose --dry-run"
             return true
         } else {
             return false
