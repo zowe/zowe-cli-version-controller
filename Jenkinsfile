@@ -23,7 +23,7 @@ node('ca-jenkins-agent') {
 
     nodejs.admins.add("wrich04", "zfernand0","markackert")
 
-    nodejs.protectedBranches.add(
+    nodejs.protectedBranches.addMap(
        name: "master"
     )
 
