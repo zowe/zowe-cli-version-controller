@@ -455,7 +455,6 @@ class GenericPipeline extends Pipeline {
         })
 
         createStage(name: 'Check for CI Skip', stage: {
-            gitCommit("This should blow up")
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {
