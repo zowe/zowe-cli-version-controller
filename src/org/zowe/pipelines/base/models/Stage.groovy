@@ -31,7 +31,7 @@ class Stage {
     /**
      * The first exception thrown by this stage.
      */
-    Exception exception
+    protected Exception _exception
 
     /**
      * Set the exception only if one doesn't exist.
@@ -39,9 +39,17 @@ class Stage {
      * @param e The exception to set.
      */
     void setException(Exception e) {
-        if (!exception) {
-            exception = e
+        if (!_exception) {
+            _exception = e
         }
+    }
+
+    /**
+     * Get the exception thrown.
+     * @return The exception thrown.
+     */
+    Exception getException() {
+        return _exception
     }
 
     /**
