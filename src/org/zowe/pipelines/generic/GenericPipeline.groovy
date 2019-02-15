@@ -10,7 +10,7 @@
 
 package org.zowe.pipelines.generic
 
-
+import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.generic.arguments.BuildStageArguments
@@ -104,7 +104,7 @@ class GenericPipeline extends Pipeline {
      */
     GitConfig gitConfig
 
-    protected GenericPipelineControl getTypedControl() {
+    protected GenericPipelineControl get_control() {
         return this._control
     }
 
