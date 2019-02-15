@@ -1,3 +1,13 @@
+/*
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ */
+
 node('ca-jenkins-agent') {
     def branch = ""
     
@@ -9,22 +19,15 @@ node('ca-jenkins-agent') {
     
     def lib = library("shared-pipelines@$branch").org.zowe.pipelines.nodejs
     
-    def nodejs = lib.NodeJSRunner.new(this)
+    def nodejs = lib.NodeJSPipeline.new(this)
 
-    nodejs.adminEmails = [
-        "christopher.wright@broadcom.com",
-        "fernando.rijocedeno@broadcom.com",
-        "michael.bauer2@broadcom.com",
-        "mark.ackert@broadcom.com",
-        "daniel.kelosky@broadcom.com"
-    ]
+    nodejs.admins.add("wrich04", "zfernand0","markackert")
 
-    nodejs.protectedBranches = [
-        master: 'daily'
-    ]
+    nodejs.protectedBranches.addMap(
+       name: "master"
+    )
 
     nodejs.gitConfig = [
-        user: 'zowe-robot',
         email: 'zowe.robot@gmail.com',
         credentialsId: 'zowe-robot-github'
     ]
@@ -47,19 +50,19 @@ node('ca-jenkins-agent') {
         ]
     )
 
-    nodejs.buildStage(timeout: [
+    nodejs.build(timeout: [
         time: 5,
         unit: 'MINUTES',
-    ],  buildOperation:
+    ], operation:
        {
              sh "npm run build"
        })
 
     def UNIT_TEST_ROOT = "__tests__/__results__/unit"
 
-    nodejs.testStage(
+    nodejs.test(
         name: "Unit",
-        testOperation: {
+        operation: {
             sh "npm run test:unit"
         },
         shouldUnlockKeyring: true,

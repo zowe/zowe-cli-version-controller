@@ -5,11 +5,11 @@ import hudson.model.Result
 import org.junit.Test
 
 /**
- * Unit tests for the NodeJS class
+ * Unit tests for the NodeJSPipeline class
  */
 class NodeJsTest {
     /**
-     * Test instantiating a NodeJS object
+     * Test instantiating a NodeJSPipeline object
      */
     @Test
     void instantiationTest() {
