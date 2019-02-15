@@ -306,6 +306,8 @@ class GenericPipeline extends Pipeline {
                     throw new DeployStageException("Build must be successful to deploy", args.name)
                 } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
                     throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
+                } else if (_control.preDeployTests.size() == 0) {
+                    throw new DeployStageException("At least one test stage must be defined", args.name)
                 }
 
                 args.operation(stageName)
