@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-package org.zowe.pipelines.generic.exceptions
+package org.zowe.pipelines.generic.exceptions.git
 
 import org.zowe.pipelines.base.exceptions.PipelineException
 

@@ -17,6 +17,11 @@ import org.zowe.pipelines.generic.arguments.BuildStageArguments
 import org.zowe.pipelines.generic.arguments.GenericSetupArguments
 import org.zowe.pipelines.generic.arguments.GenericStageArguments
 import org.zowe.pipelines.generic.arguments.TestStageArguments
+import org.zowe.pipelines.generic.enums.BuildType
+import org.zowe.pipelines.generic.enums.GitOperation
+import org.zowe.pipelines.generic.exceptions.git.BehindRemoteException
+import org.zowe.pipelines.generic.exceptions.git.GitException
+import org.zowe.pipelines.generic.exceptions.git.IllegalBuildException
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 
@@ -85,19 +90,19 @@ class GenericPipeline extends Pipeline {
     protected static final String _TOKEN = "TOKEN"
 
     /**
+     * Stores the change information for reference later.
+     */
+    final ChangeInformation changeInfo
+
+    /**
      * Git user configuration.
      *
      * <p>The configuration will determine what user is responsible for committing and pushing
      * code updates done by the pipeline. Failure to include this configuration will result in
-     * a {@link org.zowe.pipelines.generic.exceptions.GitException} being thrown in the pipeline
+     * a {@link org.zowe.pipelines.generic.exceptions.git.GitException} being thrown in the pipeline
      * setup.</p>
      */
     GitConfig gitConfig
-
-    /**
-     * Stores the change information for reference later.
-     */
-    protected ChangeInformation _changeInfo
 
     /**
      * A boolean that tracks if the build step was run. When false, the build still hasn't completed
@@ -124,6 +129,8 @@ class GenericPipeline extends Pipeline {
      */
     GenericPipeline(steps) {
         super(steps)
+
+        changeInfo = new ChangeInformation(steps)
     }
 
     /**
@@ -343,8 +350,13 @@ class GenericPipeline extends Pipeline {
      * @param message The commit message
      * @return A boolean indicating if a commit was made. True indicates that a successful commit
      *         has occurred.
+     * @throw {@link IllegalBuildException} when a commit operation happens on an illegal build type.
      */
     boolean gitCommit(String message) {
+        if (changeInfo.isPullRequest) {
+            throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
+        }
+
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
         if (ret == 0) {
             steps.sh "git commit -m \"$message $_CI_SKIP\" --signoff"
@@ -361,14 +373,19 @@ class GenericPipeline extends Pipeline {
      * the branch is out of sync</p>
      *
      * @return A boolean indicating if the push was made. True indicates a successful push
-     * @throw {@link GitException} when pushing to a branch that has forward commits from this build
+     * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
+     * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      */
     boolean gitPush() throws GitException {
+        if (changeInfo.isPullRequest) {
+            throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
+        }
+
         steps.sh "git fetch --no-tags"
         String status = steps.sh returnStdout: true, script: "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
-            throw new GitException("Detected commits not part of build in: ${_changeInfo.branchName}!")
+            throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
             steps.sh "git push --verbose"
             return true
@@ -388,7 +405,8 @@ class GenericPipeline extends Pipeline {
      *     <dd>
      *         This step configures the git environment for commits and pushes. The {@link #gitConfig}
      *         provided will be injected into the git remote url and the head will point to the
-     *         proper remote branch. The username and email settings will also be set.
+     *         proper remote branch. The username and email settings will also be set.  If the
+     *         current build is for a pull request, this step will be skipped.
      *     </dd>
      *     <dt><b>Check for CI Skip</b></dt>
      *     <dd>
@@ -406,8 +424,6 @@ class GenericPipeline extends Pipeline {
         super.setupBase(timeouts)
 
         createStage(name: 'Configure Git', stage: {
-            _changeInfo = new ChangeInformation(steps)
-
             steps.withCredentials([steps.usernamePassword(
                 credentialsId: gitConfig.credentialsId,
                 passwordVariable: "NOT_USED",
@@ -419,7 +435,7 @@ class GenericPipeline extends Pipeline {
             }
 
             // Setup the branch to track it's remote
-            steps.sh "git checkout ${_changeInfo.branchName}"
+            steps.sh "git checkout ${changeInfo.branchName}"
             steps.sh "git status"
 
             // If the branch is protected, setup the proper configuration
@@ -433,9 +449,13 @@ class GenericPipeline extends Pipeline {
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
             }
-        }, isSkippable: false, timeout: timeouts.gitSetup)
+        }, isSkippable: false, timeout: timeouts.gitSetup, shouldExecute: {
+            // Disable commits and pushes
+            return !changeInfo.isPullRequest
+        })
 
         createStage(name: 'Check for CI Skip', stage: {
+            gitCommit("This should blow up")
             // This checks for the [ci skip] text. If found, the status code is 0
             def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
             if (result == 0) {

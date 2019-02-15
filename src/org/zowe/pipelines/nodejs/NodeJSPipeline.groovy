@@ -358,7 +358,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Login to the publish registry
             _loginToRegistry(publishConfig)
 
-            NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+            NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
                 gitPush()
@@ -397,7 +397,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Extract the raw version
             def rawVersion = baseVersion.split("\\.")
 
-            NodeJSProtectedBranch branch = protectedBranches.get(_changeInfo.branchName)
+            NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
@@ -642,12 +642,12 @@ class NodeJSPipeline extends GenericPipeline {
                 String branch
 
                 // If this is a pull request, then we will be checking if the base branch is protected
-                if (_changeInfo.isPullRequest) {
-                    branch = _changeInfo.baseBranch
+                if (changeInfo.isPullRequest) {
+                    branch = changeInfo.baseBranch
                 }
                 // Otherwise we are checking if the current branch is protected
                 else {
-                    branch = _changeInfo.branchName
+                    branch = changeInfo.branchName
                 }
 
                 if (protectedBranches.isProtected(branch)) {
@@ -657,7 +657,7 @@ class NodeJSPipeline extends GenericPipeline {
                     def devInstall = "npm install"
 
                     // If this is a pull request, we don't want to make any commits
-                    if (_changeInfo.isPullRequest) {
+                    if (changeInfo.isPullRequest) {
                         depInstall += " --no-save"
                         devInstall += " --no-save"
                     }
@@ -670,7 +670,7 @@ class NodeJSPipeline extends GenericPipeline {
                     branchProps.dependencies.each { npmPackage, version -> steps.sh "$depInstall $npmPackage@$version" }
                     branchProps.devDependencies.each { npmPackage, version -> steps.sh "$devInstall $npmPackage@$version" }
 
-                    if (!_changeInfo.isPullRequest) {
+                    if (!changeInfo.isPullRequest) {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
