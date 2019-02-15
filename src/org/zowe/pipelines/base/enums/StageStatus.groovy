@@ -15,11 +15,6 @@ package org.zowe.pipelines.base.enums
  */
 enum StageStatus {
     /**
-     * The stage was not present in the build.
-     */
-    ABSENT,
-
-    /**
      * The stage was created but hasn't executed yet.
      */
     CREATE,
@@ -33,6 +28,11 @@ enum StageStatus {
      * The stage failed execution.
      */
     FAIL,
+
+    /**
+     * The stage was skipped
+     */
+    SKIP,
 
     /**
      * The stage successfully executed.

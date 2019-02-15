@@ -10,14 +10,12 @@
 
 package org.zowe.pipelines.base.models
 
-import org.zowe.pipelines.base.enums.StageStatus
-
 /**
  * Control variables for a {@link org.zowe.pipelines.base.Pipeline}
  */
 class PipelineControl {
     /**
-     * Status of the pipeline setup.
+     * The setup stage
      */
-    StageStatus setup = StageStatus.ABSENT
+    Stage setup
 }

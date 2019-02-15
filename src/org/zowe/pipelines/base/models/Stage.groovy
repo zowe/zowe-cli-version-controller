@@ -11,6 +11,7 @@
 package org.zowe.pipelines.base.models
 
 import org.zowe.pipelines.base.arguments.StageArguments
+import org.zowe.pipelines.base.enums.StageStatus
 
 /**
  * A stage that will be executed in the Jenkins pipeline.
@@ -31,6 +32,17 @@ class Stage {
      * The first exception thrown by this stage.
      */
     Exception exception
+
+    /**
+     * Set the exception only if one doesn't exist.
+     *
+     * @param e The exception to set.
+     */
+    void setException(Exception e) {
+        if (!exception) {
+            exception = e
+        }
+    }
 
     /**
      * The closure function that represents the complete stage operation.
@@ -68,12 +80,7 @@ class Stage {
     int order
 
     /**
-     * Was the stage executed?
-     *
-     * <p>This variable will become true when {@link org.zowe.pipelines.base.Pipeline#createStage(org.zowe.pipelines.base.arguments.StageArguments)}
-     * calls the {@link org.zowe.pipelines.base.arguments.StageArguments#stage} operation.</p>
-     *
-     * @default false
+     * The execution status of a stage
      */
-    boolean wasExecuted = false
+    StageStatus status = StageStatus.CREATE
 }

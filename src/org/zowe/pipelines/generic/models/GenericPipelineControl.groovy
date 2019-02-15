@@ -10,12 +10,12 @@
 
 package org.zowe.pipelines.generic.models
 
-import org.zowe.pipelines.base.enums.StageStatus
 import org.zowe.pipelines.base.models.PipelineControl
+import org.zowe.pipelines.base.models.Stage
 
 class GenericPipelineControl extends PipelineControl {
-    StageStatus build = StageStatus.ABSENT
-    StageStatus test = StageStatus.ABSENT
-    StageStatus version = StageStatus.ABSENT
-    StageStatus deploy = StageStatus.ABSENT
+    Stage build
+    List<Stage> preDeployTests = []
+    Stage version
+    Stage deploy
 }

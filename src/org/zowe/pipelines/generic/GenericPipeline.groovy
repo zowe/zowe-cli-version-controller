@@ -13,6 +13,8 @@ package org.zowe.pipelines.generic
 import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.enums.ResultEnum
+import org.zowe.pipelines.base.enums.StageStatus
+import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.generic.arguments.BuildStageArguments
 import org.zowe.pipelines.generic.arguments.GenericSetupArguments
 import org.zowe.pipelines.generic.arguments.GenericStageArguments
@@ -104,9 +106,10 @@ class GenericPipeline extends Pipeline {
      */
     GitConfig gitConfig
 
-    protected GenericPipelineControl get_control() {
-        return this._control
-    }
+    /**
+     * More control variables for the pipeline.
+     */
+    protected GenericPipelineControl _control = new GenericPipelineControl()
 
     /**
      * A boolean that tracks if the build step was run. When false, the build still hasn't completed
@@ -132,29 +135,8 @@ class GenericPipeline extends Pipeline {
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
     GenericPipeline(steps) {
-        this(steps, [:])
-    }
-
-    /**
-     * Construct the class and override properties.
-     *
-     * <p>Intended for subclass usage to properly maintain inherited properties.</p>
-     * @param steps The workflow steps provided by the Jenkins pipeline.
-     * @param inheritedProps A map of inherited properties.
-     */
-    protected GenericPipeline(steps, Map inheritedFields) {
-        super(steps, mergeFields(inheritedFields))
-
+        super(steps)
         changeInfo = new ChangeInformation(steps)
-    }
-
-    @NonCPS
-    protected static Map mergeFields(fields) {
-        if (!fields._control) {
-            fields._control = new GenericPipelineControl()
-        }
-
-        return fields
     }
 
     /**
@@ -198,14 +180,16 @@ class GenericPipeline extends Pipeline {
      *                  the stage.
      */
     void buildGeneric(Map arguments = [:]) {
+        BuildStageException preSetupException
+
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
         BuildStageArguments args = arguments
 
-        BuildStageException preSetupException
-
-        if (args.stage) {
+        if (_control.build) {
+            preSetupException = new BuildStageException("Only one build step is allowed per pipeline.", args.name)
+        } else if (args.stage) {
             preSetupException = new BuildStageException("arguments.stage is an invalid option for buildGeneric", args.name)
         }
 
@@ -217,16 +201,14 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
-            if (_didBuild) {
-                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
-            }
-
             args.operation(stageName)
-
-            _didBuild = true
         }
 
-        createStage(args)
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage build = createStage(args)
+        if (!_control.build) {
+            _control.build = build
+        }
     }
 
     /**
@@ -320,8 +302,10 @@ class GenericPipeline extends Pipeline {
                     throw preSetupException
                 }
 
-                if (!_didTest) {
-                    throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
+                if (_control.build?.status != StageStatus.SUCCESS) {
+                    throw new DeployStageException("Build must be successful to deploy", args.name)
+                } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+                    throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
                 }
 
                 args.operation(stageName)
@@ -342,18 +326,18 @@ class GenericPipeline extends Pipeline {
 //    void versionGeneric(Map arguments) {
 //
 //    }
-
-    Closure getExecutionForProtected(Closure input) {
-        return {
-            boolean shouldExecute = true
-
-            if (input) {
-                shouldExecute = input()
-            }
-
-            return shouldExecute && _isProtectedBranch
-        }
-    }
+//
+//    Closure getExecutionForProtected(Closure input) {
+//        return {
+//            boolean shouldExecute = true
+//
+//            if (input) {
+//                shouldExecute = input()
+//            }
+//
+//            return shouldExecute && _isProtectedBranch
+//        }
+//    }
 
     /**
      * Signal that no more stages will be added and begin pipeline execution.
@@ -625,9 +609,7 @@ class GenericPipeline extends Pipeline {
             // can be sent.
             if (preSetupException) {
                 throw preSetupException
-            }
-
-            if (!_didBuild) {
+            } else if (_control.build?.status != StageStatus.SUCCESS) {
                 throw new TestStageException("Tests cannot be run before the build has completed", args.name)
             }
 
@@ -701,11 +683,13 @@ class GenericPipeline extends Pipeline {
             } else if (args.coverageResults) {
                 steps.echo "WARNING: Cobertura file not detected, skipping"
             }
-
-            _didTest = true
         }
 
-        createStage(args)
+        // Create the stage and ensure that the tests are properly added.
+        Stage test = createStage(args)
+        if (!(_control.version || _control.deploy)) {
+            _control.preDeployTests += test
+        }
     }
 
     /**

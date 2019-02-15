@@ -180,7 +180,7 @@ class Pipeline {
     /**
      * This control variable represents internal states of items in the pipeline.
      */
-    protected PipelineControl _control
+    protected PipelineControl _control = new PipelineControl()
 
     /**
      * Tracks if the current branch is protected.
@@ -239,25 +239,7 @@ class Pipeline {
      * @param steps The workflow steps object provided by the Jenkins pipeline
      */
     Pipeline(steps) {
-        this(steps, [:])
-    }
-
-    /**
-     * Construct the class and override properties.
-     *
-     * <p>Intended for subclass usage to properly maintain inherited properties.</p>
-     * @param steps The workflow steps provided by the Jenkins pipeline.
-     * @param inheritedProps A map of inherited properties.
-     */
-    protected Pipeline(steps, Map inheritedProps) {
         this.steps = steps
-
-        // Properly instantiate the control variable
-        if (inheritedProps._control) {
-            this._control = inheritedProps._control
-        } else {
-            this._control = new PipelineControl()
-        }
     }
 
     /**
@@ -284,8 +266,9 @@ class Pipeline {
      * its execute phase.</p>
      *
      * @param args The arguments that define the stage.
+     * @return The created {@link Stage}.
      */
-    final void createStage(StageArguments args) {
+    final Stage createStage(StageArguments args) {
         // @FUTURE allow easy way for create stage to specify build parameters
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
@@ -305,9 +288,12 @@ class Pipeline {
         stage.execute = {
             steps.stage(args.name) {
                 steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    stage.status = StageStatus.EXECUTE
+
                     // Skips the stage when called with a reason code
                     Closure skipStage = { reason ->
                         steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
+                        stage.status = StageStatus.SKIP
                         Utils.markStageSkippedForConditional(args.name)
                     }
 
@@ -319,7 +305,7 @@ class Pipeline {
 
                     _closureWrapper(stage) {
                         // First check that setup was called first
-                        if (_control.setup <= StageStatus.CREATE && stage.name != _SETUP_STAGE_NAME) {
+                        if ((!_control.setup || _control.setup < StageStatus.SUCCESS) && stage.name != _SETUP_STAGE_NAME) {
                             throw new StageException(
                                     "Pipeline setup not complete, please execute setup() on the instantiated Pipeline class",
                                     args.name
@@ -338,7 +324,6 @@ class Pipeline {
                         else {
                             steps.echo "Executing stage ${args.name}"
 
-                            stage.wasExecuted = true
                             if (args.isSkippable) {
                                 steps.echo "This step can be skipped by setting the `${_getStageSkipOption(stage)}` option to true"
                             }
@@ -354,6 +339,7 @@ class Pipeline {
                             steps.withEnv(environment) {
                                 _closureWrapper(stage) {
                                     args.stage(stage.name)
+                                    stage.status = StageStatus.SUCCESS
                                 }
                             }
                         }
@@ -361,18 +347,21 @@ class Pipeline {
                 }
             }
         }
+
+        return stage
     }
 
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
      * @param arguments A map of arguments that can be instantiated to a {@link StageArguments} instance.
+     * @return The created {@link Stage}.
      *
      * @see #createStage(StageArguments)
      */
-    final void createStage(Map arguments) {
+    final Stage createStage(Map arguments) {
         // Call the overloaded method
-        createStage(arguments as StageArguments)
+        return createStage(arguments as StageArguments)
     }
 
     /**
@@ -555,26 +544,33 @@ class Pipeline {
      * @param timeouts The timeouts for the added stages.
      */
     void setupBase(SetupArguments timeouts) {
-        // Indicate that setup was created
-        _control.setup = StageStatus.CREATE
+        if (_control.setup) {
+            _stages.firstFailingStage = _control.setup
+            _control.setup.exception = new StageException("Setup was called twice!", _control.setup.name)
+        }
 
-        createStage(name: _SETUP_STAGE_NAME, stage: {
-            _control.setup = StageStatus.EXECUTE
-
+        // Create the stage and hold the variable for the future
+        Stage setup = createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
 
             if (_stages.firstFailingStage) {
-                _control.setup = StageStatus.FAIL
                 if (_stages.firstFailingStage.exception) {
                     throw _stages.firstFailingStage.exception
                 } else {
                     throw new StageException("Setup found a failing stage but there was no associated exception.", _stages.firstFailingStage.name)
                 }
             } else {
-                _control.setup = StageStatus.SUCCESS
                 steps.echo "No problems with pre-initialization of pipeline :)"
             }
         }, isSkippable: false, timeout: timeouts.setup)
+
+        // Check for duplicate setup call
+        if (_control.setup) {
+            _stages.firstFailingStage = _control.setup
+            _control.setup.exception = new StageException("Setup was called twice!", _control.setup.name)
+        } else {
+            _control.setup = setup
+        }
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
@@ -608,6 +604,7 @@ class Pipeline {
 
             setResult(ResultEnum.FAILURE)
             stage.exception = e
+            stage.status = StageStatus.FAIL
             throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
@@ -615,6 +612,7 @@ class Pipeline {
             // Don't alert of the build status if the stage already has an exception
             if (!stage.exception && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
                 // Add the exception of the bad build status
+                stage.status = StageStatus.FAIL
                 stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
                 _stages.firstFailingStage = stage
             }
