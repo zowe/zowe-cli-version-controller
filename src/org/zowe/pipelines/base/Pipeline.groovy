@@ -305,7 +305,7 @@ class Pipeline {
 
                     _closureWrapper(stage) {
                         // First check that setup was called first
-                        if ((!_control.setup || _control.setup < StageStatus.SUCCESS) && stage.name != _SETUP_STAGE_NAME) {
+                        if ((!_control.setup || _control.setup.status < StageStatus.SUCCESS) && stage.name != _SETUP_STAGE_NAME) {
                             throw new StageException(
                                     "Pipeline setup not complete, please execute setup() on the instantiated Pipeline class",
                                     args.name
