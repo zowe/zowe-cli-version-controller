@@ -305,7 +305,7 @@ class Pipeline {
                         // First check that setup was called first
                         if (_control.setup <= StageStatus.CREATE && stage.name != _SETUP_STAGE_NAME) {
                             throw new StageException(
-                                    "Pipeline setup not complete, please execute setup() on the instantiated BasePipeline class",
+                                    "Pipeline setup not complete, please execute setup() on the instantiated Pipeline class",
                                     args.name
                             )
                         } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
