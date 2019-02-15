@@ -12,6 +12,8 @@ package org.zowe.pipelines.base
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.arguments.*
+import org.zowe.pipelines.base.enums.ResultEnum
+import org.zowe.pipelines.base.enums.StageStatus
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
@@ -175,6 +177,8 @@ class Pipeline {
      */
     ProtectedBranches<ProtectedBranch> protectedBranches = new ProtectedBranches<ProtectedBranch>(ProtectedBranch.class)
 
+    protected PipelineControl _control = new PipelineControl()
+
     /**
      * Tracks if the current branch is protected.
      */
@@ -299,7 +303,7 @@ class Pipeline {
 
                     _closureWrapper(stage) {
                         // First check that setup was called first
-                        if (!(_setupCalled && _stages.firstStageToExecute.name == _SETUP_STAGE_NAME)) {
+                        if (_control.setup <= StageStatus.CREATE && stage.name != _SETUP_STAGE_NAME) {
                             throw new StageException(
                                     "Pipeline setup not complete, please execute setup() on the instantiated BasePipeline class",
                                     args.name
@@ -535,18 +539,23 @@ class Pipeline {
      * @param timeouts The timeouts for the added stages.
      */
     void setupBase(SetupArguments timeouts) {
-        _setupCalled = true
+        // Indicate that setup was created
+        _control.setup = StageStatus.CREATE
 
         createStage(name: _SETUP_STAGE_NAME, stage: {
+            _control.setup = StageStatus.EXECUTE
+
             steps.echo "Setup was called first"
 
             if (_stages.firstFailingStage) {
+                _control.setup = StageStatus.FAIL
                 if (_stages.firstFailingStage.exception) {
                     throw _stages.firstFailingStage.exception
                 } else {
                     throw new StageException("Setup found a failing stage but there was no associated exception.", _stages.firstFailingStage.name)
                 }
             } else {
+                _control.setup = StageStatus.SUCCESS
                 steps.echo "No problems with pre-initialization of pipeline :)"
             }
         }, isSkippable: false, timeout: timeouts.setup)

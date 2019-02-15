@@ -12,7 +12,7 @@ package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
-import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline

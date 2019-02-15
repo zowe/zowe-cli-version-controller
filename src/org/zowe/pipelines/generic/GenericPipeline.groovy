@@ -12,7 +12,7 @@ package org.zowe.pipelines.generic
 
 
 import org.zowe.pipelines.base.Pipeline
-import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.generic.arguments.BuildStageArguments
 import org.zowe.pipelines.generic.arguments.GenericSetupArguments
 import org.zowe.pipelines.generic.arguments.GenericStageArguments
@@ -148,7 +148,7 @@ class GenericPipeline extends Pipeline {
      *     <dd>
      *         Runs the build of your application. The build stage also ignores any
      *         {@link BuildStageArguments#resultThreshold} provided and only runs
-     *         on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
+     *         on {@link ResultEnum#SUCCESS}.</p>
      *     </dd>
      * </dl>
      *
@@ -227,7 +227,7 @@ class GenericPipeline extends Pipeline {
      *
      *     <ul>
      *         <li>The stage will only execute if the current build result is
-     *         {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS} or higher.</li>
+     *         {@link ResultEnum#SUCCESS} or higher.</li>
      *         <li>The stage will only execute if the current branch is protected.</li>
      *     </ul>
      * </p>
@@ -313,6 +313,22 @@ class GenericPipeline extends Pipeline {
         }
 
         createSubStage(deployArguments)
+    }
+
+//    void versionGeneric(Map arguments) {
+//
+//    }
+
+    Closure getExecutionForProtected(Closure input) {
+        return {
+            boolean shouldExecute = true
+
+            if (input) {
+                shouldExecute = input()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
     }
 
     /**
@@ -523,7 +539,7 @@ class GenericPipeline extends Pipeline {
      *
      *         <p>
      *             The test stage will execute by default if the current build result is greater than or
-     *             equal to {@link org.zowe.pipelines.base.models.ResultEnum#UNSTABLE}. If a different status is passed, that will take
+     *             equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
      *             precedent.
      *         </p>
      *
