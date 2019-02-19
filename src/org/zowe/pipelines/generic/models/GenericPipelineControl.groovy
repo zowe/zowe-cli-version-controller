@@ -13,9 +13,33 @@ package org.zowe.pipelines.generic.models
 import org.zowe.pipelines.base.models.PipelineControl
 import org.zowe.pipelines.base.models.Stage
 
+/**
+ * Additional control variables for a {@link org.zowe.pipelines.generic.GenericPipeline}
+ */
 class GenericPipelineControl extends PipelineControl {
+    /**
+     * The build stage
+     */
     Stage build
+
+    /**
+     * Test stages that occur before deploy.
+     *
+     * <p>Test stages require that the build was successful.</p>
+     */
     List<Stage> preDeployTests = []
+
+    /**
+     * Versioning stage.
+     *
+     * <p>This stage requires the build to be successful and for tests to be stable (if they were executed)</p>
+     */
     Stage version
+
+    /**
+     * Deploy stage.
+     *
+     * <p>This stage requires the build to be successful and for tests to be stable (if they were executed)</p>
+     */
     Stage deploy
 }

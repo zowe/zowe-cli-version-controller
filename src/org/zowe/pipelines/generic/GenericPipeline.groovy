@@ -112,16 +112,6 @@ class GenericPipeline extends Pipeline {
     protected GenericPipelineControl _control = new GenericPipelineControl()
 
     /**
-     * A boolean that tracks if the build step was run. When false, the build still hasn't completed
-     */
-    protected boolean _didBuild = false
-
-    /**
-     * A boolean that tracks if a single test was run. When false, there hasn't been a test run yet.
-     */
-    protected boolean _didTest = false
-
-    /**
      * Constructs the class.
      *
      * <p>When invoking from a Jenkins pipeline script, the GenericPipeline must be passed
