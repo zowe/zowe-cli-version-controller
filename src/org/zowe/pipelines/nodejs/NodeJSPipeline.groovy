@@ -368,7 +368,7 @@ class NodeJSPipeline extends GenericPipeline {
                     subjectTag: "DEPLOYED",
                     body: "<h3>${steps.env.JOB_NAME}</h3>" +
                         "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                        "<p>Deployed Package: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>",
+                        "<p>Deployed Package: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
                         "<p>Package Tag: <b>${branch.tag}</b></p>" +
                         "<p>Registry: <b>{$publishConfig.url}</b></p>",
                     to: admins.emailList,
