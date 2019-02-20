@@ -665,7 +665,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                     // Otherwise we need to save the version properly
                     else {
-                        depInstall += " --no-save"
+                        depInstall += " --save"
                         devInstall += " --save-dev"
                     }
 
