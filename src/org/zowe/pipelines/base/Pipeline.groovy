@@ -544,11 +544,6 @@ class Pipeline {
      * @param timeouts The timeouts for the added stages.
      */
     void setupBase(SetupArguments timeouts) {
-        if (_control.setup) {
-            _stages.firstFailingStage = _control.setup
-            _control.setup.exception = new StageException("Setup was called twice!", _control.setup.name)
-        }
-
         // Create the stage and hold the variable for the future
         Stage setup = createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
