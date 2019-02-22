@@ -354,7 +354,7 @@ class GenericPipeline extends Pipeline {
         Closure createSubStage = { Map arguments ->
             arguments.resultThreshold = ResultEnum.SUCCESS
 
-            GenericStageArguments args = arguments
+            GenericStageArguments args = arguments as GenericStageArguments
 
             DeployStageException preSetupException
 
