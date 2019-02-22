@@ -388,6 +388,10 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
+
+            // DEBUG
+            steps.echo "${steps.env.DEPLOY_VERSION} approved by ${steps.env.DEPLOY_APPROVER}"
+
             String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
