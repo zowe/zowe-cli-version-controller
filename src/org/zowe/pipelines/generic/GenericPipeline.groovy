@@ -15,18 +15,12 @@ import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.enums.StageStatus
 import org.zowe.pipelines.base.models.Stage
-import org.zowe.pipelines.generic.arguments.BuildStageArguments
-import org.zowe.pipelines.generic.arguments.GenericSetupArguments
-import org.zowe.pipelines.generic.arguments.GenericStageArguments
-import org.zowe.pipelines.generic.arguments.TestStageArguments
+import org.zowe.pipelines.generic.arguments.*
 import org.zowe.pipelines.generic.enums.BuildType
 import org.zowe.pipelines.generic.enums.GitOperation
-import org.zowe.pipelines.generic.exceptions.git.BehindRemoteException
-import org.zowe.pipelines.generic.exceptions.git.GitException
-import org.zowe.pipelines.generic.exceptions.git.IllegalBuildException
+import org.zowe.pipelines.generic.exceptions.git.*
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
-
 import java.util.regex.Pattern
 
 /**
@@ -198,6 +192,101 @@ class GenericPipeline extends Pipeline {
         Stage build = createStage(args)
         if (!_control.build) {
             _control.build = build
+        }
+    }
+
+    /**
+     * Creates a stage that will execute a version bump
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link VersionStageArguments} class. The
+     * {@link VersionStageArguments#operation} will be executed after all checks are complete. This must
+     * be provided or a {@link java.lang.NullPointerException} will be encountered.</p>
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Versioning: {@link VersionStageArguments#name}</b></dt>
+     *     <dd>This stage is responsible for bumping the version of your application source.</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     This stage will adhere to the following conditions:
+     *
+     *     <ul>
+     *         <li>The stage will only execute if the current build result is {@link ResultEnum#SUCCESS} or higher.</li>
+     *         <li>The stage will only execute if the current branch is protected.</li>
+     *     </ul>
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link VersionStageException}</b></dt>
+     *         <dd>When stage is provided as an argument.</dd>
+     *         <dd>When a test stage has not executed.</dd>
+     *         <dt><b>{@link NullPointerException}</b></dt>
+     *         <dd>When an operation is not provided for the stage.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @Note This method was intended to be called {@code version} but had to be named
+     * {@code versionGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.
+     *
+     * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
+     */
+    void versionGeneric(Map arguments = [:]) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        VersionStageArguments args = arguments
+
+        VersionStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        args.name = "Versioning: ${args.name}"
+
+        // Execute the stage if this is a protected branch and the original should execute function are both true
+        args.shouldExecute = {
+            boolean shouldExecute = true
+
+            if (arguments.shouldExecute) {
+                shouldExecute = arguments.shouldExecute()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
+
+        args.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (_control.build?.status != StageStatus.SUCCESS) {
+                throw new VersionStageException("Build must be successful to deploy", args.name)
+            } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+                throw new VersionStageException("All test stages before deploy must be successful or skipped!", args.name)
+            } else if (_control.preDeployTests.size() == 0) {
+                throw new VersionStageException("At least one test stage must be defined", args.name)
+            }
+
+            args.operation(stageName)
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage version = createStage(args)
+        if (!_control.version) {
+            _control.version = version
         }
     }
 
