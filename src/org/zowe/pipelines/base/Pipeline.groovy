@@ -147,21 +147,21 @@ class Pipeline {
      * Images embedded in notification emails depending on the status of the build.
      */
     Map<String, List<String>> notificationImages = [
-            SUCCESS : [
-                    'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
-                    'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
-            ],
-            UNSTABLE: [
-                    'https://i.imgur.com/fV89ZD8.png',  /*not sure if*/
-                    'https://media.giphy.com/media/rmRUASq4WujsY/giphy.gif' /*f1 tires fly off*/
-            ],
-            FAILURE : [
-                    'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
-                    'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
-            ],
-            ABORTED : [
-                    'https://i.imgur.com/Zq0iBJK.jpg' /* surprised pikachu */
-            ]
+        SUCCESS : [
+            'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
+            'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
+        ],
+        UNSTABLE: [
+            'https://i.imgur.com/fV89ZD8.png',  /*not sure if*/
+            'https://media.giphy.com/media/rmRUASq4WujsY/giphy.gif' /*f1 tires fly off*/
+        ],
+        FAILURE : [
+            'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
+            'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
+        ],
+        ABORTED : [
+            'https://i.imgur.com/Zq0iBJK.jpg' /* surprised pikachu */
+        ]
     ]
 
     /**
