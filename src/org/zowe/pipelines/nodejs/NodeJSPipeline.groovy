@@ -603,7 +603,7 @@ class NodeJSPipeline extends GenericPipeline {
 
         // Prevent versioning stage to be created by deployGeneric if no versionArguments were specified
         if (versionArguments.size() <= 0) {
-            super.deployGeneric(deployArguments)
+            super.deployGeneric(deployArguments, [name: "DEBUG"])
         } else {
             // Set the version operation for an npm pipeline
             versionArguments.operation = { String stageName ->

@@ -396,8 +396,8 @@ class GenericPipeline extends Pipeline {
         }
 
         if (versionArguments.size() > 0) {
-            versionArguments.name = "Versioning"
-            createSubStage(versionArguments)
+//            versionArguments.name = "Versioning"
+//            createSubStage(versionArguments + [name: "Versioning"])
         }
 
         createSubStage(deployArguments + [name: (deployArguments.name)? "Deploy: ${deployArguments.name}" : "Deploy"])
