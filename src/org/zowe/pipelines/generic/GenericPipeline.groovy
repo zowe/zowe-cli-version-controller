@@ -342,11 +342,11 @@ class GenericPipeline extends Pipeline {
      *                         {@code versionArguments.operation} must be provided.
      */
     void deployGeneric(Map deployArguments, Map versionArguments = [:]) {
-        if (deployArguments.name) {
-            deployArguments.name = "Deploy: ${deployArguments.name}"
-        } else {
-            deployArguments.name = "Deploy"
-        }
+//        if (deployArguments.name) {
+//            deployArguments.name = "Deploy: ${deployArguments.name}"
+//        } else {
+//            deployArguments.name = "Deploy"
+//        }
 
         /*
          * Creates the various stages for the deploy
@@ -395,19 +395,14 @@ class GenericPipeline extends Pipeline {
             createStage(args)
         }
 
-
         if (versionArguments.size() > 0) {
             versionArguments.name = "Versioning"
             createSubStage(versionArguments)
         }
 
-        createSubStage(deployArguments)
+        createSubStage(deployArguments + [name: (deployArguments.name)? "Deploy: ${deployArguments.name}" : "Deploy"])
     }
 
-//    void versionGeneric(Map arguments) {
-//
-//    }
-//
 //    Closure getExecutionForProtected(Closure input) {
 //        return {
 //            boolean shouldExecute = true
