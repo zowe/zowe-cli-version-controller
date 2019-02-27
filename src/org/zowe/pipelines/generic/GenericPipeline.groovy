@@ -240,11 +240,11 @@ class GenericPipeline extends Pipeline {
      *
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
-    void versionGeneric(VersionStageArguments arguments = [:]) {
+    void versionGeneric(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        GenericStageArguments args = arguments
+        GenericStageArguments args = arguments as GenericStageArguments
 
         VersionStageException preSetupException
 
@@ -343,59 +343,52 @@ class GenericPipeline extends Pipeline {
      */
     void deployGeneric(Map deployArguments, Map versionArguments = [:]) {
         if (versionArguments.size() > 0) {
-            versionArguments.name = "Versioning"
-            versionGeneric(versionArguments as VersionStageArguments)
+            versionGeneric(versionArguments)
         }
-
-        /*
-         * Creates the various stages for the deploy
-         */
-        Closure createSubStage = { DeployStageArguments arguments ->
-            arguments.resultThreshold = ResultEnum.SUCCESS
-
-            GenericStageArguments args = arguments
-
-            DeployStageException preSetupException
-
-            if (args.stage) {
-                preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
-            }
-
-            // Execute the stage if this is a protected branch and the original should execute function
-            // are both true
-            args.shouldExecute = {
-                boolean shouldExecute = true
-
-                if (arguments.shouldExecute) {
-                    shouldExecute = arguments.shouldExecute()
-                }
-
-                return shouldExecute && _isProtectedBranch
-            }
-
-            args.stage = { String stageName ->
-                // If there were any exceptions during the setup, throw them here so proper email notifications
-                // can be sent.
-                if (preSetupException) {
-                    throw preSetupException
-                }
-
-                if (_control.build?.status != StageStatus.SUCCESS) {
-                    throw new DeployStageException("Build must be successful to deploy", args.name)
-                } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
-                    throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
-                } else if (_control.preDeployTests.size() == 0) {
-                    throw new DeployStageException("At least one test stage must be defined", args.name)
-                }
-
-                args.operation(stageName)
-            }
-
-            createStage(args)
-        }
-
+        
         deployArguments.name = "Deploy"
-        createSubStage(deployArguments as DeployStageArguments)
+
+        deployArguments.resultThreshold = ResultEnum.SUCCESS
+
+        GenericStageArguments args = deployArguments as GenericStageArguments
+
+        DeployStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        // Execute the stage if this is a protected branch and the original should execute function
+        // are both true
+        args.shouldExecute = {
+            boolean shouldExecute = true
+
+            if (deployArguments.shouldExecute) {
+                shouldExecute = deployArguments.shouldExecute()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
+
+        args.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (_control.build?.status != StageStatus.SUCCESS) {
+                throw new DeployStageException("Build must be successful to deploy", args.name)
+            } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+                throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
+            } else if (_control.preDeployTests.size() == 0) {
+                throw new DeployStageException("At least one test stage must be defined", args.name)
+            }
+
+            args.operation(stageName)
+        }
+
+        createStage(args)
     }
 
 //    Closure getExecutionForProtected(Closure input) {
