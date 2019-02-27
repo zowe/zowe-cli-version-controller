@@ -976,7 +976,7 @@ class NodeJSPipeline extends GenericPipeline {
         def expectCommand = """/usr/bin/expect <<EOD
 set timeout 60
 #npm login command, add whatever command-line arguments are necessary
-spawn npm login ${registry.url ? "--registry ${registry.url}" : ""} ${registry.scope ? "--scope=${registry.scope}" : ""}
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}${registry.scope ? " --scope=${registry.scope}" : ""}
 match_max 100000
 
 expect "Username"
@@ -1016,16 +1016,16 @@ expect {
      */
     protected void _logoutOfRegistry(RegistryConfig registry) {
         if (!registry.url) {
-            steps.echo "Attempting to logout of the default registry"
+            steps.echo "Attempting to logout of the default registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         } else {
-            steps.echo "Attempting to logout of the ${registry.url} registry"
+            steps.echo "Attempting to logout of the ${registry.url} registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         }
 
         try {
             // If the logout fails, don't blow up. Coded this way because a failed
             // logout doesn't mean we've failed. It also doesn't stop any other
             // logouts that might need to be done.
-            steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}"
+            steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}${registry.scope ? " --scope=${registry.scope}" : ""}"
         } catch (e) {
             steps.echo "Failed logout but will continue"
         }
