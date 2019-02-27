@@ -548,8 +548,6 @@ class NodeJSPipeline extends GenericPipeline {
         IllegalArgumentException deployException
         IllegalArgumentException versionException
 
-        // @TODO add dry run
-
         if (deployArguments.operation) {
             deployException = new IllegalArgumentException("operation is an invalid map object for deployArguments")
         }
@@ -581,7 +579,7 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
-                steps.sh "npm publish --tag ${branch.tag} --dry-run"
+                steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
@@ -589,7 +587,7 @@ class NodeJSPipeline extends GenericPipeline {
                         "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
                         "<p>Deployed Package: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
                         "<p>Package Tag: <b>${branch.tag}</b></p>" +
-                        "<p>Registry: <b>{$publishConfig.url}</b></p>",
+                        "<p>Registry: <b>$publishConfig.url</b></p>",
                     to: admins.emailList,
                     addProviders: false
                 )
