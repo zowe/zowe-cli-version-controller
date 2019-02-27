@@ -579,8 +579,7 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
-                // @TODO Remove dry-run
-                steps.sh "npm publish --tag ${branch.tag} --dry-run"
+                steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
@@ -968,16 +967,16 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         if (!registry.url) {
-            steps.echo "Attempting to login to the default registry"
+            steps.echo "Attempting to login to the default registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         } else {
-            steps.echo "Attempting to login to the ${registry.url} registry"
+            steps.echo "Attempting to login to the ${registry.url} registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         }
 
         // Bad formatting but this is probably the cleanest way to do the expect script
         def expectCommand = """/usr/bin/expect <<EOD
 set timeout 60
 #npm login command, add whatever command-line arguments are necessary
-spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""} ${registry.scope ? "--scope=${registry.scope}" : ""}
 match_max 100000
 
 expect "Username"

@@ -22,6 +22,13 @@ class RegistryConfig {
     String url
 
     /**
+     * The scope associated with the registry url
+     *
+     * <p>If this is null, no scope will be referenced</p>
+     */
+    String scope
+
+    /**
      * The email address of the user.
      */
     String email
