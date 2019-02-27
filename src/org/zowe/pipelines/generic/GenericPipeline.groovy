@@ -240,9 +240,11 @@ class GenericPipeline extends Pipeline {
      *
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
-    void versionGeneric(VersionStageArguments args = [:]) {
+    void versionGeneric(VersionStageArguments arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
-        args.resultThreshold = ResultEnum.SUCCESS
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        GenericStageArguments args = arguments
 
         VersionStageException preSetupException
 
@@ -256,8 +258,8 @@ class GenericPipeline extends Pipeline {
         args.shouldExecute = {
             boolean shouldExecute = true
 
-            if (args.shouldExecute) {
-                shouldExecute = args.shouldExecute()
+            if (arguments.shouldExecute) {
+                shouldExecute = arguments.shouldExecute()
             }
 
             return shouldExecute && _isProtectedBranch
@@ -348,8 +350,10 @@ class GenericPipeline extends Pipeline {
         /*
          * Creates the various stages for the deploy
          */
-        Closure createSubStage = { DeployStageArguments args ->
-            args.resultThreshold = ResultEnum.SUCCESS
+        Closure createSubStage = { DeployStageArguments arguments ->
+            arguments.resultThreshold = ResultEnum.SUCCESS
+
+            GenericStageArguments args = arguments
 
             DeployStageException preSetupException
 
@@ -362,8 +366,8 @@ class GenericPipeline extends Pipeline {
             args.shouldExecute = {
                 boolean shouldExecute = true
 
-                if (args.shouldExecute) {
-                    shouldExecute = args.shouldExecute()
+                if (arguments.shouldExecute) {
+                    shouldExecute = arguments.shouldExecute()
                 }
 
                 return shouldExecute && _isProtectedBranch
