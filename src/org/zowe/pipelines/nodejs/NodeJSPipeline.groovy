@@ -565,7 +565,7 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             if (deployArguments.customLogin) {
-                (deployArguments as DeployStageArguments).customLogin()
+                deployArguments.customLogin()
             } else {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
