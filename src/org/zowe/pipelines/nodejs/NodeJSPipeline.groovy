@@ -12,12 +12,12 @@ package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
-import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
-import org.zowe.pipelines.generic.exceptions.DeployStageException
-import org.zowe.pipelines.nodejs.arguments.NodeJSSetupArguments
+import org.zowe.pipelines.generic.exceptions.*
+import org.zowe.pipelines.nodejs.arguments.*
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
 
@@ -168,9 +168,6 @@ class NodeJSPipeline extends GenericPipeline {
      *                  the stage.
      */
     void build(Map arguments = [:]) {
-        // Force build to only happen on success, this cannot be overridden
-        arguments.resultThreshold = ResultEnum.SUCCESS
-
         buildGeneric(arguments + [operation: { String stageName ->
             // Either use a custom build script or the default npm run build
             if (arguments.operation) {
@@ -197,6 +194,223 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "rm -f $archiveName"
             }
         }])
+    }
+
+    /**
+     * Manage versions of a NodeJSPipeline package.
+     *
+     * <p>Arguments passed to this function will map to the
+     * {@link org.zowe.pipelines.generic.arguments.VersionStageArguments} class.</p>
+     *
+     * <p>The stage will be created with the {@link org.zowe.pipelines.generic.GenericPipeline#versionGeneric(java.util.Map)}
+     * method.</p>
+     *
+     * <p>In a Node JS Pipeline, this stage will always be executed on a protected branch. When in this stage,
+     * the build will determine the possible versions based on the {@link NodeJSProtectedBranch#prerelease} and
+     * {@link NodeJSProtectedBranch#level} properties.</p>
+     *
+     * <p>If the branch is set to {@link NodeJSProtectedBranch#autoDeploy}, then the default version will be used to publish
+     * (with any prerelease strings needed/removed). Otherwise, an email will be sent out asking what the new version
+     * should be. This email will list the possible versions and give a link back to the build. The build will wait
+     * for one of the {@link #admins} to open the link and select the version. If the wait period expires, the build will
+     * continue as if it was autoDeployed and will use the default version.</p>
+     *
+     * <p>If the build is approved, this new version will be committed to <b>package.json</b> and the build will continue.
+     * Otherwise, the build will stop at this step.</p>
+     *
+     * @Exceptions
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link IllegalArgumentException}</b></dt>
+     *         <dd>When versionArguments.operation is provided. This is an invalid parameter.</dd>
+     *         <dt><b>{@link org.zowe.pipelines.generic.exceptions.VersionStageException}</b></dt>
+     *         <dd>
+     *             When no pipeline admins are defined and auto deploy is false. Pipeline admins are used as approvers
+     *             for the build. If there are none, the build can never be approved.
+     *         </dd>
+     *         <dd>
+     *             A timeout of 1 Minute or less was specified. This would result in no wait for the version input
+     *             and is most likely a programming mistake.
+     *         </dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.VersionStageArguments} used to
+     *                  define the stage.
+     */
+    void version(Map arguments = [:]) {
+        IllegalArgumentException versionException
+
+        if (arguments.operation) {
+            versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
+        }
+
+        // Set the version operation for an npm pipeline
+        arguments.operation = { String stageName ->
+            if (versionException) {
+                throw versionException
+            }
+
+            // Get the package.json
+            def packageJSON = steps.readJSON file: 'package.json'
+
+            // Extract the base version
+            def baseVersion = packageJSON.version.split("-")[0]
+
+            // Extract the raw version
+            def rawVersion = baseVersion.split("\\.")
+
+            NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
+
+            // Format the prerelease to be applied to every item
+            String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
+
+            List<String> availableVersions = ["$baseVersion$prereleaseString"]
+
+            // closure function to make semver increment easier
+            Closure addOne = {String number ->
+                return Integer.parseInt(number) + 1
+            }
+
+            // This switch case has every statement fallthrough. This is so that we can add all the versions based
+            // on whichever has the lowest restriction
+            switch(branch.level) {
+                case SemverLevel.MAJOR:
+                    availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
+            // falls through
+                case SemverLevel.MINOR:
+                    availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
+            // falls through
+                case SemverLevel.PATCH:
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
+                    break
+            }
+
+            if (branch.autoDeploy) {
+                steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+            } else if (admins.size == 0) {
+                steps.echo "ERROR"
+                throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
+            } else {
+                Stage currentStage = getStage(stageName)
+
+                // Add a timeout of one minute less than the available stage execution time
+                // This will allow the versioning task at least 1 minute to update the files and
+                // move on to the next step.
+                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
+
+                if (timeout.time <= 0) {
+                    throw new VersionStageException("Unable to wait for input! Timeout for $stageName, must be greater than 1 minute." +
+                            "Timeout was ${currentStage.args.timeout.toString()}", stageName)
+                }
+
+                long startTime = System.currentTimeMillis()
+                try {
+                    // Sleep for 100 ms to ensure that the timeout catch logic will always work.
+                    // This implies that an abort within 100 ms of the timeout will result in
+                    // an ignore but who cares at this point.
+                    steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
+
+                    steps.timeout(time: timeout.time, unit: timeout.unit) {
+                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
+                                "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
+
+                        String versionList = ""
+                        List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
+
+                        // Work backwards because of how the versioning works.
+                        // patch is always the last element
+                        // minor is always the second to last element when present
+                        // major is always the third to last element when present
+                        // default is always at 0 and there can never be more than 4 items
+                        for (int i = availableVersions.size() - 1; i > 0; i--) {
+                            String version = versionText.removeAt(0)
+                            versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
+                                    "necessary prerelease strings attached.</li>$versionList"
+                        }
+
+                        bodyText += "$versionList</ul></p>" +
+                                "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
+                                "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
+                                "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
+
+                        sendHtmlEmail(
+                                subjectTag: "APPROVAL REQUIRED",
+                                body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                        "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText + _getChangeSummary(),
+                                to: admins.emailList,
+                                addProviders: false
+                        )
+
+                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                                submitter: admins.commaSeparated, submitterParameter: "DEPLOY_APPROVER",
+                                parameters: [
+                                        steps.choice(
+                                                name: "DEPLOY_VERSION",
+                                                choices: availableVersions,
+                                                description: "What version should be used?"
+                                        )
+                                ]
+
+                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                        steps.env.DEPLOY_PACKAGE = packageJSON.name
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                    }
+                } catch (FlowInterruptedException exception) {
+                    /*
+                     * Do some bs math to determine if we had a timeout because there is no other way.
+                     * Don't even suggest to me that there might be another way unless you can provide
+                     * the code that I couldn't find in 5 hours.
+                     *
+                     * The main problem is that when the timeout step kills the input step, the input
+                     * step fires out another FlowInterruptedException. This interrupted exception
+                     * takes precedent over the TimeoutException that should be thrown by the timeout step.
+                     *
+                     * Previously, I had checked to see if the exception.cause[0].user was SYSTEM and
+                     * would use that to indicate timeout. However this scenario happens for both a timeout
+                     * and a ui abort not on the input step. The consequence of this was that aborting
+                     * a build using the stop button would act like a timeout and the deploy would
+                     * auto-approve. This is not the desired behavior for an abort.
+                     *
+                     * It is because of these reasons that I have determined my cheeky timeout check
+                     * is the only feasible solution with the current state of Jenkins. If this
+                     * changes in the future, the logic can be revisited to adjust.
+                     *
+                     */
+                    if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
+                        steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
+                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                    } else {
+                        throw exception
+                    }
+                }
+            }
+
+            String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+
+            steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
+
+            sendHtmlEmail(
+                    subjectTag: "APPROVED",
+                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                            "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                            "<p>Approved: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
+                            "<p>Approved By: <b>${approveName}</b></p>",
+                    to: admins.emailList,
+                    addProviders: false
+            )
+
+            packageJSON.version = steps.env.DEPLOY_VERSION
+            steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
+            steps.sh "git add package.json"
+            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
+            gitPush()
+        }
+
+        super.versionGeneric(arguments)
     }
 
     /**
@@ -334,6 +548,8 @@ class NodeJSPipeline extends GenericPipeline {
         IllegalArgumentException deployException
         IllegalArgumentException versionException
 
+        // @TODO add dry run
+
         if (deployArguments.operation) {
             deployException = new IllegalArgumentException("operation is an invalid map object for deployArguments")
         }
@@ -348,21 +564,24 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            // Login to the registry
-            def npmRegistry = steps.sh returnStdout: true,
-                    script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
-            publishConfig.url = npmRegistry.trim()
+            if (deployArguments.customLogin) {
+                deployArguments.customLogin()
+            } else {
+                // Login to the registry
+                def npmRegistry = steps.sh returnStdout: true,
+                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+                publishConfig.url = npmRegistry.trim()
 
-            steps.sh "sudo npm config set registry ${publishConfig.url}"
+                steps.sh "sudo npm config set registry ${publishConfig.url}"
 
-            // Login to the publish registry
-            _loginToRegistry(publishConfig)
+                // Login to the publish registry
+                _loginToRegistry(publishConfig)
+            }
 
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
-                gitPush()
-                steps.sh "npm publish --tag ${branch.tag}"
+                steps.sh "npm publish --tag ${branch.tag} --dry-run"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
@@ -382,173 +601,179 @@ class NodeJSPipeline extends GenericPipeline {
             }
         }
 
-        // Set the version operation for an npm pipeline
-        versionArguments.operation = { String stageName ->
-            if (versionException) {
-                throw versionException
-            }
+        // Prevent versioning stage to be created by deployGeneric if no versionArguments were specified
+        if (versionArguments.size() <= 0) {
+            super.deployGeneric(deployArguments)
+        } else {
+            // Set the version operation for an npm pipeline
+            versionArguments.operation = { String stageName ->
+                if (versionException) {
+                    throw versionException
+                }
 
-            // Get the package.json
-            def packageJSON = steps.readJSON file: 'package.json'
+                // Get the package.json
+                def packageJSON = steps.readJSON file: 'package.json'
 
-            // Extract the base version
-            def baseVersion = packageJSON.version.split("-")[0]
+                // Extract the base version
+                def baseVersion = packageJSON.version.split("-")[0]
 
-            // Extract the raw version
-            def rawVersion = baseVersion.split("\\.")
+                // Extract the raw version
+                def rawVersion = baseVersion.split("\\.")
 
-            NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
+                NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
-            // Format the prerelease to be applied to every item
-            String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
+                // Format the prerelease to be applied to every item
+                String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            List<String> availableVersions = ["$baseVersion$prereleaseString"]
+                List<String> availableVersions = ["$baseVersion$prereleaseString"]
 
-            // closure function to make semver increment easier
-            Closure addOne = {String number ->
-                return Integer.parseInt(number) + 1
-            }
+                // closure function to make semver increment easier
+                Closure addOne = { String number ->
+                    return Integer.parseInt(number) + 1
+                }
 
-            // This switch case has every statement fallthrough. This is so that we can add all the versions based
-            // on whichever has the lowest restriction
-            switch(branch.level) {
-                case SemverLevel.MAJOR:
-                    availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
-                    // falls through
-                case SemverLevel.MINOR:
-                    availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
-                    // falls through
-                case SemverLevel.PATCH:
-                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
-                    break
-            }
+                // This switch case has every statement fallthrough. This is so that we can add all the versions based
+                // on whichever has the lowest restriction
+                switch (branch.level) {
+                    case SemverLevel.MAJOR:
+                        availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
+                // falls through
+                    case SemverLevel.MINOR:
+                        availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
+                // falls through
+                    case SemverLevel.PATCH:
+                        availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
+                        break
+                }
 
-            if (branch.autoDeploy) {
-                steps.env.DEPLOY_VERSION = availableVersions.get(0)
-                steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-            } else if (admins.size == 0) {
-                steps.echo "ERROR"
-                throw new DeployStageException(
-                        "No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.",
-                        stageName
-                )
-            } else {
-                Stage currentStage = getStage(stageName)
-
-                // Add a timeout of one minute less than the available stage execution time
-                // This will allow the versioning task at least 1 minute to update the files and
-                // move on to the next step.
-                StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
-
-                if (timeout.time <= 0) {
+                if (branch.autoDeploy) {
+                    steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                    steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+                } else if (admins.size == 0) {
+                    steps.echo "ERROR"
                     throw new DeployStageException(
-                            "Unable to wait for input! Timeout for $stageName, must be greater than 1 minute." +
-                                    " Timeout was ${currentStage.args.timeout.toString()}", stageName
+                            "No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.",
+                            stageName
                     )
-                }
+                } else {
+                    Stage currentStage = getStage(stageName)
 
-                long startTime = System.currentTimeMillis()
-                try {
-                    // Sleep for 100 ms to ensure that the timeout catch logic will always work.
-                    // This implies that an abort within 100 ms of the timeout will result in
-                    // an ignore but who cares at this point.
-                    steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
+                    // Add a timeout of one minute less than the available stage execution time
+                    // This will allow the versioning task at least 1 minute to update the files and
+                    // move on to the next step.
+                    StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
 
-                    steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
-                            "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
-
-                        String versionList = ""
-                        List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
-
-                        // Work backwards because of how the versioning works.
-                        // patch is always the last element
-                        // minor is always the second to last element when present
-                        // major is always the third to last element when present
-                        // default is always at 0 and there can never be more than 4 items
-                        for (int i = availableVersions.size() - 1; i > 0; i--) {
-                            String version = versionText.removeAt(0)
-                            versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
-                                "necessary prerelease strings attached.</li>$versionList"
-                        }
-
-                        bodyText += "$versionList</ul></p>" +
-                            "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
-                            "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
-                            "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
-
-                        sendHtmlEmail(
-                            subjectTag: "APPROVAL REQUIRED",
-                            body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText + _getChangeSummary(),
-                            to: admins.emailList,
-                            addProviders: false
+                    if (timeout.time <= 0) {
+                        throw new DeployStageException(
+                                "Unable to wait for input! Timeout for $stageName, must be greater than 1 minute." +
+                                        " Timeout was ${currentStage.args.timeout.toString()}", stageName
                         )
-
-                        def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                            submitter: admins.commaSeparated, submitterParameter: "DEPLOY_APPROVER",
-                            parameters: [
-                                steps.choice(
-                                    name: "DEPLOY_VERSION",
-                                    choices: availableVersions,
-                                    description: "What version should be used?"
-                                )
-                            ]
-
-                        steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
-                } catch (FlowInterruptedException exception) {
-                    /*
-                     * Do some bs math to determine if we had a timeout because there is no other way.
-                     * Don't even suggest to me that there might be another way unless you can provide
-                     * the code that I couldn't find in 5 hours.
-                     *
-                     * The main problem is that when the timeout step kills the input step, the input
-                     * step fires out another FlowInterruptedException. This interrupted exception
-                     * takes precedent over the TimeoutException that should be thrown by the timeout step.
-                     *
-                     * Previously, I had checked to see if the exception.cause[0].user was SYSTEM and
-                     * would use that to indicate timeout. However this scenario happens for both a timeout
-                     * and a ui abort not on the input step. The consequence of this was that aborting
-                     * a build using the stop button would act like a timeout and the deploy would
-                     * auto-approve. This is not the desired behavior for an abort.
-                     *
-                     * It is because of these reasons that I have determined my cheeky timeout check
-                     * is the only feasible solution with the current state of Jenkins. If this
-                     * changes in the future, the logic can be revisited to adjust.
-                     *
-                     */
-                    if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
-                        steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
-                    } else {
-                        throw exception
+
+                    long startTime = System.currentTimeMillis()
+                    try {
+                        // Sleep for 100 ms to ensure that the timeout catch logic will always work.
+                        // This implies that an abort within 100 ms of the timeout will result in
+                        // an ignore but who cares at this point.
+                        steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
+
+                        steps.timeout(time: timeout.time, unit: timeout.unit) {
+                            String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
+                                    "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
+
+                            String versionList = ""
+                            List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
+
+                            // Work backwards because of how the versioning works.
+                            // patch is always the last element
+                            // minor is always the second to last element when present
+                            // major is always the third to last element when present
+                            // default is always at 0 and there can never be more than 4 items
+                            for (int i = availableVersions.size() - 1; i > 0; i--) {
+                                String version = versionText.removeAt(0)
+                                versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
+                                        "necessary prerelease strings attached.</li>$versionList"
+                            }
+
+                            bodyText += "$versionList</ul></p>" +
+                                    "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
+                                    "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
+                                    "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
+
+                            sendHtmlEmail(
+                                    subjectTag: "APPROVAL REQUIRED",
+                                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                            "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText + _getChangeSummary(),
+                                    to: admins.emailList,
+                                    addProviders: false
+                            )
+
+                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
+                                    submitter: admins.commaSeparated, submitterParameter: "DEPLOY_APPROVER",
+                                    parameters: [
+                                            steps.choice(
+                                                    name: "DEPLOY_VERSION",
+                                                    choices: availableVersions,
+                                                    description: "What version should be used?"
+                                            )
+                                    ]
+
+                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
+                            steps.env.DEPLOY_PACKAGE = packageJSON.name
+                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                        }
+                    } catch (FlowInterruptedException exception) {
+                        /*
+                         * Do some bs math to determine if we had a timeout because there is no other way.
+                         * Don't even suggest to me that there might be another way unless you can provide
+                         * the code that I couldn't find in 5 hours.
+                         *
+                         * The main problem is that when the timeout step kills the input step, the input
+                         * step fires out another FlowInterruptedException. This interrupted exception
+                         * takes precedent over the TimeoutException that should be thrown by the timeout step.
+                         *
+                         * Previously, I had checked to see if the exception.cause[0].user was SYSTEM and
+                         * would use that to indicate timeout. However this scenario happens for both a timeout
+                         * and a ui abort not on the input step. The consequence of this was that aborting
+                         * a build using the stop button would act like a timeout and the deploy would
+                         * auto-approve. This is not the desired behavior for an abort.
+                         *
+                         * It is because of these reasons that I have determined my cheeky timeout check
+                         * is the only feasible solution with the current state of Jenkins. If this
+                         * changes in the future, the logic can be revisited to adjust.
+                         *
+                         */
+                        if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
+                            steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
+                            steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                        } else {
+                            throw exception
+                        }
                     }
                 }
+                String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+
+                steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
+
+                sendHtmlEmail(
+                        subjectTag: "APPROVED",
+                        body: "<h3>${steps.env.JOB_NAME}</h3>" +
+                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
+                                "<p>Approved: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
+                                "<p>Approved By: <b>${approveName}</b></p>",
+                        to: admins.emailList,
+                        addProviders: false
+                )
+
+                packageJSON.version = steps.env.DEPLOY_VERSION
+                steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
+                steps.sh "git add package.json"
+                gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
+                gitPush()
             }
-            String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
-            steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
-
-            sendHtmlEmail(
-                    subjectTag: "APPROVED",
-                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                            "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                            "<p>Approved: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
-                            "<p>Approved By: <b>${approveName}</b></p>",
-                    to: admins.emailList,
-                    addProviders: false
-            )
-
-            packageJSON.version = steps.env.DEPLOY_VERSION
-            steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
-            steps.sh "git add package.json"
-            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
+            super.deployGeneric(deployArguments, versionArguments)
         }
-
-        super.deployGeneric(deployArguments, versionArguments)
     }
 
     /**

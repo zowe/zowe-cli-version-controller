@@ -4,10 +4,14 @@
 # Ignore Gradle build output directory
 build
 
+bin
+out
+
 .idea
 .vscode
 target
-
+.project
+*.iml
 
 # ignored files for the inner mocked project used for testing the shared pipeline
 mock_project

@@ -10,21 +10,17 @@
 
 package org.zowe.pipelines.generic
 
-
+import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
-import org.zowe.pipelines.base.models.ResultEnum
-import org.zowe.pipelines.generic.arguments.BuildStageArguments
-import org.zowe.pipelines.generic.arguments.GenericSetupArguments
-import org.zowe.pipelines.generic.arguments.GenericStageArguments
-import org.zowe.pipelines.generic.arguments.TestStageArguments
+import org.zowe.pipelines.base.enums.ResultEnum
+import org.zowe.pipelines.base.enums.StageStatus
+import org.zowe.pipelines.base.models.Stage
+import org.zowe.pipelines.generic.arguments.*
 import org.zowe.pipelines.generic.enums.BuildType
 import org.zowe.pipelines.generic.enums.GitOperation
-import org.zowe.pipelines.generic.exceptions.git.BehindRemoteException
-import org.zowe.pipelines.generic.exceptions.git.GitException
-import org.zowe.pipelines.generic.exceptions.git.IllegalBuildException
+import org.zowe.pipelines.generic.exceptions.git.*
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
-
 import java.util.regex.Pattern
 
 /**
@@ -105,14 +101,9 @@ class GenericPipeline extends Pipeline {
     GitConfig gitConfig
 
     /**
-     * A boolean that tracks if the build step was run. When false, the build still hasn't completed
+     * More control variables for the pipeline.
      */
-    protected boolean _didBuild = false
-
-    /**
-     * A boolean that tracks if a single test was run. When false, there hasn't been a test run yet.
-     */
-    protected boolean _didTest = false
+    protected GenericPipelineControl _control = new GenericPipelineControl()
 
     /**
      * Constructs the class.
@@ -129,7 +120,6 @@ class GenericPipeline extends Pipeline {
      */
     GenericPipeline(steps) {
         super(steps)
-
         changeInfo = new ChangeInformation(steps)
     }
 
@@ -148,7 +138,7 @@ class GenericPipeline extends Pipeline {
      *     <dd>
      *         Runs the build of your application. The build stage also ignores any
      *         {@link BuildStageArguments#resultThreshold} provided and only runs
-     *         on {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}.</p>
+     *         on {@link ResultEnum#SUCCESS}.</p>
      *     </dd>
      * </dl>
      *
@@ -174,14 +164,16 @@ class GenericPipeline extends Pipeline {
      *                  the stage.
      */
     void buildGeneric(Map arguments = [:]) {
+        BuildStageException preSetupException
+
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
         BuildStageArguments args = arguments
 
-        BuildStageException preSetupException
-
-        if (args.stage) {
+        if (_control.build) {
+            preSetupException = new BuildStageException("Only one build step is allowed per pipeline.", args.name)
+        } else if (args.stage) {
             preSetupException = new BuildStageException("arguments.stage is an invalid option for buildGeneric", args.name)
         }
 
@@ -193,16 +185,109 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
-            if (_didBuild) {
-                throw new BuildStageException("Only one build step is allowed per pipeline.", args.name)
+            args.operation(stageName)
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage build = createStage(args)
+        if (!_control.build) {
+            _control.build = build
+        }
+    }
+
+    /**
+     * Creates a stage that will execute a version bump
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link VersionStageArguments} class. The
+     * {@link VersionStageArguments#operation} will be executed after all checks are complete. This must
+     * be provided or a {@link java.lang.NullPointerException} will be encountered.</p>
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Versioning: {@link VersionStageArguments#name}</b></dt>
+     *     <dd>This stage is responsible for bumping the version of your application source.</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     This stage will adhere to the following conditions:
+     *
+     *     <ul>
+     *         <li>The stage will only execute if the current build result is {@link ResultEnum#SUCCESS} or higher.</li>
+     *         <li>The stage will only execute if the current branch is protected.</li>
+     *     </ul>
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link VersionStageException}</b></dt>
+     *         <dd>When stage is provided as an argument.</dd>
+     *         <dd>When a test stage has not executed.</dd>
+     *         <dt><b>{@link NullPointerException}</b></dt>
+     *         <dd>When an operation is not provided for the stage.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @Note This method was intended to be called {@code version} but had to be named
+     * {@code versionGeneric} due to the issues described in {@link org.zowe.pipelines.base.Pipeline}.
+     *
+     * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
+     */
+    void versionGeneric(Map arguments = [:]) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        GenericStageArguments args = arguments as GenericStageArguments
+
+        VersionStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        args.name = "Versioning: ${arguments.name}"
+
+        // Execute the stage if this is a protected branch and the original should execute function are both true
+        args.shouldExecute = {
+            boolean shouldExecute = true
+
+            if (arguments.shouldExecute) {
+                shouldExecute = arguments.shouldExecute()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
+
+        args.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (_control.build?.status != StageStatus.SUCCESS) {
+                throw new VersionStageException("Build must be successful to deploy", args.name)
+            } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+                throw new VersionStageException("All test stages before deploy must be successful or skipped!", args.name)
+            } else if (_control.preDeployTests.size() == 0) {
+                throw new VersionStageException("At least one test stage must be defined", args.name)
             }
 
             args.operation(stageName)
-
-            _didBuild = true
         }
 
-        createStage(args)
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage version = createStage(args)
+        if (!_control.version) {
+            _control.version = version
+        }
     }
 
     /**
@@ -227,7 +312,7 @@ class GenericPipeline extends Pipeline {
      *
      *     <ul>
      *         <li>The stage will only execute if the current build result is
-     *         {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS} or higher.</li>
+     *         {@link ResultEnum#SUCCESS} or higher.</li>
      *         <li>The stage will only execute if the current branch is protected.</li>
      *     </ul>
      * </p>
@@ -257,63 +342,66 @@ class GenericPipeline extends Pipeline {
      *                         {@code versionArguments.operation} must be provided.
      */
     void deployGeneric(Map deployArguments, Map versionArguments = [:]) {
-        if (deployArguments.name) {
-            deployArguments.name = "Deploy: ${deployArguments.name}"
-        } else {
-            deployArguments.name = "Deploy"
-        }
-
-        /*
-         * Creates the various stages for the deploy
-         */
-        Closure createSubStage = { Map arguments ->
-            arguments.resultThreshold = ResultEnum.SUCCESS
-
-            GenericStageArguments args = arguments
-
-            DeployStageException preSetupException
-
-            if (args.stage) {
-                preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
-            }
-
-            // Execute the stage if this is a protected branch and the original should execute function
-            // are both true
-            args.shouldExecute = {
-                boolean shouldExecute = true
-
-                if (arguments.shouldExecute) {
-                    shouldExecute = arguments.shouldExecute()
-                }
-
-                return shouldExecute && _isProtectedBranch
-            }
-
-            args.stage = { String stageName ->
-                // If there were any exceptions during the setup, throw them here so proper email notifications
-                // can be sent.
-                if (preSetupException) {
-                    throw preSetupException
-                }
-
-                if (!_didTest) {
-                    throw new DeployStageException("A test must be run before the pipeline can deploy", args.name)
-                }
-
-                args.operation(stageName)
-            }
-
-            createStage(args)
-        }
-
-
         if (versionArguments.size() > 0) {
-            versionArguments.name = "Versioning"
-            createSubStage(versionArguments)
+            versionGeneric(versionArguments)
         }
 
-        createSubStage(deployArguments)
+        deployArguments.resultThreshold = ResultEnum.SUCCESS
+
+        GenericStageArguments args = deployArguments as GenericStageArguments
+
+        args.name = "Deploy: ${deployArguments.name}"
+
+        DeployStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+        }
+
+        // Execute the stage if this is a protected branch and the original should execute function
+        // are both true
+        args.shouldExecute = {
+            boolean shouldExecute = true
+
+            if (deployArguments.shouldExecute) {
+                shouldExecute = deployArguments.shouldExecute()
+            }
+
+            return shouldExecute && _isProtectedBranch
+        }
+
+        args.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications
+            // can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (_control.build?.status != StageStatus.SUCCESS) {
+                throw new DeployStageException("Build must be successful to deploy", args.name)
+            } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+                throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
+            } else if (_control.preDeployTests.size() == 0) {
+                throw new DeployStageException("At least one test stage must be defined", args.name)
+            }
+
+            args.operation(stageName)
+        }
+
+        createStage(args)
     }
+
+//    Closure getExecutionForProtected(Closure input) {
+//        return {
+//            boolean shouldExecute = true
+//
+//            if (input) {
+//                shouldExecute = input()
+//            }
+//
+//            return shouldExecute && _isProtectedBranch
+//        }
+//    }
 
     /**
      * Signal that no more stages will be added and begin pipeline execution.
@@ -377,6 +465,7 @@ class GenericPipeline extends Pipeline {
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      */
     boolean gitPush() throws GitException {
+        // @TODO add dry run flag
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
@@ -387,7 +476,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --verbose"
+            steps.sh "git push --verbose --dry-run"
             return true
         } else {
             return false
@@ -523,7 +612,7 @@ class GenericPipeline extends Pipeline {
      *
      *         <p>
      *             The test stage will execute by default if the current build result is greater than or
-     *             equal to {@link org.zowe.pipelines.base.models.ResultEnum#UNSTABLE}. If a different status is passed, that will take
+     *             equal to {@link ResultEnum#UNSTABLE}. If a different status is passed, that will take
      *             precedent.
      *         </p>
      *
@@ -585,9 +674,7 @@ class GenericPipeline extends Pipeline {
             // can be sent.
             if (preSetupException) {
                 throw preSetupException
-            }
-
-            if (!_didBuild) {
+            } else if (_control.build?.status != StageStatus.SUCCESS) {
                 throw new TestStageException("Tests cannot be run before the build has completed", args.name)
             }
 
@@ -661,11 +748,13 @@ class GenericPipeline extends Pipeline {
             } else if (args.coverageResults) {
                 steps.echo "WARNING: Cobertura file not detected, skipping"
             }
-
-            _didTest = true
         }
 
-        createStage(args)
+        // Create the stage and ensure that the tests are properly added.
+        Stage test = createStage(args)
+        if (!(_control.version || _control.deploy)) {
+            _control.preDeployTests += test
+        }
     }
 
     /**

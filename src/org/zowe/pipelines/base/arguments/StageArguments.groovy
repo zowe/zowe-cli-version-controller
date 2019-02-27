@@ -10,7 +10,7 @@
 
 package org.zowe.pipelines.base.arguments
 
-import org.zowe.pipelines.base.models.ResultEnum
+import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.models.StageTimeout
 
 /**
@@ -66,7 +66,7 @@ class StageArguments {
      * <p>For more information about the skip precedent, see
      * {@link org.zowe.pipelines.base.Pipeline#createStage(StageArguments)}</p>
      *
-     * @default {@link org.zowe.pipelines.base.models.ResultEnum#SUCCESS}
+     * @default {@link ResultEnum#SUCCESS}
      */
     ResultEnum resultThreshold = ResultEnum.SUCCESS
 

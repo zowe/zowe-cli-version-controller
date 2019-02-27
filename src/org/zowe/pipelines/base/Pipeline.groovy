@@ -12,6 +12,8 @@ package org.zowe.pipelines.base
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.arguments.*
+import org.zowe.pipelines.base.enums.ResultEnum
+import org.zowe.pipelines.base.enums.StageStatus
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
 
@@ -145,21 +147,21 @@ class Pipeline {
      * Images embedded in notification emails depending on the status of the build.
      */
     Map<String, List<String>> notificationImages = [
-            SUCCESS : [
-                    'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
-                    'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
-            ],
-            UNSTABLE: [
-                    'https://i.imgur.com/fV89ZD8.png',  /*not sure if*/
-                    'https://media.giphy.com/media/rmRUASq4WujsY/giphy.gif' /*f1 tires fly off*/
-            ],
-            FAILURE : [
-                    'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
-                    'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
-            ],
-            ABORTED : [
-                    'https://i.imgur.com/Zq0iBJK.jpg' /* surprised pikachu */
-            ]
+        SUCCESS : [
+            'https://i.imgur.com/ixx5WSq.png', /*happy seal*/
+            'https://i.imgur.com/jiCQkYj.png'  /*happy puppy*/
+        ],
+        UNSTABLE: [
+            'https://i.imgur.com/fV89ZD8.png',  /*not sure if*/
+            'https://media.giphy.com/media/rmRUASq4WujsY/giphy.gif' /*f1 tires fly off*/
+        ],
+        FAILURE : [
+            'https://i.imgur.com/iQ4DuYL.png',  /*this is fine fire */
+            'https://media.giphy.com/media/3X0nMYG46US2c/giphy.gif' /*terminator sink into lava*/
+        ],
+        ABORTED : [
+            'https://i.imgur.com/Zq0iBJK.jpg' /* surprised pikachu */
+        ]
     ]
 
     /**
@@ -176,14 +178,14 @@ class Pipeline {
     ProtectedBranches<ProtectedBranch> protectedBranches = new ProtectedBranches<ProtectedBranch>(ProtectedBranch.class)
 
     /**
+     * This control variable represents internal states of items in the pipeline.
+     */
+    protected PipelineControl _control = new PipelineControl()
+
+    /**
      * Tracks if the current branch is protected.
      */
     protected boolean _isProtectedBranch = false
-
-    /**
-     * Tracks if the setup method was called.
-     */
-    protected boolean _setupCalled = false
 
     /**
      * Tracks if the remaining stages should be skipped.
@@ -264,8 +266,9 @@ class Pipeline {
      * its execute phase.</p>
      *
      * @param args The arguments that define the stage.
+     * @return The created {@link Stage}.
      */
-    final void createStage(StageArguments args) {
+    final Stage createStage(StageArguments args) {
         // @FUTURE allow easy way for create stage to specify build parameters
         Stage stage = new Stage(args: args, name: args.name, order: _stages.size() + 1)
 
@@ -285,9 +288,12 @@ class Pipeline {
         stage.execute = {
             steps.stage(args.name) {
                 steps.timeout(time: args.timeout.time, unit: args.timeout.unit) {
+                    stage.status = StageStatus.EXECUTE
+
                     // Skips the stage when called with a reason code
                     Closure skipStage = { reason ->
                         steps.echo "Stage Skipped: \"${args.name}\" Reason: ${reason}"
+                        stage.status = StageStatus.SKIP
                         Utils.markStageSkippedForConditional(args.name)
                     }
 
@@ -299,9 +305,9 @@ class Pipeline {
 
                     _closureWrapper(stage) {
                         // First check that setup was called first
-                        if (!(_setupCalled && _stages.firstStageToExecute.name == _SETUP_STAGE_NAME)) {
+                        if ((!_control.setup || _control.setup.status < StageStatus.SUCCESS) && stage.name != _SETUP_STAGE_NAME) {
                             throw new StageException(
-                                    "Pipeline setup not complete, please execute setup() on the instantiated BasePipeline class",
+                                    "Pipeline setup not complete, please execute setup() on the instantiated Pipeline class",
                                     args.name
                             )
                         } else if (!steps.currentBuild.resultIsBetterOrEqualTo(args.resultThreshold.value)) {
@@ -318,7 +324,6 @@ class Pipeline {
                         else {
                             steps.echo "Executing stage ${args.name}"
 
-                            stage.wasExecuted = true
                             if (args.isSkippable) {
                                 steps.echo "This step can be skipped by setting the `${_getStageSkipOption(stage)}` option to true"
                             }
@@ -334,6 +339,7 @@ class Pipeline {
                             steps.withEnv(environment) {
                                 _closureWrapper(stage) {
                                     args.stage(stage.name)
+                                    stage.status = StageStatus.SUCCESS
                                 }
                             }
                         }
@@ -341,18 +347,21 @@ class Pipeline {
                 }
             }
         }
+
+        return stage
     }
 
     /**
      * Creates a new stage to be run in the Jenkins pipeline.
      *
      * @param arguments A map of arguments that can be instantiated to a {@link StageArguments} instance.
+     * @return The created {@link Stage}.
      *
      * @see #createStage(StageArguments)
      */
-    final void createStage(Map arguments) {
+    final Stage createStage(Map arguments) {
         // Call the overloaded method
-        createStage(arguments as StageArguments)
+        return createStage(arguments as StageArguments)
     }
 
     /**
@@ -535,9 +544,8 @@ class Pipeline {
      * @param timeouts The timeouts for the added stages.
      */
     void setupBase(SetupArguments timeouts) {
-        _setupCalled = true
-
-        createStage(name: _SETUP_STAGE_NAME, stage: {
+        // Create the stage and hold the variable for the future
+        Stage setup = createStage(name: _SETUP_STAGE_NAME, stage: {
             steps.echo "Setup was called first"
 
             if (_stages.firstFailingStage) {
@@ -550,6 +558,14 @@ class Pipeline {
                 steps.echo "No problems with pre-initialization of pipeline :)"
             }
         }, isSkippable: false, timeout: timeouts.setup)
+
+        // Check for duplicate setup call
+        if (_control.setup) {
+            _stages.firstFailingStage = _control.setup
+            _control.setup.exception = new StageException("Setup was called twice!", _control.setup.name)
+        } else {
+            _control.setup = setup
+        }
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
@@ -583,6 +599,7 @@ class Pipeline {
 
             setResult(ResultEnum.FAILURE)
             stage.exception = e
+            stage.status = StageStatus.FAIL
             throw e
         } finally {
             stage.endOfStepBuildStatus = steps.currentBuild.currentResult
@@ -590,6 +607,7 @@ class Pipeline {
             // Don't alert of the build status if the stage already has an exception
             if (!stage.exception && steps.currentBuild.resultIsWorseOrEqualTo('UNSTABLE')) {
                 // Add the exception of the bad build status
+                stage.status = StageStatus.FAIL
                 stage.exception = new StageException("Stage exited with a result of UNSTABLE or worse", stage.name)
                 _stages.firstFailingStage = stage
             }

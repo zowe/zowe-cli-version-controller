@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-package org.zowe.pipelines.base.models
+package org.zowe.pipelines.base.enums
 
 /**
  * Enumeration of the various build statuses accepted by Jenkins
