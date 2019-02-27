@@ -579,7 +579,7 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
-                steps.sh "npm publish --tag ${branch.tag}"
+                steps.sh "npm publish --tag ${branch.tag} --dry-run"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",

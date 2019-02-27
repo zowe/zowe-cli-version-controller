@@ -475,7 +475,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --verbose"
+            steps.sh "git push --verbose --dry-run"
             return true
         } else {
             return false
