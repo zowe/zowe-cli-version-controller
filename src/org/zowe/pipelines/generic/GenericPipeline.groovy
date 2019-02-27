@@ -252,7 +252,7 @@ class GenericPipeline extends Pipeline {
             preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
         }
 
-        args.name = "Versioning: ${args.name}"
+        args.name = "Versioning: ${arguments.name}"
 
         // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {
@@ -350,7 +350,7 @@ class GenericPipeline extends Pipeline {
 
         GenericStageArguments args = deployArguments as GenericStageArguments
 
-        args.name = "Deploy: ${args.name}"
+        args.name = "Deploy: ${deployArguments.name}"
 
         DeployStageException preSetupException
 
