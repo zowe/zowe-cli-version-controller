@@ -570,15 +570,15 @@ class NodeJSPipeline extends GenericPipeline {
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
                 publishConfig.url = npmRegistry.trim()
 
-                steps.sh "cat .npmrc"
-                steps.sh "cat ~/.npmrc"
-                steps.sh "sudo cat ~/.npmrc"
+                steps.sh "cat .npmrc || exit 0"
+                steps.sh "cat ~/.npmrc || exit 0"
+                steps.sh "sudo cat ~/.npmrc || exit 0"
 
                 steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
 
-                steps.sh "cat .npmrc"
-                steps.sh "cat ~/.npmrc"
-                steps.sh "sudo cat ~/.npmrc"
+                steps.sh "cat .npmrc || exit 0"
+                steps.sh "cat ~/.npmrc || exit 0"
+                steps.sh "sudo cat ~/.npmrc || exit 0"
 
                 // Login to the publish registry
                 _loginToRegistry(publishConfig)
