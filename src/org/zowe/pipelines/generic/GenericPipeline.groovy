@@ -345,12 +345,12 @@ class GenericPipeline extends Pipeline {
         if (versionArguments.size() > 0) {
             versionGeneric(versionArguments)
         }
-        
-        deployArguments.name = "Deploy"
 
         deployArguments.resultThreshold = ResultEnum.SUCCESS
 
         GenericStageArguments args = deployArguments as GenericStageArguments
+
+        args.name = "Deploy: ${args.name}"
 
         DeployStageException preSetupException
 
