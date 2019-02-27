@@ -570,7 +570,15 @@ class NodeJSPipeline extends GenericPipeline {
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
                 publishConfig.url = npmRegistry.trim()
 
+                steps.sh "cat .npmrc"
+                steps.sh "cat ~/.npmrc"
+                steps.sh "sudo cat ~/.npmrc"
+
                 steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
+
+                steps.sh "cat .npmrc"
+                steps.sh "cat ~/.npmrc"
+                steps.sh "sudo cat ~/.npmrc"
 
                 // Login to the publish registry
                 _loginToRegistry(publishConfig)
@@ -579,6 +587,7 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
+                steps.sh "rm -f .npmrc || exit 0"
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
