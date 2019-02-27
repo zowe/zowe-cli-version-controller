@@ -252,8 +252,7 @@ class GenericPipeline extends Pipeline {
             preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
         }
 
-        // @TODO Check why arguments.name is null
-        args.name = "Versioning: ${arguments.name}"
+        args.name = "Versioning${arguments.name ? ": ${arguments.name}" : ""}"
 
         // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {
@@ -274,13 +273,11 @@ class GenericPipeline extends Pipeline {
             }
 
             if (_control.build?.status != StageStatus.SUCCESS) {
-                // @TODO Add this back later
-//                throw new VersionStageException("Build must be successful to deploy", args.name)
+                throw new VersionStageException("Build must be successful to deploy", args.name)
             } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
                 throw new VersionStageException("All test stages before deploy must be successful or skipped!", args.name)
             } else if (_control.preDeployTests.size() == 0) {
-                // @TODO Add this back later
-//                throw new VersionStageException("At least one test stage must be defined", args.name)
+                throw new VersionStageException("At least one test stage must be defined", args.name)
             }
 
             args.operation(stageName)
@@ -353,7 +350,7 @@ class GenericPipeline extends Pipeline {
 
         GenericStageArguments args = deployArguments as GenericStageArguments
 
-        args.name = "Deploy: ${deployArguments.name}"
+        args.name = "Deploy${deployArguments.name ? ": ${deployArguments.name}" : ""}"
 
         DeployStageException preSetupException
 
@@ -381,13 +378,11 @@ class GenericPipeline extends Pipeline {
             }
 
             if (_control.build?.status != StageStatus.SUCCESS) {
-                // @TODO Add this back later
-//                throw new DeployStageException("Build must be successful to deploy", args.name)
+                throw new DeployStageException("Build must be successful to deploy", args.name)
             } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
                 throw new DeployStageException("All test stages before deploy must be successful or skipped!", args.name)
             } else if (_control.preDeployTests.size() == 0) {
-                // @TODO Add this back later
-//                throw new DeployStageException("At least one test stage must be defined", args.name)
+                throw new DeployStageException("At least one test stage must be defined", args.name)
             }
 
             args.operation(stageName)
@@ -480,8 +475,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            // @TODO Remove dry-run
-            steps.sh "git push --verbose --dry-run"
+            steps.sh "git push --verbose"
             return true
         } else {
             return false
