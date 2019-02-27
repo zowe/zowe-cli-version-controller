@@ -534,6 +534,9 @@ class NodeJSPipeline extends GenericPipeline {
      *         publish command will be executed with the {@link NodeJSProtectedBranch#tag} specified.
      *         On successful deploy, an email will be sent out to the {@link #admins}.</p>
      *
+     *         <p>Note that the local npmrc configuration file will not affect publishing in any way.
+     *         This step only considers the configuration parameters provided in {@link #publishConfig}.</p>
+     *
      *         <dl><dt><b>Exceptions:</b></dt><dd>
      *         <dl>
      *             <dt><b>{@link IllegalArgumentException}</b></dt>
@@ -571,15 +574,7 @@ class NodeJSPipeline extends GenericPipeline {
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
                 publishConfig.url = npmRegistry.trim()
 
-                steps.sh "cat .npmrc || exit 0"
-                steps.sh "cat ~/.npmrc || exit 0"
-                steps.sh "sudo cat ~/.npmrc || exit 0"
-
                 steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
-
-                steps.sh "cat .npmrc || exit 0"
-                steps.sh "cat ~/.npmrc || exit 0"
-                steps.sh "sudo cat ~/.npmrc || exit 0"
 
                 // Login to the publish registry
                 _loginToRegistry(publishConfig)
@@ -588,7 +583,9 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
+                // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
+
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
