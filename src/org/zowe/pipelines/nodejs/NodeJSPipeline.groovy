@@ -570,7 +570,7 @@ class NodeJSPipeline extends GenericPipeline {
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
                 publishConfig.url = npmRegistry.trim()
 
-                steps.sh "sudo npm config set registry ${publishConfig.url}"
+                steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
 
                 // Login to the publish registry
                 _loginToRegistry(publishConfig)
