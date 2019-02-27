@@ -18,7 +18,7 @@ import org.zowe.pipelines.generic.arguments.GenericStageArguments
  */
 class DeployStageArguments extends GenericStageArguments {
     /**
-     * The name of the Versioning step.
+     * The name of the Deploy step.
      *
      * @default {@code "Package"}
      */

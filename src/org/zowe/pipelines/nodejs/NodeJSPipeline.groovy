@@ -12,10 +12,10 @@ package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
-import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
+import org.zowe.pipelines.generic.arguments.VersionStageArguments
 import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
 import org.zowe.pipelines.nodejs.models.*
@@ -69,6 +69,7 @@ import java.util.concurrent.TimeUnit
  *     pipeline.registryConfig = [
  *         [email: 'email@example.com', credentialsId: 'credentials-id'],
  *         [url: 'https://registry.com', email: 'email@example.com', credentialsId: 'credentials-id']
+ *         [url: 'https://registry.com', email: 'email@example.com', credentialsId: 'credentials-id', scope: '@myOrg']
  *     ]
  *
  *     // MUST BE CALLED FIRST
@@ -533,6 +534,9 @@ class NodeJSPipeline extends GenericPipeline {
      *         publish command will be executed with the {@link NodeJSProtectedBranch#tag} specified.
      *         On successful deploy, an email will be sent out to the {@link #admins}.</p>
      *
+     *         <p>Note that the local npmrc configuration file will not affect publishing in any way.
+     *         This step only considers the configuration parameters provided in {@link #publishConfig}.</p>
+     *
      *         <dl><dt><b>Exceptions:</b></dt><dd>
      *         <dl>
      *             <dt><b>{@link IllegalArgumentException}</b></dt>
@@ -570,7 +574,7 @@ class NodeJSPipeline extends GenericPipeline {
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
                 publishConfig.url = npmRegistry.trim()
 
-                steps.sh "sudo npm config set registry ${publishConfig.url}"
+                steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
 
                 // Login to the publish registry
                 _loginToRegistry(publishConfig)
@@ -579,6 +583,9 @@ class NodeJSPipeline extends GenericPipeline {
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
             try {
+                // Prevent npm publish from being affected by the local npmrc file
+                steps.sh "rm -f .npmrc || exit 0"
+
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
@@ -967,16 +974,16 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         if (!registry.url) {
-            steps.echo "Attempting to login to the default registry"
+            steps.echo "Attempting to login to the default registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         } else {
-            steps.echo "Attempting to login to the ${registry.url} registry"
+            steps.echo "Attempting to login to the ${registry.url} registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         }
 
         // Bad formatting but this is probably the cleanest way to do the expect script
         def expectCommand = """/usr/bin/expect <<EOD
 set timeout 60
 #npm login command, add whatever command-line arguments are necessary
-spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}
+spawn npm login ${registry.url ? "--registry ${registry.url}" : ""}${registry.scope ? " --scope=${registry.scope}" : ""}
 match_max 100000
 
 expect "Username"
@@ -1016,16 +1023,16 @@ expect {
      */
     protected void _logoutOfRegistry(RegistryConfig registry) {
         if (!registry.url) {
-            steps.echo "Attempting to logout of the default registry"
+            steps.echo "Attempting to logout of the default registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         } else {
-            steps.echo "Attempting to logout of the ${registry.url} registry"
+            steps.echo "Attempting to logout of the ${registry.url} registry${registry.scope ? " under the scope: ${registry.scope}" : ""}"
         }
 
         try {
             // If the logout fails, don't blow up. Coded this way because a failed
             // logout doesn't mean we've failed. It also doesn't stop any other
             // logouts that might need to be done.
-            steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}"
+            steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}${registry.scope ? " --scope=${registry.scope}" : ""}"
         } catch (e) {
             steps.echo "Failed logout but will continue"
         }
