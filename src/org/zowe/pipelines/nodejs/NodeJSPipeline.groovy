@@ -12,7 +12,6 @@ package org.zowe.pipelines.nodejs
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.ProtectedBranches
-import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
@@ -69,6 +68,7 @@ import java.util.concurrent.TimeUnit
  *     pipeline.registryConfig = [
  *         [email: 'email@example.com', credentialsId: 'credentials-id'],
  *         [url: 'https://registry.com', email: 'email@example.com', credentialsId: 'credentials-id']
+ *         [url: 'https://registry.com', email: 'email@example.com', credentialsId: 'credentials-id', scope: '@myOrg']
  *     ]
  *
  *     // MUST BE CALLED FIRST
