@@ -88,7 +88,11 @@ node('ca-jenkins-agent') {
         emailext(
             to: recipients,
             subject: "[${currentBuild.currentResult}] Branch propagated: ${params.SOURCE} => ${params.TARGET}",
-            body: "Build result: ${currentBuild.absoluteUrl}"
+            body: """
+            <p>Repository: ${params.GIT_URL}</p>
+            <p>File(s) overwritten: ${params.FILE_OVERWRITE}</p>
+            <p>Build result: ${currentBuild.absoluteUrl}</p>
+            """
         );
     }
 }
