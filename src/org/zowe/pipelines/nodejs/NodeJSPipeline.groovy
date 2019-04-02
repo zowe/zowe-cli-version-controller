@@ -292,6 +292,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+                steps.env.DEPLOY_PACKAGE = packageJSON.name
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
@@ -588,7 +589,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
 
-                steps.sh "npm publish --dry-run --tag ${branch.tag}"
+                steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
@@ -656,6 +657,7 @@ class NodeJSPipeline extends GenericPipeline {
                 if (branch.autoDeploy) {
                     steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+                    steps.env.DEPLOY_PACKAGE = packageJSON.name
                 } else if (admins.size == 0) {
                     steps.echo "ERROR"
                     throw new DeployStageException(
