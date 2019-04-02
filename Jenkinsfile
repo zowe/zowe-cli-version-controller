@@ -21,7 +21,7 @@ node('ca-jenkins-agent') {
     
     def nodejs = lib.NodeJSPipeline.new(this)
 
-    nodejs.admins.add("wrich04", "zfernand0","markackert")
+    nodejs.admins.add("zfernand0","markackert")
 
     nodejs.protectedBranches.addMap(
        name: "master"
