@@ -68,7 +68,7 @@ node('ca-jenkins-agent') {
                 }
                 
                 sh "git status"
-                sh "git config user.email \"params.GIT_EMAIL\""
+                sh "git config user.email \"${params.GIT_EMAIL}\""
                 sh "git config push.default simple"
 
                 withCredentials([usernamePassword(credentialsId: params.GIT_CRED_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {

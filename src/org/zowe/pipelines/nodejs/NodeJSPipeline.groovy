@@ -292,6 +292,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+                steps.env.DEPLOY_PACKAGE = packageJSON.name
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
@@ -390,7 +391,9 @@ class NodeJSPipeline extends GenericPipeline {
                 }
             }
 
-            String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+            String approveName =
+                    steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID :
+                            steps.env.DEPLOY_APPROVER == AUTO_APPROVE_ID ? AUTO_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
             steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
 
@@ -654,6 +657,7 @@ class NodeJSPipeline extends GenericPipeline {
                 if (branch.autoDeploy) {
                     steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+                    steps.env.DEPLOY_PACKAGE = packageJSON.name
                 } else if (admins.size == 0) {
                     steps.echo "ERROR"
                     throw new DeployStageException(
@@ -756,7 +760,10 @@ class NodeJSPipeline extends GenericPipeline {
                         }
                     }
                 }
-                String approveName = steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
+
+                String approveName =
+                    steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID :
+                        steps.env.DEPLOY_APPROVER == AUTO_APPROVE_ID ? AUTO_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
 
                 steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
 
