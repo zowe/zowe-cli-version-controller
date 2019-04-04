@@ -568,14 +568,14 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
+            // Login to the registry
+            def npmRegistry = steps.sh returnStdout: true,
+                    script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+            publishConfig.url = npmRegistry.trim()
+
             if (deployArguments.customLogin) {
                 deployArguments.customLogin()
             } else {
-                // Login to the registry
-                def npmRegistry = steps.sh returnStdout: true,
-                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
-                publishConfig.url = npmRegistry.trim()
-
                 steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
 
                 // Login to the publish registry
