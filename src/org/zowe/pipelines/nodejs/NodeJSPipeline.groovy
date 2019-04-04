@@ -289,10 +289,10 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
+            steps.env.DEPLOY_PACKAGE = packageJSON.name
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-                steps.env.DEPLOY_PACKAGE = packageJSON.name
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
@@ -358,7 +358,6 @@ class NodeJSPipeline extends GenericPipeline {
                                 ]
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
@@ -569,14 +568,14 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
+            // Login to the registry
+            def npmRegistry = steps.sh returnStdout: true,
+                    script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+            publishConfig.url = npmRegistry.trim()
+
             if (deployArguments.customLogin) {
                 deployArguments.customLogin()
             } else {
-                // Login to the registry
-                def npmRegistry = steps.sh returnStdout: true,
-                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
-                publishConfig.url = npmRegistry.trim()
-
                 steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
 
                 // Login to the publish registry
@@ -654,10 +653,10 @@ class NodeJSPipeline extends GenericPipeline {
                         break
                 }
 
+                steps.env.DEPLOY_PACKAGE = packageJSON.name
                 if (branch.autoDeploy) {
                     steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-                    steps.env.DEPLOY_PACKAGE = packageJSON.name
                 } else if (admins.size == 0) {
                     steps.echo "ERROR"
                     throw new DeployStageException(
@@ -728,7 +727,6 @@ class NodeJSPipeline extends GenericPipeline {
                                     ]
 
                             steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                            steps.env.DEPLOY_PACKAGE = packageJSON.name
                             steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                         }
                     } catch (FlowInterruptedException exception) {
