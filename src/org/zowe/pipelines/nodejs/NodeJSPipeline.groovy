@@ -289,10 +289,10 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
+            steps.env.DEPLOY_PACKAGE = packageJSON.name
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-                steps.env.DEPLOY_PACKAGE = packageJSON.name
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
@@ -358,7 +358,6 @@ class NodeJSPipeline extends GenericPipeline {
                                 ]
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_PACKAGE = packageJSON.name
                         steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                     }
                 } catch (FlowInterruptedException exception) {
@@ -654,10 +653,10 @@ class NodeJSPipeline extends GenericPipeline {
                         break
                 }
 
+                steps.env.DEPLOY_PACKAGE = packageJSON.name
                 if (branch.autoDeploy) {
                     steps.env.DEPLOY_VERSION = availableVersions.get(0)
                     steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-                    steps.env.DEPLOY_PACKAGE = packageJSON.name
                 } else if (admins.size == 0) {
                     steps.echo "ERROR"
                     throw new DeployStageException(
@@ -728,7 +727,6 @@ class NodeJSPipeline extends GenericPipeline {
                                     ]
 
                             steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                            steps.env.DEPLOY_PACKAGE = packageJSON.name
                             steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
                         }
                     } catch (FlowInterruptedException exception) {
