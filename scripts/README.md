@@ -7,4 +7,4 @@ This folder contains various scripts for the controller to operate properly.
 | [updateLicense.js] | Makes sure that the proper license is applied to all files |
 
 [code-migration.groovy]: /scripts/code-migration.groovy
-[updateLicense,js]: /scripts/updateLicense.js
+[updateLicense.js]: /scripts/updateLicense.js
