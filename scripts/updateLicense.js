@@ -6,47 +6,67 @@
  * SPDX-License-Identifier: EPL-2.0
  *
  * Copyright Contributors to the Zowe Project.
- *
  */
 
 const fs = require("fs");
 
-// process all Java/JS -ish comment-style files
-require("glob")("{!(node_modules),!(.idea),!(gradle),!(bin),!(build),!(lib)}{/**/*.java,/**/*.js,/**/*.ts,/**/*.gradle,/**/*.groovy}", (globErr, filePaths) => {
-        if (globErr) {
-            throw globErr;
+// Directories to ignore
+const ignoreDirs = "!(node_modules),!(.idea),!(gradle),!(bin),!(build),!(lib)";
+
+const processFiles = (header, findRegex, filePaths) => {
+    let alreadyContainedCopyright = 0;
+    for (const filePath of filePaths) {
+        const file = fs.readFileSync(filePath);
+        let result = file.toString();
+        const resultLines = result.split(/\r?\n/g);
+        if (resultLines.join().indexOf(header.split(/\r?\n/g).join()) >= 0) {
+            alreadyContainedCopyright++;
+            continue; // already has copyright
         }
-        // turn the license file into a multi line comment
-        const desiredLineLength = 80;
-        let alreadyContainedCopyright = 0;
-        const header = "/*\n" + fs.readFileSync("LICENSE_HEADER").toString()
-                .split(/\r?\n/g).map((line) => {
-                    return " " + ("* " + line).trim();
-                })
-                .join(require("os").EOL) + require("os").EOL + " */" +
-            require("os").EOL + require("os").EOL;
-        for (const filePath of filePaths) {
-            const file = fs.readFileSync(filePath);
-            let result = file.toString();
-            const resultLines = result.split(/\r?\n/g);
-            if (resultLines.join().indexOf(header.split(/\r?\n/g).join()) >= 0) {
-                alreadyContainedCopyright++;
-                continue; // already has copyright
-            }
-            const shebangPattern = require("shebang-regex");
-            let usedShebang = "";
-            result = result.replace(shebangPattern, function (fullMatch) {
-                usedShebang = fullMatch + "\n"; // save the shebang that was used, if any
-                return "";
-            });
-            // remove any existing copyright
-            // Be very, very careful messing with this regex. Regex is wonderful.
-            result = result.replace(/\/\*[\s\S]*?(Copyright)[\s\S]*?\*\/[\s\n]*/i, "");
-            result = header + result; // add the new header
-            result = usedShebang + result; // add the shebang back
-            fs.writeFileSync(filePath, result);
-        }
-        console.log("Ensured that %d files had copyright information" +
-            " (%d already did).", filePaths.length, alreadyContainedCopyright);
+        const shebangPattern = require("shebang-regex");
+        let usedShebang = "";
+        result = result.replace(shebangPattern, function (fullMatch) {
+            usedShebang = fullMatch + "\n"; // save the shebang that was used, if any
+            return "";
+        });
+        // remove any existing copyright
+        // Be very, very careful messing with this regex. Regex is wonderful.
+        result = result.replace(findRegex, "");
+        result = header + result; // add the new header
+        result = usedShebang + result; // add the shebang back
+        fs.writeFileSync(filePath, result);
     }
-);
+    return alreadyContainedCopyright;
+}
+
+// process all Java/JS -ish comment-style files
+require("glob")("{" + ignoreDirs + /* Include other Dirs here */ "}" + "{/**/*.java,/**/*.js,/**/*.ts,/**/*.gradle,/**/*.groovy}", (globErr, filePaths) => {
+    if (globErr) {
+        throw globErr;
+    }
+    
+    const header = "/*\n" + fs.readFileSync("LICENSE_HEADER").toString().split(/\r?\n/g).map((line) => {
+        return " " + ("* " + line).trim();
+    }).join(require("os").EOL) + require("os").EOL + " */" + require("os").EOL + require("os").EOL;
+
+    // Process all files
+    const nonProcessedFiles = processFiles(header, /\/\*[\s\S]*?(Copyright|License)[\s\S]*?\*\/[\s\n]*/i, filePaths);
+
+    console.log("JS: Ensured that %d files had copyright information (%d already did).", filePaths.length, nonProcessedFiles);
+});
+
+// process all HTML/XML -ish comment-style files
+require("glob")("{" + ignoreDirs + /* Include other Dirs here */ "}" + "{/**/*.html,/**/*.htm,/**/*.xml}", (globErr, filePaths) => {
+    if (globErr) {
+        throw globErr;
+    }
+    
+    const header = "<!--\n" + fs.readFileSync("LICENSE_HEADER").toString().split(/\r?\n/g).map((line) => {
+        return "    " + (line).trim();
+    }).join(require("os").EOL) + require("os").EOL + "-->" + require("os").EOL + require("os").EOL;
+
+    // Process all files
+    const nonProcessedFiles = processFiles(header, /\<\!\-\-[\s\S]*?(Copyright|License)[\s\S]*?\-\-\>[\s\n]*/i, filePaths);
+
+    console.log("HTML: Ensured that %d files had copyright information (%d already did).", filePaths.length, nonProcessedFiles);
+});

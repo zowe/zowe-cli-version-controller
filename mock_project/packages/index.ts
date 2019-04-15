@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: EPL-2.0
  *
  * Copyright Contributors to the Zowe Project.
- *
  */
 
 process.stdout.write("Thanks for building me!\n");
