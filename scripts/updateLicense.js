@@ -10,8 +10,8 @@
 
 const fs = require("fs");
 
-// Directories to ignore
-const ignoreDirs = "!(node_modules),!(.idea),!(gradle),!(bin),!(build),!(lib)";
+// Directories to include
+const includeDirs = "src,scripts,docs,mock_project";
 
 const processFiles = (header, findRegex, filePaths) => {
     let alreadyContainedCopyright = 0;
@@ -40,7 +40,7 @@ const processFiles = (header, findRegex, filePaths) => {
 }
 
 // process all Java/JS -ish comment-style files
-require("glob")("{" + ignoreDirs + /* Include other Dirs here */ "}" + "{/**/*.java,/**/*.js,/**/*.ts,/**/*.gradle,/**/*.groovy}", (globErr, filePaths) => {
+require("glob")("{" + includeDirs + "}" + "{/**/*.java,/**/*.js,/**/*.ts,/**/*.gradle,/**/*.groovy}", (globErr, filePaths) => {
     if (globErr) {
         throw globErr;
     }
@@ -56,7 +56,7 @@ require("glob")("{" + ignoreDirs + /* Include other Dirs here */ "}" + "{/**/*.j
 });
 
 // process all HTML/XML -ish comment-style files
-require("glob")("{" + ignoreDirs + /* Include other Dirs here */ "}" + "{/**/*.html,/**/*.htm,/**/*.xml}", (globErr, filePaths) => {
+require("glob")("{" + includeDirs + "}" + "{/**/*.html,/**/*.htm,/**/*.xml}", (globErr, filePaths) => {
     if (globErr) {
         throw globErr;
     }
