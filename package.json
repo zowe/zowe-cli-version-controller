@@ -4,9 +4,10 @@
   "description": "A mock project to use when testing the shared Node JS pipeline ",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --pretty -p mock_project/tsconfig.json",
+    "build": "npm run license && tsc --pretty -p mock_project/tsconfig.json",
     "lint": "tslint --format stylish -c mock_project/tslint-packages.json \"mock_project/packages/**/*.ts\"",
-    "test:unit": "jest \".*__tests__.*\\.unit\\.(spec|test)\\.ts\" --coverage"
+    "test:unit": "jest \".*__tests__.*\\.unit\\.(spec|test)\\.ts\" --coverage",
+    "license": "node scripts/updateLicense.js"
   },
   "author": "Broadcom",
   "license": "EPL-2.0",
@@ -14,6 +15,7 @@
     "@types/jest": "^23.3.13",
     "@types/node": "^10.12.18",
     "cross-env": "^5.2.0",
+    "glob": "^7.1.3",
     "jest": "^23.6.0",
     "jest-environment-node": "^23.4.0",
     "jest-environment-node-debug": "^2.0.0",
@@ -21,6 +23,7 @@
     "jest-junit": "^6.0.1",
     "jest-sonar-reporter": "^2.0.0",
     "jest-stare": "^1.11.1",
+    "shebang-regex": "^2.0.0",
     "ts-jest": "^23.10.5",
     "tslint": "^5.12.1",
     "typescript": "^3.2.4"

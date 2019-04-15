@@ -12,6 +12,7 @@ out
 target
 .project
 *.iml
+package-lock.json
 
 # ignored files for the inner mocked project used for testing the shared pipeline
 mock_project
