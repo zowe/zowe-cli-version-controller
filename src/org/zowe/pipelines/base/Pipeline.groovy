@@ -575,7 +575,7 @@ class Pipeline {
 //            )])
 
             // Setup the branch to track it's remote
-            steps.sh "sh ../verifyReleaseLabel.sh 'name' 'ws617385' 'Peter234*' 'https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels'"
+            steps.sh "sh verifyReleaseLabel.sh 'name' 'ws617385' 'Peter234*' 'https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels'"
 
         }, isSkippable: false, timeout: timeouts.checkout,)
 
