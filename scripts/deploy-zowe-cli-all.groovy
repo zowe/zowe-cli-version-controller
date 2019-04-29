@@ -27,20 +27,28 @@ def CONST = [
 
 import java.text.SimpleDateFormat;
 
+def deployTags(String pkgName, tags, cdJobName) {
+  return {
+    stage("Deploy: @zowe/${pkgName}") {
+      tags.each { tagName ->
+        echo "Deploy @zowe/${pkgName}@${tagName}"
+        build job: cdJobName, parameters: [
+          [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
+          [$class: 'StringParameterValue', name: 'PKT_TAG', value: tagName]
+        ]
+      }
+    }
+  }
+}
+
 node('ca-jenkins-agent') {
   try {
     checkout scm
-    stage ('Submit Jobs') {
-      CONST.packages.each{ pkgName ->
-        CONST.tags.each { tagName ->
-          echo "Deploy @zowe/${pkgName}@${tagName}"
-          build job: CONST.cdJobName, parameters: [
-            [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
-            [$class: 'StringParameterValue', name: 'PKT_TAG', value: tagName]
-          ]
-        }
-      }
+    def buildStages = [:]
+    CONST.packages.each { pkgName ->
+      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, CONST.tags, CONST.cdJobName))
     }
+    parallel(buildStages)
   } catch (e) {
     error "${e.getMessage()}"
   } finally {
