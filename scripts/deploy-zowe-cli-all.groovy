@@ -50,6 +50,7 @@ node('ca-jenkins-agent') {
     }
     parallel(buildStages)
   } catch (e) {
+    currentBuild.result = "FAILURE"
     error "${e.getMessage()}"
   } finally {
     def buildStatus = currentBuild.currentResult

@@ -76,10 +76,6 @@ node('ca-jenkins-agent') {
     checkout scm
     stage('Deploy package') {
       PKG_TAG = params.PKG_TAG
-      if(PKG_TAG.equals("lts-incremental") || PKG_TAG.equals("lts-stable")){
-          CONST.scope = "@brightside"
-      }
-
       def getPkgInfo = load 'scripts/getPackageInfo.groovy'
       sh "rm -f .npmrc || exit 0"
       sh "rm -f ~/.npmrc || exit 0"
