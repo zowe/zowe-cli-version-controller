@@ -40,7 +40,7 @@ opts.push(
         string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to recevie build resutls (Override)')
     ])
 )
-opts.push(buildDiscarder(logRotator(numToKeepStr: '10')))
+opts.push(buildDiscarder(logRotator(numToKeepStr: '20')))
 properties(opts)
 
 /**

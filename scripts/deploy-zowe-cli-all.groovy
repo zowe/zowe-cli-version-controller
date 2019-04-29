@@ -17,6 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
  * Constants to be used throughout the pipeline
  */
 def CONST = [
+  // Main deployment project
   cdJobName: 'zowe-cli-deploy-component',
   // Packages to be deployed
   packages: ['imperative', 'perf-timing', 'cli', 'cics', 'db2'],
@@ -32,6 +33,7 @@ node('ca-jenkins-agent') {
     stage ('Submit Jobs') {
       CONST.packages.each{ pkgName ->
         CONST.tags.each { tagName ->
+          echo "Deploy @zowe/${pkgName}@${tagName}"
           build job: CONST.cdJobName, parameters: [
             [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
             [$class: 'StringParameterValue', name: 'PKT_TAG', value: tagName]
