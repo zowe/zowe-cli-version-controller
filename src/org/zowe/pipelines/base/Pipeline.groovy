@@ -917,6 +917,14 @@ class Pipeline {
         // if more than one, throw error
         if (list.size() > 1) {
             steps.echo "list size = " + list.size()
+            def labels
+            list.each {
+                labels = labels + " ${it}"
+            }
+            throw new StageException(
+              "Release label verification failed, more than one release label assigned. Labels assigned:",
+              labels
+            )
         }
         // if none, throw error
         else if (list.size() == 0) {
