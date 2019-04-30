@@ -879,7 +879,7 @@ class Pipeline {
     final void _verifyReleaseLabel(String value, String user, String password, String url) {
 
         // the valid labels for bumping version processing
-        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release', 'bug']
+        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release', 'bug', 'invalid']
 
 //  println value
 //  println user
@@ -923,7 +923,7 @@ class Pipeline {
             steps.echo "list is empty"
         }
 
-        if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list || arrValidLabels[4] in list ){
+        if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list || arrValidLabels[4] in list || arrValidLabels[5] in list){
             steps.echo "found"
         }
         else {
