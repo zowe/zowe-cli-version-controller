@@ -578,7 +578,7 @@ class Pipeline {
             )]) {
                 steps.echo USERNAME
                 steps.echo PASSWORD
-                _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+               // _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
         }, isSkippable: false, timeout: timeouts.checkout,)
 
