@@ -906,7 +906,7 @@ class Pipeline {
 
         // loop through the label names and add valid labels to array
         data.each {
-            println  it."$value"
+          steps.echo it."$value"
             if ( it."$value" in arrValidLabels ) {
                 list.add(it."$value")
             }
@@ -917,18 +917,18 @@ class Pipeline {
         // determine if valid labels found
         // if more than one, throw error
         if (list.size() > 1) {
-            println "list size = " + list.size()
+          steps.echo "list size = " + list.size()
         }
         // if none, throw error
         else if (list.size() == 0) {
-            println "list is empty"
+          steps.echo "list is empty"
         }
 
         if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list ){
-            println "found"
+          steps.echo "found"
         }
         else {
-            println "not found"
+          steps.echo "not found"
         }
     }
 }
