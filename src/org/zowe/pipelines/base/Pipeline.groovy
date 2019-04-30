@@ -923,7 +923,7 @@ class Pipeline {
             steps.echo "list is empty"
         }
 
-        if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list ){
+        if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list || arrValidLabels[4] in list ){
             steps.echo "found"
         }
         else {
