@@ -881,22 +881,9 @@ class Pipeline {
         // the valid labels for bumping version processing
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release', 'bug', 'invalid']
 
-//  println value
-//  println user
-//  println password
-//  println url
-
         // retrieve label names from pull request
-        //process = ["curl", "--user", "PeteSwauger:xxxxxx", "-X", "GET", "-H", "Content-Type: application/json", "https://api.github.com/repos/zowe/zowe-cli-sample-plugin/issues/20/labels"].execute().text
-        //process = ["curl", "-X", "GET", "-H", "Content-Type: application/json", "https://api.github.com/repos/zowe/zowe-cli-sample-plugin/issues/20/labels"].execute().text
-
         def userpassword = "$user" + ":" + "$password"
-//  println userpassword
         def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
-
-        //process = ["curl", "--user", "ws617385:Peter234*", "-X", "GET", "-H", "Content-Type: application/json", "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels"].execute().text
-
-//  println process
 
         // pull the label names out
         def list = []
@@ -905,29 +892,26 @@ class Pipeline {
 
         // loop through the label names and add valid labels to array
         data.each {
-            steps.echo it."$value"
             if ( it."$value" in arrValidLabels ) {
                 list.add(it."$value")
             }
         }
 
-//  println "list = " + list
-
         // determine if valid labels found
         // if more than one, throw error
         if (list.size() > 1) {
-            steps.echo "list size = " + list.size()
             def labels = ""
             list.each {
                 labels = labels + " '${it}'"
             }
             throw new PipelineException(
-              "Release label verification failed, more than one release label assigned. Labels assigned:" + labels) //,
-              //"Validate labels")
+              "Release label verification failed, more than one release label assigned. Labels assigned:" + labels)
         }
         // if none, throw error
         else if (list.size() == 0) {
             steps.echo "list is empty"
+            throw new PipelineException(
+              "Release label verification failed, no release label assigned.")
         }
 
         if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list || arrValidLabels[4] in list || arrValidLabels[5] in list){
