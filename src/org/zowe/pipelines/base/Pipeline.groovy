@@ -580,12 +580,11 @@ class Pipeline {
                 steps.echo PASSWORD
                 _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
+        }, isSkippable: false, timeout: timeouts.checkout,)
 
             // Setup the branch to track it's remote
             //_verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             //_verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-
-        }, isSkippable: false, timeout: timeouts.checkout,)
 
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
