@@ -574,7 +574,7 @@ class Pipeline {
               passwordVariable: "PASSWORD",
               usernameVariable: "USERNAME"
             )]) {
-                _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                _verifyReleaseLabel("name", $USERNAME, $PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
 
             // Setup the branch to track it's remote
