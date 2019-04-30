@@ -577,7 +577,7 @@ class Pipeline {
 
             // Setup the branch to track it's remote
             steps.echo "Steps _verifyReleaseLabel"
-            _verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+            //_verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             //steps.sh 'groovy verifyReleaseLabel.groovy "name" "ws617385" "Peter234*" "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels"'
             //steps.sh "verifyReleaseLabel.sh 'name' 'ws617385' 'Peter234*' 'https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels'"
 
