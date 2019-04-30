@@ -576,6 +576,8 @@ class Pipeline {
               passwordVariable: PASSWORD,
               usernameVariable: USERNAME
             )]) {
+                steps.echo USERNAME
+                steps.echo PASSWORD
                 _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
 
