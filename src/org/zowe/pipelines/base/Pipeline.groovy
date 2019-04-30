@@ -919,7 +919,7 @@ class Pipeline {
             steps.echo "list size = " + list.size()
             def labels = ""
             list.each {
-                labels = labels + " ${it}"
+                labels = labels + " '${it}'"
             }
             throw new StageException(
               "Release label verification failed, more than one release label assigned. Labels assigned:" + labels,
