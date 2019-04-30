@@ -917,7 +917,7 @@ class Pipeline {
         // if more than one, throw error
         if (list.size() > 1) {
             steps.echo "list size = " + list.size()
-            def labels
+            def labels = ""
             list.each {
                 labels = labels + " ${it}"
             }
