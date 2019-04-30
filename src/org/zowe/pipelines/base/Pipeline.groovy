@@ -879,7 +879,7 @@ class Pipeline {
     final void _verifyReleaseLabel(String value, String user, String password, String url) {
 
         // the valid labels for bumping version processing
-        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release'] //, 'bug', 'invalid']
+        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release', 'bug'] //, 'invalid']
 
         // retrieve label names from pull request
         def userpassword = "$user" + ":" + "$password"
