@@ -905,20 +905,12 @@ class Pipeline {
                 labels = labels + " '${it}'"
             }
             throw new PipelineException(
-              "Release label verification failed, more than one release label assigned. Labels assigned:" + labels)
+              "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + labels)
         }
         // if none, throw error
         else if (list.size() == 0) {
-            steps.echo "list is empty"
             throw new PipelineException(
-              "Release label verification failed, no release label assigned.")
-        }
-
-        if( arrValidLabels[0] in list || arrValidLabels[1] in list || arrValidLabels[2] in list || arrValidLabels[3] in list || arrValidLabels[4] in list || arrValidLabels[5] in list){
-            steps.echo "found"
-        }
-        else {
-            steps.echo "not found"
+              "Release label verification failed, no release label assigned to the pull request.")
         }
     }
 }
