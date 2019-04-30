@@ -569,12 +569,12 @@ class Pipeline {
         }
 
         createStage(name: 'Validate labels', stage: {
-
-
+            String USERNAME = ""
+            String PASSWORD = ""
             steps.withCredentials([steps.usernamePassword(
               credentialsId: gitConfig.credentialsId,
-              passwordVariable: 'PASSWORD',
-              usernameVariable: 'USERNAME'
+              passwordVariable: PASSWORD,
+              usernameVariable: USERNAME
             )]) {
                 _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
