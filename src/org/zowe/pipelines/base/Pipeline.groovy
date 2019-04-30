@@ -569,16 +569,15 @@ class Pipeline {
         }
 
         createStage(name: 'Validate labels', stage: {
-//            steps.withCredentials([steps.usernamePassword(
-//              credentialsId: gitConfig.credentialsId,
-//              passwordVariable: "NOT_USED",
-//              usernameVariable: "GIT_USER_NAME"
-//            )])
+            steps.withCredentials([steps.usernamePassword(
+              credentialsId: gitConfig.credentialsId,
+              passwordVariable: "PASSWORD",
+              usernameVariable: "USERNAME"
+            )])
 
             // Setup the branch to track it's remote
-            _verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-            //steps.sh 'groovy verifyReleaseLabel.groovy "name" "ws617385" "Peter234*" "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels"'
-            //steps.sh "verifyReleaseLabel.sh 'name' 'ws617385' 'Peter234*' 'https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels'"
+            _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+            //_verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
 
         }, isSkippable: false, timeout: timeouts.checkout,)
 
@@ -879,7 +878,7 @@ class Pipeline {
     final void _verifyReleaseLabel(String value, String user, String password, String url) {
 
         // the valid labels for bumping version processing
-        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release', 'bug'] //, 'invalid']
+        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
         def userpassword = "$user" + ":" + "$password"
