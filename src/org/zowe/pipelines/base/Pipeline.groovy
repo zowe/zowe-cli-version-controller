@@ -923,7 +923,7 @@ class Pipeline {
             }
             throw new StageException(
               "Release label verification failed, more than one release label assigned. Labels assigned:" + labels,
-              stage.name)
+              "Validate labels")
         }
         // if none, throw error
         else if (list.size() == 0) {
