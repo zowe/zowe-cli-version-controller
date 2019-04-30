@@ -921,9 +921,9 @@ class Pipeline {
             list.each {
                 labels = labels + " '${it}'"
             }
-            throw new StageException(
-              "Release label verification failed, more than one release label assigned. Labels assigned:" + labels,
-              "Validate labels")
+            throw new PipelineException(
+              "Release label verification failed, more than one release label assigned. Labels assigned:" + labels) //,
+              //"Validate labels")
         }
         // if none, throw error
         else if (list.size() == 0) {
