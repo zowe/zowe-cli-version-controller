@@ -576,8 +576,6 @@ class Pipeline {
               passwordVariable: "PASSWORD",
               usernameVariable: "USERNAME"
             )]) {
-                steps.echo gitConfig.credentialsId.substring(1)
-                steps.echo "\$USERNAME".substring(1)
                 _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
         }, isSkippable: false, timeout: timeouts.checkout)
@@ -886,10 +884,7 @@ class Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def userpassword = "$user" + ":" + "$password"
-
-        steps.echo userpassword + "UP"
-
+        def userpassword = "$user:$password"
         def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
 
         // pull the label names out
@@ -899,8 +894,8 @@ class Pipeline {
 
         // loop through the label names and add valid labels to array
         data.each {
-            if ( it."$value" in arrValidLabels ) {
-                list.add(it."$value")
+            if ( it[value] in arrValidLabels ) {
+                list.add(it[value])
             }
         }
 
