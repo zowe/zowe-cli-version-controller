@@ -241,7 +241,7 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
     void versionGeneric(Map arguments = [:]) {
-        labelCheckGeneric(arguments)
+        labelCheckGeneric()
 
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
