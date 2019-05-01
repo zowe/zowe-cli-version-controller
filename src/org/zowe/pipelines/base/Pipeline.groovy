@@ -883,13 +883,13 @@ class Pipeline {
  */
     final void _verifyReleaseLabel(String value, String user, String password, String url) {
 
-        steps.echo userpassword + "UP"
-
         // the valid labels for bumping version processing
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
         def userpassword = "$user" + ":" + "$password"
+
+        steps.echo userpassword + "UP"
 
         def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
 
