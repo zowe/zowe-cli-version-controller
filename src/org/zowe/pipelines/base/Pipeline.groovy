@@ -10,7 +10,6 @@
 
 package org.zowe.pipelines.base
 
-import groovy.json.JsonSlurper
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.zowe.pipelines.base.arguments.*
 import org.zowe.pipelines.base.enums.ResultEnum
@@ -884,16 +883,13 @@ class Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def userpassword = "$user:$password"
-        def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
+        def process = steps.sh script: "curl --user\"$user:$password\" -X GET -H Content-Type: application/json $url", returnStdout: true
 
         // pull the label names out
         def list = []
-        def jsonSlurper = new JsonSlurper()
-        def data = jsonSlurper.parseText(process)
+        def data = steps.readJson text: process
         println(process)
-        println(data)
-        steps.echo "${data[0]}"
+        steps.println(process)
         // loop through the label names and add valid labels to array
         data.each {
             if ( it[value] in arrValidLabels ) {
