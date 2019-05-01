@@ -569,8 +569,8 @@ class Pipeline {
         }
 
         createStage(name: 'Validate labels', stage: {
-            String USERNAME = ""
-            String PASSWORD = ""
+//            String USERNAME = ""
+//            String PASSWORD = ""
             steps.withCredentials([steps.usernamePassword(
               credentialsId: gitConfig.credentialsId,
               passwordVariable: "PASSWORD",
@@ -579,7 +579,7 @@ class Pipeline {
                 steps.echo gitConfig.credentialsId
 //                steps.echo "$USERNAME"
 //                steps.echo "$PASSWORD"
-                _verifyReleaseLabel("name", $USERNAME, $PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
         }, isSkippable: false, timeout: timeouts.checkout,)
 
