@@ -577,10 +577,10 @@ class Pipeline {
               usernameVariable: "USERNAME"
             )]) {
                 steps.echo gitConfig.credentialsId.substring(1)
-                steps.echo "$USERNAME".substring(1)
-                _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                steps.echo "\$USERNAME".substring(1)
+                _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
-        }, isSkippable: false, timeout: timeouts.checkout,)
+        }, isSkippable: false, timeout: timeouts.checkout)
 
             // Setup the branch to track it's remote
             //_verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
