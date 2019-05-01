@@ -567,24 +567,18 @@ class Pipeline {
             _control.setup = setup
         }
 
+        createStage(name: 'Checkout', stage: {
+            steps.checkout steps.scm
+        }, isSkippable: false, timeout: timeouts.checkout)
+
         createStage(name: 'Validate labels', stage: {
-//            String USERNAME = ""
-//            String PASSWORD = ""
             steps.withCredentials([steps.usernamePassword(
-              credentialsId: gitConfig.credentialsId,
-              passwordVariable: "PASSWORD",
-              usernameVariable: "USERNAME"
+                    credentialsId: gitConfig.credentialsId,
+                    passwordVariable: "PASSWORD",
+                    usernameVariable: "USERNAME"
             )]) {
                 _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
-        }, isSkippable: false, timeout: timeouts.checkout)
-
-            // Setup the branch to track it's remote
-            //_verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-            //_verifyReleaseLabel("name", "ws617385","Peter234*","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-
-        createStage(name: 'Checkout', stage: {
-            steps.checkout steps.scm
         }, isSkippable: false, timeout: timeouts.checkout)
     }
 
