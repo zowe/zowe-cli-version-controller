@@ -21,8 +21,6 @@ import org.zowe.pipelines.generic.enums.GitOperation
 import org.zowe.pipelines.generic.exceptions.git.*
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
-import sun.security.util.Password
-
 import java.util.regex.Pattern
 
 /**
@@ -514,26 +512,11 @@ class GenericPipeline extends Pipeline {
         super.setupBase(timeouts)
 
         createStage(name: 'Configure Git', stage: {
-
-            steps.usernamePassword(
-              credentialsId: gitConfig.credentialsId,
-              passwordVariable: 'PASSWORD',
-              usernameVariable: 'USERNAME'
-            )
-
-            steps.echo 'PASSWORD'
-            steps.echo 'USERNAME'
-
             steps.withCredentials([steps.usernamePassword(
                 credentialsId: gitConfig.credentialsId,
                 passwordVariable: "NOT_USED",
                 usernameVariable: "GIT_USER_NAME"
             )]) {
-//                steps.sh 'env > env.txt'
-//                steps.usernamePassword
-//                for (String i : readFile('env.txt').split("\r?\n")) {
-//                println i
-//                }
                 steps.sh "git config user.name \$GIT_USER_NAME"
                 steps.sh "git config user.email \"${gitConfig.email}\""
                 steps.sh "git config push.default simple"
