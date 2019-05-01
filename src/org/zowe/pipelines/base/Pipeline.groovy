@@ -569,8 +569,8 @@ class Pipeline {
         }
 
         createStage(name: 'Validate labels', stage: {
-            String USERNAME = ""
-            String PASSWORD = ""
+//            String USERNAME = ""
+//            String PASSWORD = ""
             steps.withCredentials([steps.usernamePassword(
               credentialsId: gitConfig.credentialsId,
               passwordVariable: "PASSWORD",
