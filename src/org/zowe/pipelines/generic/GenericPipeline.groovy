@@ -517,6 +517,7 @@ class GenericPipeline extends Pipeline {
                 passwordVariable: "NOT_USED",
                 usernameVariable: "GIT_USER_NAME"
             )]) {
+                steps.echo GIT_USER_NAME
                 steps.sh "git config user.name \$GIT_USER_NAME"
                 steps.sh "git config user.email \"${gitConfig.email}\""
                 steps.sh "git config push.default simple"
