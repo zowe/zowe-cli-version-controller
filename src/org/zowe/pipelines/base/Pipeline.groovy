@@ -887,7 +887,7 @@ class Pipeline {
 
         // pull the label names out
         def list = []
-        def data = steps.readJson text: process
+        def data = steps.readJSON text: process
         println(process)
         steps.println(process)
         // loop through the label names and add valid labels to array
