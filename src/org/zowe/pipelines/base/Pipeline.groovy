@@ -883,7 +883,7 @@ class Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def process = steps.sh script: "curl --user \"$user:$password\" -X GET -H Content-Type: application/json $url", returnStdout: true
+        def process = steps.sh script: "curl -u\"$user:$password\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
 
         // pull the label names out
         def list = []
