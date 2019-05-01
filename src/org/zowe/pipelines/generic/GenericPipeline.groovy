@@ -375,6 +375,7 @@ class GenericPipeline extends Pipeline {
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
                 }
             }
+            args.operation(stageName)
         }
 
         // Create the stage and ensure that the first one is the stage of reference
