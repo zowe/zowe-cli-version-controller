@@ -105,7 +105,7 @@ node('ca-jenkins-agent') {
       }
 
       try {
-          OLD_PKG_VER = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}", CONST.distRegistry, "version")
+          OLD_PKG_VER = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}")
       } catch (e) {
           // Do not error out
           echo "${e.getMessage()}"
@@ -123,7 +123,6 @@ node('ca-jenkins-agent') {
 
         // We want these package to be public
         sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
-        
         sh "rm -f ~/.npmrc || exit 0"
       }
     }
@@ -152,7 +151,7 @@ node('ca-jenkins-agent') {
       details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
 
       if (params.RECIPIENTS_LIST != "") {
-        recipients = params.RECIPIENTS_LIST
+        recipients = "${params.RECIPIENTS_LIST}, cc:fernando.rijocedeno@broadcom.com"
       }
 
       if (recipients != "") {
