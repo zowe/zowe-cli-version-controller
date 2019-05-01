@@ -891,7 +891,8 @@ class Pipeline {
         def list = []
         def jsonSlurper = new JsonSlurper()
         def data = jsonSlurper.parseText(process)
-
+        println(data)
+        steps.echo "${data[0]}"
         // loop through the label names and add valid labels to array
         data.each {
             if ( it[value] in arrValidLabels ) {
