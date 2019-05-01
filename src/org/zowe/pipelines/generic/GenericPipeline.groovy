@@ -241,6 +241,8 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
     void versionGeneric(Map arguments = [:]) {
+        labelCheckGeneric(arguments)
+
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
@@ -249,7 +251,7 @@ class GenericPipeline extends Pipeline {
         VersionStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+            preSetupException = new VersionStageException("arguments.stage is an invalid option for versionGeneric", args.name)
         }
 
         args.name = "Versioning${arguments.name ? ": ${arguments.name}" : ""}"
@@ -287,6 +289,98 @@ class GenericPipeline extends Pipeline {
         Stage version = createStage(args)
         if (!_control.version) {
             _control.version = version
+        }
+    }
+
+    /**
+     * Creates a stage that will verify release labels on pull requests
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link GenericStageArguments} class. The
+     * {@link GenericStageArguments#operation} will be executed after all checks are complete. This operation
+     * must not be provided or a {@link LabelCheckStageException} will be encountered.</p>
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Validate Labels</b></dt>
+     *     <dd>This stage is responsible for verifying that the pull requests contains a release label.</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     This stage will adhere to the following conditions:
+     *
+     *     <ul>
+     *         <li>The stage will only execute if the current build result is {@link ResultEnum#SUCCESS} or higher.</li>
+     *         <li>The stage will only execute if there is a pull request open for the current branch.</li>
+     *     </ul>
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link LabelCheckStageException}</b></dt>
+     *         <dd>When stage is provided as an argument.</dd>
+     *         <dd>When operation is provided as an argument.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link GenericStageArguments} used to define the stage.
+     */
+    void labelCheckGeneric(Map arguments = [:]) {
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
+        GenericStageArguments args = arguments as GenericStageArguments
+
+        LabelCheckStageException preSetupException
+
+        if (args.stage) {
+            preSetupException = new LabelCheckStageException("arguments.stage is an invalid option for labelCheckGeneric", args.name)
+        } else if (args.operation) {
+            preSetupException = new LabelCheckStageException("arguments.operation is an invalid option for labelCheckGeneric", args.name)
+        }
+
+        args.name = "Validate Labels"
+
+        // Execute the stage if this is a protected branch and the original should execute function are both true
+        args.shouldExecute = {
+            if (arguments.shouldExecute) {
+                return arguments.shouldExecute()
+            }
+            return changeInfo.isPullRequest
+        }
+
+        args.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (_control.build?.status != StageStatus.SUCCESS) {
+                throw new VersionStageException("Build must be successful to deploy", args.name)
+            }
+
+            args.operation = { String stgName ->
+                steps.withCredentials([steps.usernamePassword(
+                        credentialsId: gitConfig.credentialsId,
+                        passwordVariable: "PASSWORD",
+                        usernameVariable: "USERNAME"
+                )]) {
+                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                }
+            }
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage labelCheck = createStage(args)
+        if (!_control.labelCheck) {
+            _control.labelCheck = labelCheck
         }
     }
 
@@ -551,16 +645,6 @@ class GenericPipeline extends Pipeline {
                 setResult(ResultEnum.NOT_BUILT)
             }
         }, timeout: timeouts.ciSkip)
-
-        createStage(name: 'Validate labels', stage: {
-            steps.withCredentials([steps.usernamePassword(
-                    credentialsId: gitConfig.credentialsId,
-                    passwordVariable: "PASSWORD",
-                    usernameVariable: "USERNAME"
-            )]) {
-                _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-            }
-        }, isSkippable: false, timeout: timeouts.checkout)
     }
 
     /**
