@@ -570,16 +570,6 @@ class Pipeline {
         createStage(name: 'Checkout', stage: {
             steps.checkout steps.scm
         }, isSkippable: false, timeout: timeouts.checkout)
-
-        createStage(name: 'Validate labels', stage: {
-            steps.withCredentials([steps.usernamePassword(
-                    credentialsId: gitConfig.credentialsId,
-                    passwordVariable: "PASSWORD",
-                    usernameVariable: "USERNAME"
-            )]) {
-                _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
-            }
-        }, isSkippable: false, timeout: timeouts.checkout)
     }
 
     /**
@@ -866,45 +856,6 @@ class Pipeline {
                 steps.echo emailException.toString()
                 steps.echo emailException.getStackTrace().join("\n")
             }
-        }
-    }
-/**
- * Verify a release label has been assigned to the pull request
- */
-    final void _verifyReleaseLabel(String value, String user, String password, String url) {
-
-        // the valid labels for bumping version processing
-        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
-
-        // retrieve label names from pull request
-        def process = steps.sh script: "curl -u\"$user:$password\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
-
-        // pull the label names out
-        def list = []
-        def data = steps.readJSON text: process
-        println(process)
-        steps.println(process)
-        // loop through the label names and add valid labels to array
-        data.each {
-            if ( it[value] in arrValidLabels ) {
-                list.add(it[value])
-            }
-        }
-
-        // determine if valid labels found
-        // if more than one, throw error
-        if (list.size() > 1) {
-            def labels = ""
-            list.each {
-                labels = labels + " '${it}'"
-            }
-            throw new PipelineException(
-              "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + labels)
-        }
-        // if none, throw error
-        else if (list.size() == 0) {
-            throw new PipelineException(
-              "Release label verification failed, no release label assigned to the pull request.")
         }
     }
 }
