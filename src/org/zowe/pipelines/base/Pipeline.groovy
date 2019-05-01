@@ -579,7 +579,7 @@ class Pipeline {
                 steps.echo gitConfig.credentialsId
                 steps.echo "$USERNAME"
                 steps.echo "$PASSWORD"
-               // _verifyReleaseLabel("name", USERNAME, PASSWORD,"https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
         }, isSkippable: false, timeout: timeouts.checkout,)
 
@@ -888,6 +888,7 @@ class Pipeline {
 
         // retrieve label names from pull request
         def userpassword = "$user" + ":" + "$password"
+        println userpassword + "UP"
         def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
 
         // pull the label names out
