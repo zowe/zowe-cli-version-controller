@@ -372,6 +372,7 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
+                    steps.sh "echo \"${gitConfig.credentialsId.substring(1)}\""
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels")
                 }
             }
@@ -883,7 +884,9 @@ class GenericPipeline extends Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def process = steps.sh script: "curl -u\"$user:$password\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
+        def userpass = "$user:$password"
+        steps.sh "echo \"${userpass.substring(1)}\""
+        def process = steps.sh script: "curl -u\"${userpass}\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
 
         // pull the label names out
         def list = []
