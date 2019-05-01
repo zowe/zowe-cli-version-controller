@@ -576,8 +576,10 @@ class Pipeline {
               passwordVariable: "PASSWORD",
               usernameVariable: "USERNAME"
             )]) {
-                steps.echo gitConfig.credentialsId
-                _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
+                steps.echo gitConfig.credentialsId.substring(1)
+                println(USERNAME)
+                steps.echo "$USERNAME".substring(1)
+                _verifyReleaseLabel("name", "$USERNAME", "$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/labels")
             }
         }, isSkippable: false, timeout: timeouts.checkout,)
 
