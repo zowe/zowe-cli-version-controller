@@ -242,7 +242,7 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
     void versionGeneric(Map arguments = [:]) {
-        labelCheckGeneric()
+        verifyLabelGeneric()
 
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
@@ -299,7 +299,7 @@ class GenericPipeline extends Pipeline {
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
      * to this function will map to the {@link GenericStageArguments} class. The
      * {@link GenericStageArguments#operation} will be executed after all checks are complete. This operation
-     * must not be provided or a {@link LabelCheckStageException} will be encountered.</p>
+     * must not be provided or a {@link VerifyLabelStageException} will be encountered.</p>
      *
      * @Stages
      * This method adds the following stage to your build:
@@ -325,7 +325,7 @@ class GenericPipeline extends Pipeline {
      *     The following exceptions will be thrown if there is an error.
      *
      *     <dl>
-     *         <dt><b>{@link LabelCheckStageException}</b></dt>
+     *         <dt><b>{@link VerifyLabelStageException}</b></dt>
      *         <dd>When stage is provided as an argument.</dd>
      *         <dd>When operation is provided as an argument.</dd>
      *     </dl>
@@ -333,18 +333,18 @@ class GenericPipeline extends Pipeline {
      *
      * @param arguments A map of arguments to be applied to the {@link GenericStageArguments} used to define the stage.
      */
-    void labelCheckGeneric(Map arguments = [:]) {
+    void verifyLabelGeneric(Map arguments = [:]) {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
         GenericStageArguments args = arguments as GenericStageArguments
 
-        LabelCheckStageException preSetupException
+        VerifyLabelStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new LabelCheckStageException("arguments.stage is an invalid option for labelCheckGeneric", args.name)
+            preSetupException = new VerifyLabelStageException("arguments.stage is an invalid option for verifyLabelGeneric", args.name)
         } else if (args.operation) {
-            preSetupException = new LabelCheckStageException("arguments.operation is an invalid option for labelCheckGeneric", args.name)
+            preSetupException = new VerifyLabelStageException("arguments.operation is an invalid option for verifyLabelGeneric", args.name)
         }
 
         args.name = "Verify Labels"
@@ -390,9 +390,9 @@ class GenericPipeline extends Pipeline {
         }
 
         // Create the stage and ensure that the first one is the stage of reference
-        Stage labelCheck = createStage(args)
-        if (!_control.labelCheck) {
-            _control.labelCheck = labelCheck
+        Stage verifyLabel = createStage(args)
+        if (!_control.verifyLabel) {
+            _control.verifyLabel = verifyLabel
         }
     }
 
@@ -917,13 +917,13 @@ class GenericPipeline extends Pipeline {
             list.each {
                 labels = labels + " '${it}'"
             }
-            throw new Exception(
-                    "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + labels)
+            throw new VerifyLabelStageException(
+                    "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + labels, "Verify labels")
         }
         // if none, throw error
         else if (list.size() == 0) {
-            throw new Exception(
-                    "Release label verification failed, no release label assigned to the pull request.")
+            throw new VerifyLabelStageException(
+                    "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
         }
     }
 }

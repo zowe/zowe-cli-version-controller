@@ -14,15 +14,15 @@ import org.zowe.pipelines.base.exceptions.StageException
 
 /**
  * A generic exception that is thrown from within the
- * {@link org.zowe.pipelines.generic.GenericPipeline#labelCheckGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#verifyLabelGeneric(java.util.Map)} method.
  */
-class LabelCheckStageException extends StageException {
+class VerifyLabelStageException extends StageException {
     /**
      * Create the exception.
      * @param message The exception message
      * @param stageName The name of the stage throwing the exception
      */
-    LabelCheckStageException(String message, String stageName) {
+    VerifyLabelStageException(String message, String stageName) {
         super(message, stageName)
     }
 }
