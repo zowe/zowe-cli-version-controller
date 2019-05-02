@@ -303,7 +303,7 @@ class GenericPipeline extends Pipeline {
      * @Stages
      * This method adds the following stage to your build:
      * <dl>
-     *     <dt><b>Validate Labels</b></dt>
+     *     <dt><b>Verify Labels</b></dt>
      *     <dd>This stage is responsible for verifying that the pull requests contains a release label.</dd>
      * </dl>
      *
@@ -346,7 +346,7 @@ class GenericPipeline extends Pipeline {
             preSetupException = new LabelCheckStageException("arguments.operation is an invalid option for labelCheckGeneric", args.name)
         }
 
-        args.name = "Validate Labels"
+        args.name = "Verify Labels"
 
         // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {

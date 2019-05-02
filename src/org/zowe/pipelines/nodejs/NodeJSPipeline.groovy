@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit
  *     // Set your config up before calling setup
  *     pipeline.admins.add("userid1", "userid2", "userid3")
  *
- *     pipeline.protectedBranches.addMap([
+ *     pipeline.protectedBran       ches.addMap([
  *         [name: "master", tag: "daily", prerelease: "alpha"],
  *         [name: "beta", tag: "beta", prerelease: "beta"],
  *         [name: "dummy", tag: "dummy", autoDeploy: true],
