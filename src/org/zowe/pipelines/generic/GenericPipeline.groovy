@@ -373,6 +373,7 @@ class GenericPipeline extends Pipeline {
                         usernameVariable: "USERNAME"
                 )]) {
                     def url = gitConfig.githubAPIEndpoint + "repos/ws617385/playground/issues/2/labels"
+                    steps.echo url
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url)
                     //_verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels")
                 }
