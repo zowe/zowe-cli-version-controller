@@ -373,7 +373,7 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
-                    def url = gitConfig.githubAPIEndpoint + "repos/" + "ws617385/playground" + "/issues/" + "2" + "/labels"
+                    def url = gitConfig.githubAPIEndpoint + "repos/" + "ws617385/playground" + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
                     steps.echo changeInfo.branchName
                     steps.echo changeInfo.changeBranch
                     steps.echo url
