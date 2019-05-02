@@ -373,19 +373,17 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
+                    // Retrieve the remote URL and pull out the repository information to use in the call to _verifyReleaseLabel
+                    // Example: "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels"
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
                     String repository = remoteUrl.replace(".git", "")
                     ArrayList repositoryArray = repository.split("/")
 
                     String url = gitConfig.githubAPIEndpoint + "repos/" + repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1] + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
-                    //String url = gitConfig.githubAPIEndpoint + "repos/" + "ws617385/playground" + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
-                    steps.echo changeInfo.branchName
-                    steps.echo changeInfo.changeBranch
-                    steps.echo remoteUrl
-                    steps.echo url
+
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url)
-                    //_verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD","https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels")
+
                 }
             }
             args.operation(stageName)
