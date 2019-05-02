@@ -375,7 +375,7 @@ class GenericPipeline extends Pipeline {
                 )]) {
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
                     String repository = remoteUrl.replace(".git", "")
-                    ArrayList repositoryArray = repository.split()
+                    ArrayList repositoryArray = repository.split("/")
 
                     String url = gitConfig.githubAPIEndpoint + "repos/" + repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1] + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
