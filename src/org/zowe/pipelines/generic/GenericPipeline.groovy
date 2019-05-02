@@ -606,6 +606,8 @@ class GenericPipeline extends Pipeline {
         // Call setup from the super class
         super.setupBase(timeouts)
 
+        steps.echo "changeInfo.branchName = " + changeInfo.branchName
+
         createStage(name: 'Configure Git', stage: {
             steps.withCredentials([steps.usernamePassword(
                 credentialsId: gitConfig.credentialsId,
