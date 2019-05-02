@@ -23,4 +23,9 @@ class GitConfig {
      * The credentials id in Jenkins
      */
     String credentialsId
+
+    /**
+     * The GitHub API endpoint
+     */
+    String githubAPIEndpoint
 }

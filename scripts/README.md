@@ -8,5 +8,3 @@ This folder contains various scripts for the controller to operate properly.
 
 [code-migration.groovy]: /scripts/code-migration.groovy
 [updateLicense.js]: /scripts/updateLicense.js
-[verifyReleaseLabel.sh]: /scripts/verifyReleaseLabel.sh
-[verifyReleaseLabel.groovy]: /scripts/verifyReleaseLabel.groovy

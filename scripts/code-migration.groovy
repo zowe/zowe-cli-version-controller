@@ -25,7 +25,7 @@ opts.push(
         string(name: 'GIT_CRED_ID', defaultValue: 'zowe-robot-github', description: 'Git Credential ID'),
         string(name: 'GIT_EMAIL', defaultValue: 'zowe.robot@gmail.com', description: 'Git email'),
         string(name: 'FILE_OVERWRITE', defaultValue: 'package.json', description: 'comma-separated file(s) that will have conflicts'),
-        string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to recevie build resutls (Override)')
+        string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to receive build results (Override)')
     ])
 )
 opts.push(buildDiscarder(logRotator(numToKeepStr: '10')))
@@ -53,7 +53,7 @@ node('ca-jenkins-agent') {
                 sh "git status"
                 sh "mkdir temp || exit 0"
                 
-                // Looping through the list becuase brace expansion is unsupported given unwanted escaping
+                // Looping through the list because brace expansion is unsupported given unwanted escaping
                 def filesVar = "package.json,.npmrc".split(',')
                 for (item in filesVar){
                     sh "cp ./${item} ./temp/"
