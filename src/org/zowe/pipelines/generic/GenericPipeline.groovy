@@ -373,10 +373,15 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
-                    String url = gitConfig.githubAPIEndpoint + "repos/" + "ws617385/playground" + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
+                    String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+                    String repository = remoteUrl.replace(".git", "")
+                    ArrayList repositoryArray = repository.split()
+
+                    String url = gitConfig.githubAPIEndpoint + "repos/" + repositoryArray[repositoryArray.size() - 2] + "/" +
+                      repositoryArray[repositoryArray.size() - 1] + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
+                    //String url = gitConfig.githubAPIEndpoint + "repos/" + "ws617385/playground" + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
                     steps.echo changeInfo.branchName
                     steps.echo changeInfo.changeBranch
-                    String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
                     steps.echo remoteUrl
                     steps.echo url
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url)
