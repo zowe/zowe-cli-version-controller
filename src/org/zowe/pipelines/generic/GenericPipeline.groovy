@@ -349,7 +349,6 @@ class GenericPipeline extends Pipeline {
 
         args.name = "Verify Labels"
 
-      steps.echo "args.shouldExecute = " + args.shouldExecute + "  arguments.shouldExecute = " + arguments.shouldExecute()
         // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {
             if (arguments.shouldExecute) {
