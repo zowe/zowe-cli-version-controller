@@ -27,14 +27,14 @@ def CONST = [
 
 import java.text.SimpleDateFormat;
 
-def deployTags(String pkgName, tags, cdJobName) {
+def deployTags(pkgName, tags, cdJobName) {
   return {
     stage("Deploy: @zowe/${pkgName}") {
       tags.each { tagName ->
         echo "Deploy @zowe/${pkgName}@${tagName}"
         build job: cdJobName, parameters: [
           [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
-          [$class: 'StringParameterValue', name: 'PKT_TAG', value: tagName]
+          [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
         ]
       }
     }
