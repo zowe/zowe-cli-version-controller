@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
  *     pipeline.publishConfig = [
  *         email: nodejs.gitConfig.email,
  *         credentialsId: 'robot-user'
- *         githubAPIEndpoint: 'https://github.com/api/v3/'
+ *         githubAPIEndpoint: 'https://api.github.com/'
  *     ]
  *
  *     pipeline.registryConfig = [
@@ -196,6 +196,8 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "rm -f $archiveName"
             }
         }])
+
+        verifyLabelGeneric()
     }
 
     /**

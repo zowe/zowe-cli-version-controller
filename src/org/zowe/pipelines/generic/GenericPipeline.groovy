@@ -60,7 +60,7 @@ import java.util.regex.Pattern
  *     pipeline.gitConfig = [
  *         email: 'git-user-email@example.com',
  *         credentialsId: 'git-user-credentials-id'
- *         githubAPIEndpoint: 'https://github.com/api/v3/'
+ *         githubAPIEndpoint: 'https://api.github.com/'
  *     ]
  *
  *     // MUST BE CALLED FIRST
@@ -242,7 +242,7 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
     void versionGeneric(Map arguments = [:]) {
-        verifyLabelGeneric()
+//        verifyLabelGeneric()
 
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
