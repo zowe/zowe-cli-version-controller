@@ -16,6 +16,7 @@ import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.enums.StageStatus
 import org.zowe.pipelines.base.models.*
 import org.zowe.pipelines.base.exceptions.*
+import org.zowe.pipelines.generic.exceptions.VerifyLabelStageException
 
 import java.util.concurrent.TimeUnit
 
@@ -830,15 +831,17 @@ class Pipeline {
                 bodyText += "<table>"
                 bodyText += "<tr><td style=\"width: 150px\">First Failing Stage:</td><td><b>${_stages.firstFailingStage.name}</b></td></tr>"
                 bodyText += "<tr><td>Exception:</td><td>${_stages.firstFailingStage.exception.toString()}</td></tr>"
-                bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
-                bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
-                bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
-                def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
 
-                for (int i = 0; i < stackTrace.length; i++) {
-                    bodyText += "at ${stackTrace[i]}<br/>"
-                }
+                if (!_stages.firstFailingStage?.exception instanceof VerifyLabelStageException) {
+                  bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
+                  bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
+                  bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
+                  def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
 
+                  for (int i = 0; i < stackTrace.length; i++) {
+                      bodyText += "at ${stackTrace[i]}<br/>"
+                  }
+               }
                 bodyText += "</div></td></tr>"
                 bodyText += "</table>"
             }
