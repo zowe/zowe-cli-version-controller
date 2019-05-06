@@ -969,9 +969,9 @@ class GenericPipeline extends Pipeline {
 //          "color": "2b0a91",
 //          "description": "Indicates a major breaking change will be introduced"
 //        '''
-        def payload = JsonOutput.toJson([name    : "release-major",
-                                         color   : "2b0a91",
-                                         description  : "Indicates a major breaking change will be introduced"])
+        def payload = JsonOutput.toJson([name       : "release-major",
+                                         color      : "2b0a91",
+                                         description: "Indicates a major breaking change will be introduced"])
 
 //        def inputFile = new File("./Constants.json")
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
@@ -981,12 +981,14 @@ class GenericPipeline extends Pipeline {
         def data = jsonSlurper.parseText(inputJSON)
         def name = "name"
         def a = "release_labels"
-        data."${a}".each{ steps.echo it."${name}"
+        data."${a}".each {
+            steps.echo it."${name}"
 
-        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-        arrValidLabels.each {
-            def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
-        //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
+            String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+            arrValidLabels.each {
+                def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
+                //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
+            }
         }
     }
 }
