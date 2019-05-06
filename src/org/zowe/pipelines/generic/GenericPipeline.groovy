@@ -981,7 +981,8 @@ class GenericPipeline extends Pipeline {
         def data = jsonSlurper.parseText(inputJSON)
         def name = "name"
         def a = "release_labels"
-        data."${a}".each {
+        data."release-labels".each {
+            steps.echo it
             steps.echo it."${name}"
 
             String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
