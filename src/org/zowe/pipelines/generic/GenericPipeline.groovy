@@ -991,6 +991,7 @@ class GenericPipeline extends Pipeline {
                                              description: it."description"])
 
             String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+            steps.echo url
             arrValidLabels.each {
                 def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
                 steps.echo process
