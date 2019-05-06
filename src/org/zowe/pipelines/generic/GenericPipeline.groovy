@@ -924,7 +924,7 @@ class GenericPipeline extends Pipeline {
         // if none, throw error
         else if (list.size() == 0) {
             // if none assigned, assume missing so add to repository
-            //_addReleaseLabels(arrValidLabels, userpass, ownerRepository)
+            _addReleaseLabels(arrValidLabels, userpass, ownerRepository)
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
         }
@@ -935,9 +935,41 @@ class GenericPipeline extends Pipeline {
      */
     protected void _addReleaseLabels(String[] arrValidLabels, String userPassword, String ownerRepository) {
 
-        def url = ownerRepository
+        /*def json = '''\
+        {
+            "release-labels": [
+          {
+              "name": "release-major",
+              "color": "2b0a91",
+              "description": "Indicates a major breaking change will be introduced"
+          },
+          {
+              "name": "release-minor",
+              "color": "8118cc",
+              "description": "Indicates a minor feature will be added"
+          },
+          {
+              "name": "release-patch",
+              "color": "faa5ff",
+              "description": "Indicates a patch to existing code will be applied"
+          },
+          {
+              "name": "no-release",
+              "color": "cfd3d7",
+              "description": "Indicates no user-facing code will be introduced"
+          }
+        ]
+        }
+        '''*/
+        def json = '''\
+        {
+          "name": "release-major",
+          "color": "2b0a91",
+          "description": "Indicates a major breaking change will be introduced"
+        '''
+        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         arrValidLabels.each {
-        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url", returnStdout: true
+        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
         }
     }
 }

@@ -833,15 +833,15 @@ class Pipeline {
                 bodyText += "<tr><td>Exception:</td><td>${_stages.firstFailingStage.exception.toString()}</td></tr>"
 
                 if (!_stages.firstFailingStage?.exception instanceof VerifyLabelStageException) {
-                  bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
-                  bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
-                  bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
-                  def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
+                    bodyText += "<tr><td style=\"vertical-align: top\">Stack:</td>"
+                    bodyText += "<td style=\"color: red; display: block; max-height: 350px; max-width: 65vw; overflow: auto\">"
+                    bodyText += "<div style=\"width: max-content; font-family: monospace;\">"
+                    def stackTrace = _stages.firstFailingStage.exception.getStackTrace()
 
-                  for (int i = 0; i < stackTrace.length; i++) {
-                      bodyText += "at ${stackTrace[i]}<br/>"
-                  }
-               }
+                    for (int i = 0; i < stackTrace.length; i++) {
+                        bodyText += "at ${stackTrace[i]}<br/>"
+                    }
+                }
                 bodyText += "</div></td></tr>"
                 bodyText += "</table>"
             }
