@@ -977,6 +977,8 @@ class GenericPipeline extends Pipeline {
 //        def inputFile = new File("./Constants.json")
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
 
+        def process = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+
         def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
         def jsonSlurper = new JsonSlurper()
         def data = jsonSlurper.parseText(inputJSON)
