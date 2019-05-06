@@ -969,9 +969,9 @@ class GenericPipeline extends Pipeline {
 //          "color": "2b0a91",
 //          "description": "Indicates a major breaking change will be introduced"
 //        '''
-        def payload = JsonOutput.toJson([name       : "release-major",
-                                         color      : "2b0a91",
-                                         description: "Indicates a major breaking change will be introduced"])
+        // def payload = JsonOutput.toJson([name       : "release-major",
+//                                         color      : "2b0a91",
+//                                         description: "Indicates a major breaking change will be introduced"])
 
 //        def inputFile = new File("./Constants.json")
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
@@ -979,15 +979,19 @@ class GenericPipeline extends Pipeline {
         def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
         def jsonSlurper = new JsonSlurper()
         def data = jsonSlurper.parseText(inputJSON)
-        def name = "name"
+        //def name = "name"
 
         data."release-labels".each {
-            steps.echo it."${name}"
-            steps.echo it."name"
+//            steps.echo it."${name}"
+//            steps.echo it."name"
+            def payload = JsonOutput.toJson([name       : it."name",
+                                             color      : it."color",
+                                             description: it."description"])
 
             String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
             arrValidLabels.each {
                 def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
+                steps.echo process
                 //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
             }
         }
