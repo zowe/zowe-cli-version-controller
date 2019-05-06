@@ -22,6 +22,7 @@ import org.zowe.pipelines.generic.exceptions.git.*
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 import java.util.regex.Pattern
+import groovy.json.JsonOutput
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.base.Pipeline} class. This class adds methods for
@@ -967,9 +968,14 @@ class GenericPipeline extends Pipeline {
           "color": "2b0a91",
           "description": "Indicates a major breaking change will be introduced"
         '''
+        def payload = JsonOutput.toJson([name    : "release-major",
+                                         color   : "2b0a91",
+                                         description  : "Indicates a major breaking change will be introduced"])
+
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         arrValidLabels.each {
-        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
+        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
+        //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
         }
     }
 }
