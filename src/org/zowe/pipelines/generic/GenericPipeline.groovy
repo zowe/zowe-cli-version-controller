@@ -900,6 +900,7 @@ class GenericPipeline extends Pipeline {
 
         // retrieve label names from pull request
         def userpass = "$user:$password"
+        steps.echo userpass
         def process = steps.sh script: "curl -u\"${userpass}\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
 
         // pull the label names out
