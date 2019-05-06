@@ -982,7 +982,7 @@ class GenericPipeline extends Pipeline {
         def name = "name"
         def a = "release_labels"
         data."release-labels".each {
-            steps.echo it
+            steps.echo it.message
             steps.echo it."${name}"
 
             String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
