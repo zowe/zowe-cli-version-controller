@@ -983,7 +983,9 @@ class GenericPipeline extends Pipeline {
 
         data."release-labels".each {
 //            steps.echo it."${name}"
-//            steps.echo it."name"
+            steps.echo it."name"
+            steps.echo it."color"
+            steps.echo it."description"
             def payload = JsonOutput.toJson([name       : it."name",
                                              color      : it."color",
                                              description: it."description"])
