@@ -23,6 +23,7 @@ import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 import java.util.regex.Pattern
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.base.Pipeline} class. This class adds methods for
@@ -962,15 +963,19 @@ class GenericPipeline extends Pipeline {
         ]
         }
         '''*/
-        def json = '''\
-        {
-          "name": "release-major",
-          "color": "2b0a91",
-          "description": "Indicates a major breaking change will be introduced"
-        '''
+//        def json = '''\
+//        {
+//          "name": "release-major",
+//          "color": "2b0a91",
+//          "description": "Indicates a major breaking change will be introduced"
+//        '''
         def payload = JsonOutput.toJson([name    : "release-major",
                                          color   : "2b0a91",
                                          description  : "Indicates a major breaking change will be introduced"])
+
+        def inputFile = new File("./Constants.json")
+        def InputJSON = new JsonSlurper().parseText(inputFile.text)
+        InputJSON.each{ println it }
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         arrValidLabels.each {
