@@ -973,13 +973,15 @@ class GenericPipeline extends Pipeline {
                                          color   : "2b0a91",
                                          description  : "Indicates a major breaking change will be introduced"])
 
-        def inputFile = new File("./Constants.json")
-        def InputJSON = new JsonSlurper().parseText(inputFile.text)
-        InputJSON.each{ println it }
+//        def inputFile = new File("./Constants.json")
+//        def InputJSON = new JsonSlurper().parseText(inputFile.text)
+
+        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+        inputJSON.each{ println it }
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         arrValidLabels.each {
-        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
+            process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url --data-urlencode \'payload=${payload}\'", returnStdout: true
         //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
         }
     }
