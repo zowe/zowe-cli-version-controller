@@ -378,11 +378,12 @@ class GenericPipeline extends Pipeline {
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
                     String repository = remoteUrl.replace(".git", "")
                     ArrayList repositoryArray = repository.split("/")
+                    String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
+                      repositoryArray[repositoryArray.size() - 1]
 
-                    String url = gitConfig.githubAPIEndpoint + "repos/" + repositoryArray[repositoryArray.size() - 2] + "/" +
-                      repositoryArray[repositoryArray.size() - 1] + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
+                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
 
-                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url)
+                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url, ownerRepository)
 
                 }
             }
@@ -890,7 +891,7 @@ class GenericPipeline extends Pipeline {
     /**
      * Verify a release label has been assigned to the pull request
      */
-    protected void _verifyReleaseLabel(String value, String user, String password, String url) {
+    protected void _verifyReleaseLabel(String value, String user, String password, String url, String ownerRepository) {
 
         // the valid labels for bumping version processing
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
@@ -922,8 +923,21 @@ class GenericPipeline extends Pipeline {
         }
         // if none, throw error
         else if (list.size() == 0) {
+            // if none assigned, assume missing so add to repository
+            //_addReleaseLabels(arrValidLabels, userpass, ownerRepository)
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
+        }
+    }
+
+    /**
+     * Add release labels to the repository, if they exist no error occurs
+     */
+    protected void _addReleaseLabels(String[] arrValidLabels, String userPassword, String ownerRepository) {
+
+        def url = ownerRepository
+        arrValidLabels.each {
+        def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url", returnStdout: true
         }
     }
 }
