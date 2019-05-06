@@ -995,7 +995,7 @@ class GenericPipeline extends Pipeline {
             steps.echo payload
             steps.echo ownerRepository
             arrValidLabels.each {
-                def process = steps.sh script: "curl -u \"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" ${url} --data ${payload}", returnStdout: true
+                def process = steps.sh script: "curl -u \"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
                 steps.echo process
                 //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
             }
