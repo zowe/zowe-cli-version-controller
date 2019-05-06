@@ -979,8 +979,7 @@ class GenericPipeline extends Pipeline {
         def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
         def jsonSlurper = new JsonSlurper()
         def data = jsonSlurper.parseText(inputJSON)
-        steps.echo data
-        data.each{ steps.echo it."name" }
+        data.release-labels.each{ steps.echo it."name" }
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         arrValidLabels.each {
