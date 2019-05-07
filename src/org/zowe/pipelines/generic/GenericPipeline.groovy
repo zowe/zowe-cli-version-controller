@@ -930,8 +930,8 @@ class GenericPipeline extends Pipeline {
         else if (list.size() == 0) {
             // if none assigned, assume missing so add to repository
 //            _addReleaseLabels(arrValidLabels, userpass, ownerRepository)
-            String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-            def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" ${url2} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+//            String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+//            def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" ${url2} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
         }
