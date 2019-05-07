@@ -912,7 +912,7 @@ class GenericPipeline extends Pipeline {
         String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 
         steps.echo userpass
-        def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
+        def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", returnStdout: true
         def processa = steps.sh script: "curl -u\"${userpass}\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
         def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
         def process3 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
