@@ -375,6 +375,8 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
+
+                    def env = System.getenv()
                     // Retrieve the remote URL and pull out the repository information to use in the call to _verifyReleaseLabel
                     // Example: "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels"
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
@@ -383,7 +385,7 @@ class GenericPipeline extends Pipeline {
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
 
-                    steps.echo "$USERNAME"
+                    steps.echo env.USERNAME
                     String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
                     def process2 = steps.sh script: "curl -u\"$USERNAME\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
                     //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
