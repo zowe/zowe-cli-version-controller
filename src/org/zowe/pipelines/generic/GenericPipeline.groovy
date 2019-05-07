@@ -913,12 +913,15 @@ class GenericPipeline extends Pipeline {
         def process = steps.sh script: "curl -u\"${userpass}\" -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
         String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-        //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+        def process3 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
         // pull the label names out
         def list = []
         def data = steps.readJSON text: process
         steps.println(process)
+        steps.println(process2)
+        steps.println(process3)
+
         // loop through the label names and add valid labels to array
         data.each {
             if ( it[value] in arrValidLabels ) {
