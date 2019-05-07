@@ -979,7 +979,7 @@ class GenericPipeline extends Pipeline {
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
         //def proces2 = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-        def process = steps.sh script: "curl -u \"${userPassword}\" -X POST -H \"Content-Type: application/json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+        def process = steps.sh script: "curl -u \"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
 //        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
 //        def jsonSlurper = new JsonSlurper()
