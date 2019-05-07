@@ -372,7 +372,7 @@ class GenericPipeline extends Pipeline {
             args.operation = { String stgName ->
                 steps.withCredentials([steps.usernameColonPassword(
                         credentialsId: gitConfig.credentialsId,
-                        variable: "USERPASSWORD"
+                        variable: _TOKEN
 //                        passwordVariable: "PASSWORD",
 //                        usernameVariable: "USERNAME"
                 )]) {
@@ -384,9 +384,9 @@ class GenericPipeline extends Pipeline {
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
 
-                    steps.echo $USERPASSWORD
+                    steps.echo _TOKEN
                     String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-                    def process2 = steps.sh script: "curl -u\"${USERPASSWORD}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+                    def process2 = steps.sh script: "curl -u\"${_TOKEN}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
                     //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
                     String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
