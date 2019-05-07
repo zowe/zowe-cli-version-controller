@@ -391,7 +391,7 @@ class GenericPipeline extends Pipeline {
                     //def process2 = steps.sh script: "curl -u\"$USERNAME\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
                     //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
-                    steps.echo process2
+                    //steps.echo process2
                     String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
 
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url, ownerRepository)
