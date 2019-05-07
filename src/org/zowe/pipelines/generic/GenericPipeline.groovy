@@ -370,10 +370,11 @@ class GenericPipeline extends Pipeline {
             }
 
             args.operation = { String stgName ->
-                steps.withCredentials([steps.usernamePassword(
+                steps.withCredentials([steps.usernameColonPassword(
                         credentialsId: gitConfig.credentialsId,
-                        passwordVariable: "PASSWORD",
-                        usernameVariable: "USERNAME"
+                        variable: "USERPASSWORD"
+//                        passwordVariable: "PASSWORD",
+//                        usernameVariable: "USERNAME"
                 )]) {
                     // Retrieve the remote URL and pull out the repository information to use in the call to _verifyReleaseLabel
                     // Example: "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels"
@@ -382,6 +383,11 @@ class GenericPipeline extends Pipeline {
                     ArrayList repositoryArray = repository.split("/")
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
+
+                    steps.echo $USERPASSWORD
+                    String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+                    def process2 = steps.sh script: "curl -u\"${USERPASSWORD}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+                    //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
                     String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
 
