@@ -903,7 +903,7 @@ class GenericPipeline extends Pipeline {
         steps.echo userpass
         def process = steps.sh script: "curl -X GET -H \"Content-Type: application/json\" $url", returnStdout: true
         String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-        def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+        def process2 = steps.sh script: "curl -u\"$user:$password\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
         // pull the label names out
         def list = []
