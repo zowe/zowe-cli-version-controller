@@ -922,10 +922,8 @@ class GenericPipeline extends Pipeline {
         // pull the label names out
         def list = []
         def data = steps.readJSON text: process
-        steps.println(process)
-        //steps.println(processa)
         steps.println(process2)
-        //steps.println(process3)
+        steps.println(process)
 
         // loop through the label names and add valid labels to array
         data.each {
