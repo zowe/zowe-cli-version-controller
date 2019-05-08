@@ -910,6 +910,8 @@ class GenericPipeline extends Pipeline {
         // retrieve label names from pull request
         def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", returnStdout: true
 
+        steps.echo process
+
         // pull the label names out
         def list = []
         def data = steps.readJSON text: process
