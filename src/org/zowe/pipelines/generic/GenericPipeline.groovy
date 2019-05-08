@@ -908,22 +908,11 @@ class GenericPipeline extends Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def userpass = "$user:$password"
-        String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-
-        steps.echo userpass
-        steps.echo url2
-        def process2 = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
         def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", returnStdout: true
-        //def processa = steps.sh script: "curl -u\"${userpass}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", returnStdout: true
-        //def process2 = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-        //def process3 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
         // pull the label names out
         def list = []
         def data = steps.readJSON text: process
-        steps.println(process2)
-        steps.println(process)
 
         // loop through the label names and add valid labels to array
         data.each {
@@ -945,7 +934,7 @@ class GenericPipeline extends Pipeline {
         // if none, throw error
         else if (list.size() == 0) {
             // if none assigned, assume missing so add to repository
-//            _addReleaseLabels(arrValidLabels, userpass, ownerRepository)
+            _addReleaseLabels(arrValidLabels, user, password, ownerRepository)
 //            String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 //            def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" ${url2} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
             throw new VerifyLabelStageException(
@@ -956,7 +945,7 @@ class GenericPipeline extends Pipeline {
     /**
      * Add release labels to the repository, if they exist no error occurs
      */
-    protected void _addReleaseLabels(String[] arrValidLabels, String userPassword, String ownerRepository) {
+    protected void _addReleaseLabels(String[] arrValidLabels, String user, String password, String ownerRepository) {
 
         /*def json = '''\
         {
@@ -998,9 +987,9 @@ class GenericPipeline extends Pipeline {
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-        //def proces2 = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-        def process = steps.sh script: "curl -u \"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+        def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
+        steps.echo process
 //        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
 //        def jsonSlurper = new JsonSlurper()
 //        def data = jsonSlurper.parseText(inputJSON)
