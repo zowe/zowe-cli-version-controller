@@ -935,8 +935,6 @@ class GenericPipeline extends Pipeline {
         else if (list.size() == 0) {
             // if none assigned, assume missing so add to repository
             _addReleaseLabels(arrValidLabels, user, password, ownerRepository)
-//            String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-//            def process2 = steps.sh script: "curl -u\"${userpass}\" -X POST -H \"Content-Type: application/json\" ${url2} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
         }
@@ -987,33 +985,34 @@ class GenericPipeline extends Pipeline {
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-        def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
 
         steps.echo process
-//        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-//        def jsonSlurper = new JsonSlurper()
-//        def data = jsonSlurper.parseText(inputJSON)
-//        //def name = "name"
-//
-//        data."release-labels".each {
-////            steps.echo it."${name}"
-//            steps.echo it."name"
-//            steps.echo it."color"
-//            steps.echo it."description"
-//            def payload = JsonOutput.toJson([name       : it."name",
-//                                             color      : it."color",
-//                                             description: it."description"])
-//
-//
-//            steps.echo url
-//            steps.echo payload
-//            steps.echo ownerRepository
-//            arrValidLabels.each {
-//                def process = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-//                //def process = steps.sh script: "curl -u \"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-//                steps.echo process
-//                //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
-//            }
-//        }
+
+        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+        def jsonSlurper = new JsonSlurper()
+        def data = jsonSlurper.parseText(inputJSON)
+        //def name = "name"
+
+        data."release-labels".each {
+            steps.echo it."name"
+            steps.echo it."color"
+            steps.echo it."description"
+            def payload = JsonOutput.toJson([name       : it."name",
+                                             color      : it."color",
+                                             description: it."description"])
+
+
+            steps.echo url
+            steps.echo payload
+            steps.echo ownerRepository
+            arrValidLabels.each {
+                //def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+                def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '${payload}'", returnStdout: true
+                //def process = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+
+                steps.echo process
+                //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
+            }
+        }
     }
 }
