@@ -1008,6 +1008,7 @@ class GenericPipeline extends Pipeline {
             //arrValidLabels.each {
                 //def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
             def userpassword = "$user" + ":" + "$password"
+            steps.echo userpassword
 
             //def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
             def process = ["curl", "-u", userpassword, "-X", "POST", "-H", "Accept: application/vnd.github.symmetra-preview+json", url, "-data", payload].execute().text
