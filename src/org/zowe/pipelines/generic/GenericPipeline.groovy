@@ -992,6 +992,7 @@ class GenericPipeline extends Pipeline {
         def jsonSlurper = new JsonSlurper()
         def data = jsonSlurper.parseText(inputJSON)
         //def name = "name"
+        steps.echo data
 
         data."release-labels".each {
             steps.echo it."name"
@@ -1002,7 +1003,7 @@ class GenericPipeline extends Pipeline {
                                              description: it."description"])
 
 
-            steps.echo url
+            //steps.echo url
             steps.echo payload
             steps.echo ownerRepository
             arrValidLabels.each {
