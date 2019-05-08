@@ -947,7 +947,7 @@ class GenericPipeline extends Pipeline {
      */
     protected void _addReleaseLabels(String[] arrValidLabels, String user, String password, String ownerRepository) {
 
-        /*def json = '''\
+        def json = '''\
         {
             "release-labels": [
           {
@@ -972,7 +972,7 @@ class GenericPipeline extends Pipeline {
           }
         ]
         }
-        '''*/
+        '''
 //        def json = '''\
 //        {
 //          "name": "release-major",
@@ -989,9 +989,9 @@ class GenericPipeline extends Pipeline {
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 
         //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-        def jsonSlurper = new JsonSlurper()
-        def data = jsonSlurper.parseText(inputJSON)
+        //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+        //def jsonSlurper = new JsonSlurper()
+        def data = json //jsonSlurper.parseText(inputJSON)
 
         data."release-labels".each {
             steps.echo it."name"
