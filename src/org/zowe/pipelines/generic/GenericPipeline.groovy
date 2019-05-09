@@ -1035,15 +1035,18 @@ class GenericPipeline extends Pipeline {
             steps.echo it."name"
             steps.echo it."color"
             steps.echo it."description"
-            def payload = JsonOutput.toJson([name       : it."name",
-                                             color      : it."color",
-                                             description: it."description"])
+            def name = it."name"
+            def color = it."color"
+            def description = it."description"
+//            def payload = JsonOutput.toJson([name       : it."name",
+//                                             color      : it."color",
+//                                             description: it."description"])
 
             //steps.echo url
             steps.echo payload
             //steps.echo ownerRepository
             //arrValidLabels.each {
-            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data ${payload}", returnStdout: true
+            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}'", returnStdout: true
             //def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
             def userpassword = "$user" + ":" + "$password"
             steps.echo userpassword
