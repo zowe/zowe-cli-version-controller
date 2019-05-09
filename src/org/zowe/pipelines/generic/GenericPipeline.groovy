@@ -990,8 +990,33 @@ class GenericPipeline extends Pipeline {
 
         //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
         //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-        //def jsonSlurper = new JsonSlurper()
-        def data = jsonSlurper.parseText(json) //inputJSON)
+        def jsonSlurper = new JsonSlurper()
+        def data = jsonSlurper.parseText '''\
+        {
+            "release-labels": [
+          {
+              "name": "release-major",
+              "color": "2b0a91",
+              "description": "Indicates a major breaking change will be introduced"
+          },
+          {
+              "name": "release-minor",
+              "color": "8118cc",
+              "description": "Indicates a minor feature will be added"
+          },
+          {
+              "name": "release-patch",
+              "color": "faa5ff",
+              "description": "Indicates a patch to existing code will be applied"
+          },
+          {
+              "name": "no-release",
+              "color": "cfd3d7",
+              "description": "Indicates no user-facing code will be introduced"
+          }
+        ]
+        }
+        '''
 
         data."release-labels".each {
             steps.echo it."name"
