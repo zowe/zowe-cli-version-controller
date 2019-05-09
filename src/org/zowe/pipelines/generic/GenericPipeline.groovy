@@ -898,7 +898,17 @@ class GenericPipeline extends Pipeline {
     protected void _verifyReleaseLabel(String value, String user, String password, String url, String ownerRepository) {
 
         // the valid labels for bumping version processing
-        String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
+        //String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
+
+        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+
+        def arrValidLabels = []
+        def data = steps.readJSON text: inputJSON
+
+        data."release-labels".each {
+            // add the name value
+            arrValidLabels.add(it."name")
+        }
 
         // retrieve label names from pull request
         def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", \
@@ -908,10 +918,10 @@ class GenericPipeline extends Pipeline {
 
         // pull the label names out
         def list = []
-        def data = steps.readJSON text: process
+        def data2 = steps.readJSON text: process
 
         // loop through the label names and add valid labels to array
-        data.each {
+        data2.each {
             if ( it[value] in arrValidLabels ) {
                 list.add(it[value])
             }
@@ -937,10 +947,16 @@ class GenericPipeline extends Pipeline {
         }
     }
 
-    /**
+     /**
      * Add release labels to the repository, if they exist no error occurs
+     *
+     * @param report The report to validate
+     * @param reportName The name of the report being validated
+     * @param stageName The name of the stage that is executing.
+     *
+     * @throw {@link TestStageException} when any of the report properties are invalid.
      */
-    protected void _addReleaseLabels(String[] arrValidLabels, String user, String password, String ownerRepository) {
+    protected void _addReleaseLabels(String user, String password, String ownerRepository) {
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 
