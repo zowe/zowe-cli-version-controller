@@ -956,7 +956,7 @@ class GenericPipeline extends Pipeline {
      *
      * @throw {@link TestStageException} when any of the report properties are invalid.
      */
-    protected void _addReleaseLabels(data, String user, String password, String ownerRepository) {
+    protected void _addReleaseLabels(Object data, String user, String password, String ownerRepository) {
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 //
