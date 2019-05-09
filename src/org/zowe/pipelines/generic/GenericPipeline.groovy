@@ -941,7 +941,7 @@ class GenericPipeline extends Pipeline {
         // if none, throw error
         else if (list.size() == 0) {
             // if none assigned, assume missing so add to repository
-            _addReleaseLabels(arrValidLabels, user, password, ownerRepository)
+            _addReleaseLabels(data, user, password, ownerRepository)
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
         }
@@ -956,9 +956,9 @@ class GenericPipeline extends Pipeline {
      *
      * @throw {@link TestStageException} when any of the report properties are invalid.
      */
-    protected void _addReleaseLabels(String data, String user, String password, String ownerRepository) {
+    protected void _addReleaseLabels(data, String user, String password, String ownerRepository) {
 
-//        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 //
 //        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
 //
