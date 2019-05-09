@@ -956,14 +956,14 @@ class GenericPipeline extends Pipeline {
      *
      * @throw {@link TestStageException} when any of the report properties are invalid.
      */
-    protected void _addReleaseLabels(String user, String password, String ownerRepository) {
+    protected void _addReleaseLabels(String data, String user, String password, String ownerRepository) {
 
-        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-
-        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-
-        //
-        def data = steps.readJSON text: inputJSON
+//        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+//
+//        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+//
+//        //
+//        def data = steps.readJSON text: inputJSON
         data."release-labels".each {
             // pull out the values
             def name = it."name"
