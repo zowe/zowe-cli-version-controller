@@ -22,8 +22,6 @@ import org.zowe.pipelines.generic.exceptions.git.*
 import org.zowe.pipelines.generic.models.*
 import org.zowe.pipelines.generic.exceptions.*
 import java.util.regex.Pattern
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.base.Pipeline} class. This class adds methods for
@@ -244,8 +242,6 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link VersionStageArguments} used to define the stage.
      */
     void versionGeneric(Map arguments = [:]) {
-//        verifyLabelGeneric()
-
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
@@ -376,9 +372,6 @@ class GenericPipeline extends Pipeline {
                         usernameVariable: "USERNAME"
                 )]) {
 
-//                    def env = System.getenv()
-//                    steps.echo env.USERNAME
-
                     // Retrieve the remote URL and pull out the repository information to use in the call to _verifyReleaseLabel
                     // Example: "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels"
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
@@ -387,12 +380,8 @@ class GenericPipeline extends Pipeline {
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
 
-                    //String url2 = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-                    //def process2 = steps.sh script: "curl -u\"$USERNAME\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-                    //def process2 = steps.sh script: "curl -u\"PeteSwauger:Zowe0609\" -X POST -H \"Content-Type: application/json\" $url2 --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-
-                    //steps.echo process2
-                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + changeInfo.branchName.replace("PR-","") + "/labels"
+                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + \
+                                 changeInfo.branchName.replace("PR-","") + "/labels"
 
                     _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url, ownerRepository)
 
@@ -628,8 +617,6 @@ class GenericPipeline extends Pipeline {
     void setupGeneric(GenericSetupArguments timeouts) {
         // Call setup from the super class
         super.setupBase(timeouts)
-
-        steps.echo "changeInfo.branchName = " + changeInfo.branchName
 
         createStage(name: 'Configure Git', stage: {
             steps.withCredentials([steps.usernamePassword(
@@ -901,6 +888,12 @@ class GenericPipeline extends Pipeline {
 
     /**
      * Verify a release label has been assigned to the pull request
+     *
+     * @param report The report to validate
+     * @param reportName The name of the report being validated
+     * @param stageName The name of the stage that is executing.
+     *
+     * @throw {@link TestStageException} when any of the report properties are invalid.
      */
     protected void _verifyReleaseLabel(String value, String user, String password, String url, String ownerRepository) {
 
@@ -908,7 +901,8 @@ class GenericPipeline extends Pipeline {
         String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
 
         // retrieve label names from pull request
-        def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", returnStdout: true
+        def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", \
+                      returnStdout: true
 
         steps.echo process
 
@@ -931,7 +925,8 @@ class GenericPipeline extends Pipeline {
                 labels = labels + " '${it}'"
             }
             throw new VerifyLabelStageException(
-                    "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + labels, "Verify labels")
+                    "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + \
+                    labels, "Verify labels")
         }
         // if none, throw error
         else if (list.size() == 0) {
@@ -960,7 +955,8 @@ class GenericPipeline extends Pipeline {
             def description = it."description"
 
             // create the label (if exists, no error raised)
-            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}'", returnStdout: true
+            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" \
+                          ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}'", returnStdout: true
 
             steps.echo process
         }
