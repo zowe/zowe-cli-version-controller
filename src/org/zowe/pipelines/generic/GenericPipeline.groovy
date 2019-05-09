@@ -987,62 +987,66 @@ class GenericPipeline extends Pipeline {
 //        def InputJSON = new JsonSlurper().parseText(inputFile.text)
 
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
+        def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+        process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-minor\",\"color\":\"8118cc\",\"description\":\"Indicates a minor feature will be added\"}'", returnStdout: true
+        process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-patch\",\"color\":\"faa5ff\",\"description\":\"Indicates a patch to existing code will be applied\"}'", returnStdout: true
+        process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"no-release\",\"color\":\"cfd3d7\",\"description\":\"Indicates no user-facing code will be introduced\"}'", returnStdout: true
 
-        //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-        //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-        def jsonSlurper = new JsonSlurper()
-        def data = jsonSlurper.parseText '''\
-        {
-            "release-labels": [
-          {
-              "name": "release-major",
-              "color": "2b0a91",
-              "description": "Indicates a major breaking change will be introduced"
-          },
-          {
-              "name": "release-minor",
-              "color": "8118cc",
-              "description": "Indicates a minor feature will be added"
-          },
-          {
-              "name": "release-patch",
-              "color": "faa5ff",
-              "description": "Indicates a patch to existing code will be applied"
-          },
-          {
-              "name": "no-release",
-              "color": "cfd3d7",
-              "description": "Indicates no user-facing code will be introduced"
-          }
-        ]
-        }
-        '''
-
-        data."release-labels".each {
-            steps.echo it."name"
-            steps.echo it."color"
-            steps.echo it."description"
-            def payload = JsonOutput.toJson([name       : it."name",
-                                             color      : it."color",
-                                             description: it."description"])
-
-
-            //steps.echo url
-            steps.echo payload
-            //steps.echo ownerRepository
-            //arrValidLabels.each {
-            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-            def userpassword = "$user" + ":" + "$password"
-            steps.echo userpassword
-
-            //def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
-            //def process = ["curl", "-u", userpassword, "-X", "POST", "-H", "Accept: application/vnd.github.symmetra-preview+json", url, "-data", payload].execute().text
-            //    def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '${payload}'", returnStdout: true
-                //def process = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
-
-                steps.echo process
-                //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
-            //}
-        }
+//        //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+//        //def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
+//        def jsonSlurper = new JsonSlurper()
+//        def data = jsonSlurper.parseText '''\
+//        {
+//            "release-labels": [
+//          {
+//              "name": "release-major",
+//              "color": "2b0a91",
+//              "description": "Indicates a major breaking change will be introduced"
+//          },
+//          {
+//              "name": "release-minor",
+//              "color": "8118cc",
+//              "description": "Indicates a minor feature will be added"
+//          },
+//          {
+//              "name": "release-patch",
+//              "color": "faa5ff",
+//              "description": "Indicates a patch to existing code will be applied"
+//          },
+//          {
+//              "name": "no-release",
+//              "color": "cfd3d7",
+//              "description": "Indicates no user-facing code will be introduced"
+//          }
+//        ]
+//        }
+//        '''
+//
+//        data."release-labels".each {
+//            steps.echo it."name"
+//            steps.echo it."color"
+//            steps.echo it."description"
+//            def payload = JsonOutput.toJson([name       : it."name",
+//                                             color      : it."color",
+//                                             description: it."description"])
+//
+//
+//            //steps.echo url
+//            steps.echo payload
+//            //steps.echo ownerRepository
+//            //arrValidLabels.each {
+//            def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+//            def userpassword = "$user" + ":" + "$password"
+//            steps.echo userpassword
+//
+//            //def process = ["curl", "--user", userpassword , "-X", "GET", "-H", "Content-Type: application/json", "$url"].execute().text
+//            //def process = ["curl", "-u", userpassword, "-X", "POST", "-H", "Accept: application/vnd.github.symmetra-preview+json", url, "-data", payload].execute().text
+//            //    def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" ${url} --data '${payload}'", returnStdout: true
+//                //def process = steps.sh script: "curl -H \"Content-Type: application/json\" \"https://api.github.com/repos/zowe/zowe-cli-sample-plugin/labels\" --data '{\"name\":\"release-major\",\"color\":\"2b0a91\",\"description\":\"Indicates a major breaking change will be introduced\"}'", returnStdout: true
+//
+//                steps.echo process
+//                //def process = steps.sh script: "curl -u\"${userPassword}\" -X POST -H \"Content-Type: application/json\" $url -d \"${json}\"", returnStdout: true
+//            //}
+//        }
     }
 }
