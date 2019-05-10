@@ -976,7 +976,7 @@ class GenericPipeline extends Pipeline {
             def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" \
                           ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}'", returnStdout: true
 
-            steps.echo process
+            steps.echo "Label created: \n" + process
         }
     }
 }
