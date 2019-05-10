@@ -379,11 +379,11 @@ class GenericPipeline extends Pipeline {
                     ArrayList repositoryArray = repository.split("/")
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
+//
+//                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + \
+//                                 changeInfo.branchName.replace("PR-","") + "/labels"
 
-                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + \
-                                 changeInfo.branchName.replace("PR-","") + "/labels"
-
-                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", url, ownerRepository)
+                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", ownerRepository)
 
                 }
             }
@@ -889,19 +889,20 @@ class GenericPipeline extends Pipeline {
     /**
      * Verify a release label has been assigned to the pull request
      *
-     * @param report The report to validate
-     * @param reportName The name of the report being validated
-     * @param stageName The name of the stage that is executing.
+     * @param value The key (to pull from the Constants.json file ('name' is passed)
+     * @param user The user name to access the GitHub REST APIs
+     * @param password  The password to access the GitHub REST APIs
+     * @param url The GitHub REST APIs url to
+     * @param ownerRepository The owner and repository names used in the curl GitHub REST APIs url
      *
-     * @throw {@link TestStageException} when any of the report properties are invalid.
+     * @throw {@link VerifyLabelStageException} when no release label or multiple labels assigned to pull request
      */
-    protected void _verifyReleaseLabel(String value, String user, String password, String url, String ownerRepository) {
+    protected void _verifyReleaseLabel(String value, String user, String password, String ownerRepository) {
 
-        // the valid labels for bumping version processing
-        //String[] arrValidLabels = ['release-major', 'release-minor', 'release-patch', 'no-release']
-
+        // read the valid release label values
         def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
 
+        // create an array of valid release values
         def arrValidLabels = []
         def data = steps.readJSON text: inputJSON
 
@@ -910,13 +911,17 @@ class GenericPipeline extends Pipeline {
             arrValidLabels.add(it."name")
         }
 
+        // the GitHub REST APIs url to read the labels assigned to the pull request
+        String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + \
+                                 changeInfo.branchName.replace("PR-","") + "/labels"
+
         // retrieve label names from pull request
         def process = steps.sh script: "curl -u\"${user}:${password}\" -X GET -H \"Accept: application/vnd.github.symmetra-preview+json\" $url", \
                       returnStdout: true
 
-        steps.echo process
+        steps.echo "Labels found: \n" + process
 
-        // pull the label names out
+        // pull the label names out of the data returned
         def list = []
         def data2 = steps.readJSON text: process
 
@@ -950,22 +955,19 @@ class GenericPipeline extends Pipeline {
      /**
      * Add release labels to the repository, if they exist no error occurs
      *
-     * @param report The report to validate
-     * @param reportName The name of the report being validated
-     * @param stageName The name of the stage that is executing.
+     * @param data The valid release label values
+     * @param user The user name to access the GitHub REST APIs
+     * @param password  The password to access the GitHub REST APIs
+     * @param ownerRepository The owner and repository names used in the curl GitHub REST APIs url
      *
-     * @throw {@link TestStageException} when any of the report properties are invalid.
      */
     protected void _addReleaseLabels(Object data, String user, String password, String ownerRepository) {
 
+        // the GitHub REST APIs url to create the labels in the repository
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
-//
-//        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-//
-//        //
-//        def data = steps.readJSON text: inputJSON
+
         data."release-labels".each {
-            // pull out the values
+            // pull out the values from the valid release labels
             def name = it."name"
             def color = it."color"
             def description = it."description"
