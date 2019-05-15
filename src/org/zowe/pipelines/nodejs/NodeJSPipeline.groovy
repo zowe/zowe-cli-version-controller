@@ -196,8 +196,6 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "rm -f $archiveName"
             }
         }])
-
-        verifyLabelGeneric()
     }
 
     /**

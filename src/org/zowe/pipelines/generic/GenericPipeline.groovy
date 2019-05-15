@@ -658,6 +658,8 @@ class GenericPipeline extends Pipeline {
                 setResult(ResultEnum.NOT_BUILT)
             }
         }, timeout: timeouts.ciSkip)
+
+        verifyLabelGeneric()
     }
 
     /**
