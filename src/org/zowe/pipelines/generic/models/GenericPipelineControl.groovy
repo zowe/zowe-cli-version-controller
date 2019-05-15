@@ -31,10 +31,13 @@ class GenericPipelineControl extends PipelineControl {
 
     /**
      * Verify Label stage.
-     *
-     * <p>This stage requires the build to be successful</p>
      */
     Stage verifyLabel
+
+    /**
+     * Release Label on the PR.
+     */
+    String releaseLabel
 
     /**
      * Versioning stage.

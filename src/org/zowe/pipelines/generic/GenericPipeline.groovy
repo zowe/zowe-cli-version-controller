@@ -245,7 +245,7 @@ class GenericPipeline extends Pipeline {
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        GenericStageArguments args = arguments as GenericStageArguments
+        VersionStageArguments args = arguments as GenericStageArguments
 
         VersionStageException preSetupException
 
@@ -254,6 +254,9 @@ class GenericPipeline extends Pipeline {
         }
 
         args.name = "Versioning${arguments.name ? ": ${arguments.name}" : ""}"
+
+        // Assign the proper release label (this comes from verifyLabelGeneric())
+        args.releaseLabel = _control.releaseLabel
 
         // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {
@@ -373,7 +376,7 @@ class GenericPipeline extends Pipeline {
                       repositoryArray[repositoryArray.size() - 1]
 
                     if (gitConfig?.githubAPIEndpoint) {
-                        _verifyReleaseLabel("\$USERNAME", "\$PASSWORD", ownerRepository, stgName)
+                        _control.releaseLabel = _verifyReleaseLabel("\$USERNAME", "\$PASSWORD", ownerRepository, stgName)
                     } else {
                         throw new VerifyLabelStageException("Unable to retrieve labels without GitHub Endpoint (`gitConfig.githubAPIEndpoint`)", stgName)
                     }
@@ -888,10 +891,12 @@ class GenericPipeline extends Pipeline {
      * @param url The GitHub REST APIs url to
      * @param ownerRepository The owner and repository names used in the curl GitHub REST APIs url
      * @param stageName The name of the stage that called this function
+
+     * @returns The name of selected release label
      *
      * @throw {@link VerifyLabelStageException} when no release label or multiple labels assigned to pull request
      */
-    protected void _verifyReleaseLabel(String user, String password, String ownerRepository, String stageName) {
+    protected String _verifyReleaseLabel(String user, String password, String ownerRepository, String stageName) {
         // Create an array of valid release values
         def arrValidLabels = []
         def data = [labels: [
@@ -909,6 +914,11 @@ class GenericPipeline extends Pipeline {
                 name: "release-patch",
                 color: "faa5ff",
                 description: "Indicates a patch to existing code will be applied"
+            ],
+            [
+                name: "pre-release",
+                color: "cfd3d7",
+                description: "Indicates that only the pre-release string should be updated"
             ],
             [
                 name: "no-release",
@@ -934,12 +944,14 @@ class GenericPipeline extends Pipeline {
 
         // pull the label names out of the data returned
         def list = []
+        def selectedLabel = ""
         def data2 = steps.readJSON text: process
 
         // loop through the label names and add valid labels to array
         data2.each {
             if ( it.name in arrValidLabels ) {
                 list.add(it.name)
+                selectedLabel = it.name
             }
         }
 
@@ -963,6 +975,8 @@ class GenericPipeline extends Pipeline {
             throw new VerifyLabelStageException(
                     "Release label verification failed, no release label assigned to the pull request.", stageName)
         }
+
+        return selectedLabel
     }
 
      /**

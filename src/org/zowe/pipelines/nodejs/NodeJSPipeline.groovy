@@ -106,6 +106,11 @@ class NodeJSPipeline extends GenericPipeline {
     static final String AUTO_APPROVE_ID = "[PIPELINE_AUTO_APPROVE]"
 
     /**
+     * This is the id of the approver saved when the pipeline auto approves the deploy.
+     */
+    static final String LABEL_APPROVE_ID = "[LABEL_AUTO_APPROVE]"
+
+    /**
      * This is the id of the approver saved when the pipeline auto approves the deploy because
      * of a timeout.
      */
@@ -249,6 +254,8 @@ class NodeJSPipeline extends GenericPipeline {
             versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
         }
 
+        def releaseLabel = arguments.releaseLabel
+
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
             if (versionException) {
@@ -294,6 +301,30 @@ class NodeJSPipeline extends GenericPipeline {
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
+            } else if (releaseLabel != "") {
+                steps.env.DEPLOY_APPROVER = LABEL_APPROVE_ID
+                if (releaseLabel == "no-release") {
+                    throw new VersionStageException("\"no-release\" label specified. Aborting...", stageName)
+                } else if (releaseLabel == "pre-release") {
+                    steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                } else if (releaseLabel == "release-patch") {
+                    steps.env.DEPLOY_VERSION = availableVersions.get(availableVersions.size() - 1)
+                } else if (releaseLabel == "release-minor") {
+                    if (branch.level == SemverLevel.PATCH) {
+                        throw new VersionStageException("Release label specified cannot be applied to this branch. Aborting...", stageName)
+                    } else if (branch.level == SemverLevel.MINOR) {
+                        steps.env.DEPLOY_VERSION = availableVersions.get(1)
+                    } else if (branch.level == SemverLevel.MAJOR) {
+                        steps.env.DEPLOY_VERSION = availableVersions.get(2)
+                    }
+                } else if (releaseLabel == "release-major") {
+                    if (branch.level != SemverLevel.MAJOR) {
+                        throw new VersionStageException("Release label specified cannot be applied to this branch. Aborting...", stageName)
+                    }
+                    steps.env.DEPLOY_VERSION = availableVersions.get(1)
+                } else {
+                    throw new VersionStageException("Release label not recognized. Aborting...", stageName)
+                }
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)

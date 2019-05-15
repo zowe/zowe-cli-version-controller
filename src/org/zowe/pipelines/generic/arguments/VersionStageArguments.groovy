@@ -21,4 +21,9 @@ class VersionStageArguments extends GenericStageArguments {
      * @default {@code "Package"}
      */
     String name = "Package"
+
+    /**
+     * The release label selected in the PR
+     */
+    String releaseLabel = ""
 }
