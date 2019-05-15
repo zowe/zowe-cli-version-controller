@@ -312,7 +312,6 @@ class GenericPipeline extends Pipeline {
      *     This stage will adhere to the following conditions:
      *
      *     <ul>
-     *         <li>The stage will only execute if the current build result is {@link ResultEnum#SUCCESS} or higher.</li>
      *         <li>The stage will only execute if there is a pull request open for the current branch.</li>
      *     </ul>
      * </p>
@@ -333,9 +332,6 @@ class GenericPipeline extends Pipeline {
      * @param arguments A map of arguments to be applied to the {@link GenericStageArguments} used to define the stage.
      */
     void verifyLabelGeneric(Map arguments = [:]) {
-        // Force build to only happen on success, this cannot be overridden
-        arguments.resultThreshold = ResultEnum.SUCCESS
-
         GenericStageArguments args = arguments as GenericStageArguments
 
         VerifyLabelStageException preSetupException
@@ -360,10 +356,6 @@ class GenericPipeline extends Pipeline {
             // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
             if (preSetupException) {
                 throw preSetupException
-            }
-
-            if (_control.build?.status != StageStatus.SUCCESS) {
-                throw new VersionStageException("Build must be successful to deploy", args.name)
             }
 
             args.operation = { String stgName ->
