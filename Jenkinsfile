@@ -29,7 +29,8 @@ node('ca-jenkins-agent') {
 
     nodejs.gitConfig = [
         email: 'zowe.robot@gmail.com',
-        credentialsId: 'zowe-robot-github'
+        credentialsId: 'zowe-robot-github',
+        githubAPIEndpoint: 'https://api.github.com/'
     ]
 
     nodejs.publishConfig = [
