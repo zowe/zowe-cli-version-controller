@@ -326,6 +326,7 @@ class GenericPipeline extends Pipeline {
      *         <dt><b>{@link VerifyLabelStageException}</b></dt>
      *         <dd>When stage is provided as an argument.</dd>
      *         <dd>When operation is provided as an argument.</dd>
+     *         <dd>When githubAPIEndpoint in {@Link GitConfig} cannot be determined.</dd>
      *     </dl>
      * </p>
      *
@@ -371,7 +372,6 @@ class GenericPipeline extends Pipeline {
                         passwordVariable: "PASSWORD",
                         usernameVariable: "USERNAME"
                 )]) {
-
                     // Retrieve the remote URL and pull out the repository information to use in the call to _verifyReleaseLabel
                     // Example: "https://github.gwd.broadcom.net/api/v3/repos/ws617385/playground/issues/2/labels"
                     String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
@@ -379,12 +379,12 @@ class GenericPipeline extends Pipeline {
                     ArrayList repositoryArray = repository.split("/")
                     String ownerRepository = repositoryArray[repositoryArray.size() - 2] + "/" +
                       repositoryArray[repositoryArray.size() - 1]
-//
-//                    String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/issues/" + \
-//                                 changeInfo.branchName.replace("PR-","") + "/labels"
 
-                    _verifyReleaseLabel("name", "\$USERNAME", "\$PASSWORD", ownerRepository)
-
+                    if (gitConfig?.githubAPIEndpoint) {
+                        _verifyReleaseLabel("\$USERNAME", "\$PASSWORD", ownerRepository, stgName)
+                    } else {
+                        throw new VerifyLabelStageException("Unable to retrieve labels without GitHub Endpoint", stgName)
+                    }
                 }
             }
             args.operation(stageName)
@@ -891,26 +891,43 @@ class GenericPipeline extends Pipeline {
     /**
      * Verify a release label has been assigned to the pull request
      *
-     * @param value The key (to pull from the Constants.json file ('name' is passed)
      * @param user The user name to access the GitHub REST APIs
      * @param password  The password to access the GitHub REST APIs
      * @param url The GitHub REST APIs url to
      * @param ownerRepository The owner and repository names used in the curl GitHub REST APIs url
+     * @param stageName The name of the stage that called this function
      *
      * @throw {@link VerifyLabelStageException} when no release label or multiple labels assigned to pull request
      */
-    protected void _verifyReleaseLabel(String value, String user, String password, String ownerRepository) {
-
-        // read the valid release label values
-        def inputJSON = ["curl", "https://raw.githubusercontent.com/zowe/zowe-cli-version-controller/master/Constants.json"].execute().text
-
-        // create an array of valid release values
+    protected void _verifyReleaseLabel(String user, String password, String ownerRepository, String stageName) {
+        // Create an array of valid release values
         def arrValidLabels = []
-        def data = steps.readJSON text: inputJSON
+        def data = [labels: [
+            [
+                name: "release-major",
+                color: "2b0a91",
+                description: "Indicates a major breaking change will be introduced"
+            ],
+            [
+                name: "release-minor",
+                color: "8118cc",
+                description: "Indicates a minor feature will be added"
+            ],
+            [
+                name: "release-patch",
+                color: "faa5ff",
+                description: "Indicates a patch to existing code will be applied"
+            ],
+            [
+                name: "no-release",
+                color: "cfd3d7",
+                description: "Indicates no user-facing code will be introduced"
+            ]
+        ]]
 
-        data."release-labels".each {
+        data.labels.each {
             // add the name value
-            arrValidLabels.add(it."name")
+            arrValidLabels.add(it.name)
         }
 
         // the GitHub REST APIs url to read the labels assigned to the pull request
@@ -929,10 +946,14 @@ class GenericPipeline extends Pipeline {
 
         // loop through the label names and add valid labels to array
         data2.each {
-            if ( it[value] in arrValidLabels ) {
-                list.add(it[value])
+            if ( it.name in arrValidLabels ) {
+                list.add(it.name)
             }
         }
+
+        // TODO: Only create the necessary labels
+        // Make sure that all labels are properly created
+        _addReleaseLabels(data, user, password, ownerRepository)
 
         // determine if valid labels found
         // if more than one, throw error
@@ -943,14 +964,12 @@ class GenericPipeline extends Pipeline {
             }
             throw new VerifyLabelStageException(
                     "Release label verification failed, more than one release label assigned to the pull request. Labels assigned:" + \
-                    labels, "Verify labels")
+                    labels, stageName)
         }
         // if none, throw error
         else if (list.size() == 0) {
-            // if none assigned, assume missing so add to repository
-            _addReleaseLabels(data, user, password, ownerRepository)
             throw new VerifyLabelStageException(
-                    "Release label verification failed, no release label assigned to the pull request.", "Verify labels")
+                    "Release label verification failed, no release label assigned to the pull request.", stageName)
         }
     }
 
@@ -961,22 +980,20 @@ class GenericPipeline extends Pipeline {
      * @param user The user name to access the GitHub REST APIs
      * @param password  The password to access the GitHub REST APIs
      * @param ownerRepository The owner and repository names used in the curl GitHub REST APIs url
-     *
      */
     protected void _addReleaseLabels(Object data, String user, String password, String ownerRepository) {
-
-        // the GitHub REST APIs url to create the labels in the repository
+        // The GitHub REST APIs url to create the labels in the repository
         String url = gitConfig.githubAPIEndpoint + "repos/" + ownerRepository + "/labels"
 
-        data."release-labels".each {
-            // pull out the values from the valid release labels
+        data.labels.each {
+            // Pull out the values from the valid release labels
             def name = it."name"
             def color = it."color"
             def description = it."description"
 
-            // create the label (if exists, no error raised)
+            // Create the label (if exists, no error raised)
             def process = steps.sh script: "curl -u\"${user}:${password}\" -X POST -H \"Accept: application/vnd.github.symmetra-preview+json\" \
-                          ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}'", returnStdout: true
+                          ${url} --data '{\"name\":\"${name}\",\"color\":\"${color}\",\"description\":\"${description}\"}' || exit 0", returnStdout: true
 
             steps.echo "Label created: \n" + process
         }
