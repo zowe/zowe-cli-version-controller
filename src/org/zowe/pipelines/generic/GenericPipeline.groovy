@@ -375,7 +375,7 @@ class GenericPipeline extends Pipeline {
                     if (gitConfig?.githubAPIEndpoint) {
                         _verifyReleaseLabel("\$USERNAME", "\$PASSWORD", ownerRepository, stgName)
                     } else {
-                        throw new VerifyLabelStageException("Unable to retrieve labels without GitHub Endpoint", stgName)
+                        throw new VerifyLabelStageException("Unable to retrieve labels without GitHub Endpoint (`gitConfig.githubAPIEndpoint`)", stgName)
                     }
                 }
             }
