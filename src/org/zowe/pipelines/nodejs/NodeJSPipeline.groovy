@@ -470,15 +470,15 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
+            def packageJSON = steps.readJSON file: 'package.json'
+            def devDeps = packageJSON.devDependencies
             if (!arguments.dev) {
                 // Clean the work space
                 steps.sh "rm -rf node_modules"
                 steps.sh "rm npm-shrinkwrap.json || exit 0"
                 steps.sh "rm package-lock.json || exit 0"
 
-
                 // Remove dev dependencies
-                def packageJSON = steps.readJSON file: 'package.json'
                 packageJSON.remove('devDependencies')
                 steps.writeJSON file: 'package.json', json: packageJSON
                 // Touch the package.json to remove strange formatting
@@ -495,6 +495,16 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "cat npm-shrinkwrap.json"
             }
 
+            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.name}" : ""}"
+
+            // Add dev deps back in
+            packageJSON.devDependencies = devDeps
+            steps.writeJSON file: 'package.json', json: packageJSON
+            // Touch the package.json to remove strange formatting
+            steps.sh "npm i --package-lock-only --no-package-lock"
+
+            // debug
+            steps.sh "cat package.json"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
@@ -965,10 +975,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
 
-                steps.sh "rm package-lock.json"
                 steps.sh "npm install"
-                steps.sh "npm audit"
-                steps.sh "npm audit fix"
 
                 // Get the branch that will be used to install dependencies for
                 String branch

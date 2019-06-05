@@ -27,7 +27,7 @@ class CheckVulnerabilitiesStageArguments extends GenericStageArguments {
     /**
      * The registry to npm-audit against.
      */
-    String registry
+    String registry = ""
 
     /**
      * Indicates if the pipeline should include {@code "dev"} dependencies when checking for vulnerabilities.
