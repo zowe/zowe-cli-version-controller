@@ -676,9 +676,6 @@ class NodeJSPipeline extends GenericPipeline {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
 
-                // Remove dev dependencies before publishing
-                steps.sh "npm prune --production"
-
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
