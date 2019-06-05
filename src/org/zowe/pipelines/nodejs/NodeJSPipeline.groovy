@@ -478,7 +478,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "rm package-lock.json || exit 0"
 
                 // Remove dev dependencies
-                packageJSON.remove('devDependencies')
+                packageJSON.devDependencies = [:]
                 steps.writeJSON file: 'package.json', json: packageJSON
 
                 // Create an production ready environment
@@ -494,7 +494,7 @@ class NodeJSPipeline extends GenericPipeline {
             packageJSON.devDependencies = devDeps
             steps.writeJSON file: 'package.json', json: packageJSON
             // Touch the package.json to remove strange formatting
-            steps.sh "npm i --package-lock-only --no-package-lock"
+            steps.sh "npm i --only=prod --package-lock-only --no-package-lock"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
