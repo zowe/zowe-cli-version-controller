@@ -452,11 +452,10 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * @param arguments A map of arguments to be applied to the {@link CheckVulnerabilitiesStageArguments} used to define the stage.
      */
-    void checkVulnerabilities(Map arguments = [:]) {
+    void checkVulnerabilities(CheckVulnerabilitiesStageArguments arguments = [:]) {
 
         NodeJSPipelineException preSetupException
 
-        arguments.name = "Check Vulnerabilities"
         if (arguments.stage) {
             preSetupException = new NodeJSPipelineException("arguments.stage is an invalid option for checkVulnerabilities", arguments.name)
         }
@@ -495,7 +494,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "cat npm-shrinkwrap.json"
             }
 
-            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.name}" : ""}"
+            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
 
             // Add dev deps back in
             packageJSON.devDependencies = devDeps
