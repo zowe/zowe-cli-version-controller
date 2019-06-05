@@ -965,7 +965,10 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
 
+                steps.sh "rm package-lock.json"
                 steps.sh "npm install"
+                steps.sh "npm audit"
+                steps.sh "npm audit fix"
 
                 // Get the branch that will be used to install dependencies for
                 String branch
