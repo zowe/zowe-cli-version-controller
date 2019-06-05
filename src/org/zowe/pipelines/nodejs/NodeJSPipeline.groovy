@@ -486,7 +486,9 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "npm shrinkwrap --only=prod"
             }
 
-            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
+            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""} || exit 0"
+
+            steps.sh "npm audit fix"
 
             // Add dev deps back in
             packageJSON.devDependencies = devDeps
