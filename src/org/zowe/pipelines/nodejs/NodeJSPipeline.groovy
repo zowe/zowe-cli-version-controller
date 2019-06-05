@@ -407,7 +407,10 @@ class NodeJSPipeline extends GenericPipeline {
             )
 
             packageJSON.version = steps.env.DEPLOY_VERSION
-            steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
+            steps.writeJSON file: 'package.json', json: packageJSON
+            // Touch the package.json to remove strange formatting
+            steps.sh "npm i --package-lock-only --no-package-lock || exit 0"
+
             steps.sh "git add package.json"
             gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
             gitPush()
@@ -587,6 +590,9 @@ class NodeJSPipeline extends GenericPipeline {
             try {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
+
+                // Remove dev dependencies before publishing
+                steps.sh "npm prune --production"
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
@@ -776,7 +782,10 @@ class NodeJSPipeline extends GenericPipeline {
                 )
 
                 packageJSON.version = steps.env.DEPLOY_VERSION
-                steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
+                steps.writeJSON file: 'package.json', json: packageJSON
+                // Touch the package.json to remove strange formatting
+                steps.sh "npm i --package-lock-only --no-package-lock || exit 0"
+
                 steps.sh "git add package.json"
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitPush()

@@ -249,7 +249,7 @@ class GenericPipeline extends Pipeline {
         VersionStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+            preSetupException = new VersionStageException("arguments.stage is an invalid option for versionGeneric", args.name)
         }
 
         args.name = "Versioning${arguments.name ? ": ${arguments.name}" : ""}"
@@ -275,7 +275,7 @@ class GenericPipeline extends Pipeline {
             if (_control.build?.status != StageStatus.SUCCESS) {
                 throw new VersionStageException("Build must be successful to deploy", args.name)
             } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
-                throw new VersionStageException("All test stages before deploy must be successful or skipped!", args.name)
+                throw new VersionStageException("All test stages before versioning must be successful or skipped!", args.name)
             } else if (_control.preDeployTests.size() == 0) {
                 throw new VersionStageException("At least one test stage must be defined", args.name)
             }
@@ -475,7 +475,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --verbose"
+            steps.sh "git push --verbose --follow-tags"
             return true
         } else {
             return false
