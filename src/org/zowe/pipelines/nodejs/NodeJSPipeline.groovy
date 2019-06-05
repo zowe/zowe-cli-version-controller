@@ -480,18 +480,10 @@ class NodeJSPipeline extends GenericPipeline {
                 // Remove dev dependencies
                 packageJSON.remove('devDependencies')
                 steps.writeJSON file: 'package.json', json: packageJSON
-                // Touch the package.json to remove strange formatting
-                steps.sh "npm i --package-lock-only --no-package-lock"
-
-                // debug
-                steps.sh "cat package.json"
 
                 // Create an production ready environment
                 steps.sh "npm install --only=prod --no-package-lock"
                 steps.sh "npm shrinkwrap --only=prod"
-
-                // debug
-                steps.sh "cat npm-shrinkwrap.json"
             }
 
             steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
@@ -501,9 +493,6 @@ class NodeJSPipeline extends GenericPipeline {
             steps.writeJSON file: 'package.json', json: packageJSON
             // Touch the package.json to remove strange formatting
             steps.sh "npm i --package-lock-only --no-package-lock"
-
-            // debug
-            steps.sh "cat package.json"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
