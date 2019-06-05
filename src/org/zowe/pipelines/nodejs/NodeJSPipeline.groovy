@@ -420,6 +420,91 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Creates a stage that will execute a vulnerability check
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link CheckVulnerabilitiesStageArguments} class.
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Check Vulnerabilities</b></dt>
+     *     <dd>This stage is responsible for npm auditing your application source.</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     NONE
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link NodeJSPipelineException}</b></dt>
+     *         <dd>When stage is provided as an argument.</dd>
+     *         <dd>When operation is provided as an argument.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link CheckVulnerabilitiesStageArguments} used to define the stage.
+     */
+    void checkVulnerabilities(Map arguments = [:]) {
+
+        NodeJSPipelineException preSetupException
+
+        arguments.name = "Check Vulnerabilities"
+        if (arguments.stage) {
+            preSetupException = new NodeJSPipelineException("arguments.stage is an invalid option for checkVulnerabilities", arguments.name)
+        }
+        if (arguments.operation) {
+            preSetupException = new NodeJSPipelineException("arguments.operation is an invalid option for checkVulnerabilities", arguments.name)
+        }
+
+        arguments.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            if (!arguments.dev) {
+                // Clean the work space
+                steps.sh "rm -rf node_modules"
+                steps.sh "rm npm-shrinkwrap.json || exit 0"
+                steps.sh "rm package-lock.json || exit 0"
+
+
+                // Remove dev dependencies
+                def packageJSON = steps.readJSON file: 'package.json'
+                packageJSON.remove('devDependencies')
+                steps.writeJSON file: 'package.json', json: packageJSON
+                // Touch the package.json to remove strange formatting
+                steps.sh "npm i --package-lock-only --no-package-lock"
+
+                // debug
+                steps.sh "cat package.json"
+
+                // Create an production ready environment
+                steps.sh "npm install --only=prod --no-package-lock"
+                steps.sh "npm shrinkwrap --only=prod"
+
+                // debug
+                steps.sh "cat npm-shrinkwrap.json"
+            }
+
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage checkVuln = createStage(arguments)
+        if (!_control.checkVuln) {
+            _control.checkVuln = checkVuln
+        }
+    }
+
+    /**
      * Deploy a Node JS package.
      *
      * <dl>

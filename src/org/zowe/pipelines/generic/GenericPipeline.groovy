@@ -544,12 +544,12 @@ class GenericPipeline extends Pipeline {
 
         createStage(name: 'Check for CI Skip', stage: {
             // This checks for the [ci skip] text. If found, the status code is 0
-            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-            if (result == 0) {
-                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
-                _shouldSkipRemainingStages = true
-                setResult(ResultEnum.NOT_BUILT)
-            }
+//            def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+//            if (result == 0) {
+//                steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
+//                _shouldSkipRemainingStages = true
+//                setResult(ResultEnum.NOT_BUILT)
+//            }
         }, timeout: timeouts.ciSkip)
     }
 
