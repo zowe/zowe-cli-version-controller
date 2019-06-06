@@ -497,7 +497,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Touch the package.json to remove strange formatting
             steps.sh "npm i --only=prod --package-lock-only --no-package-lock || exit 0"
 
-            steps.sh "git add *"
+            steps.sh "git add package-lock.json"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
