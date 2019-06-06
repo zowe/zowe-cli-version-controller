@@ -482,22 +482,17 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.writeJSON file: 'package.json', json: packageJSON
 
                 // Create an production ready environment
-//                steps.sh "npm install --only=prod --no-package-lock"
                 steps.sh "npm install --no-package-lock"
                 steps.sh "npm shrinkwrap"
             }
 
-            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""} || exit 0"
-            steps.sh "npm audit fix"
-            steps.sh "mv npm-shrinkwrap.json package-lock.json"
+            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
 
             // Add dev deps back in
             packageJSON.devDependencies = devDeps
             steps.writeJSON file: 'package.json', json: packageJSON
             // Touch the package.json to remove strange formatting
             steps.sh "npm i --only=prod --package-lock-only --no-package-lock || exit 0"
-
-            steps.sh "git add package-lock.json"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
@@ -679,7 +674,6 @@ class NodeJSPipeline extends GenericPipeline {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
 
-
                 def packageJSON = steps.readJSON file: 'package.json'
                 def devDeps = packageJSON.devDependencies
 
@@ -693,11 +687,8 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.writeJSON file: 'package.json', json: packageJSON
 
                 // Create an production ready environment
-                steps.sh "npm install --only=prod --no-package-lock"
-                steps.sh "npm shrinkwrap --only=prod"
-
-                steps.sh "npm audit || exit 0"
-                steps.sh "npm audit fix || exit 0"
+                steps.sh "npm install --no-package-lock"
+                steps.sh "npm shrinkwrap"
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
