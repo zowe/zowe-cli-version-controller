@@ -692,6 +692,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
+                steps.sh "git tag v${packageJSON.version} && git push --tags"
+
                 // Add dev deps back in
                 packageJSON.devDependencies = devDeps
                 steps.writeJSON file: 'package.json', json: packageJSON
