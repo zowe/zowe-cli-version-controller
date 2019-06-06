@@ -482,13 +482,14 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.writeJSON file: 'package.json', json: packageJSON
 
                 // Create an production ready environment
-                steps.sh "npm install --only=prod"//--no-package-lock"
-//                steps.sh "npm shrinkwrap --only=prod"
+//                steps.sh "npm install --only=prod --no-package-lock"
+                steps.sh "npm install --no-package-lock"
+                steps.sh "npm shrinkwrap"
             }
 
             steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""} || exit 0"
-
             steps.sh "npm audit fix"
+            steps.sh "mv npm-shrinkwrap.json package-lock.json"
 
             // Add dev deps back in
             packageJSON.devDependencies = devDeps
