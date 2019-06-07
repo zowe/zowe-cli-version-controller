@@ -447,8 +447,8 @@ class GenericPipeline extends Pipeline {
         }
 
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-        if (ret == 0 && !amend) {
-            steps.sh "git commit${amend? " --amend" : ""} -m \"$message $_CI_SKIP\" --signoff"
+        if (ret == 0 || amend) {
+            steps.sh "git commit${amend? "--amend" : ""}-m \"$message $_CI_SKIP\" --signoff"
             return true
         } else {
             return false
