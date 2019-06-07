@@ -406,6 +406,9 @@ class NodeJSPipeline extends GenericPipeline {
                     addProviders: false
             )
 
+            // reset working directory before versioning
+            steps.sh "git checktout -- *"
+
             steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --sign-git-tag -m \"Bump version to %s $_CI_SKIP\""
 
 //            packageJSON.version = steps.env.DEPLOY_VERSION
