@@ -16,19 +16,23 @@ import org.zowe.pipelines.generic.arguments.GenericStageArguments
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#deploy(java.util.Map, java.util.Map)} method.
  */
-class DeployStageArguments extends GenericStageArguments {
+class CheckVulnerabilitiesStageArguments extends GenericStageArguments {
     /**
-     * The name of the Deploy step.
+     * The name of the "Check Vulnerabilities" step.
      *
-     * @default {@code "Package"}
+     * @default {@code "Check Vulnerabilities"}
      */
-    String name = "Package"
+    String name = "Check Vulnerabilities"
 
     /**
-     * The custom login operation.
-     *
-     * <p>This closure is used by the deploy stage method to perform any required login operations.
-     * Additional documentation for this argument will be provided in each command.</p>
+     * The registry to npm-audit against.
      */
-    Closure customLogin
+    String registry = ""
+
+    /**
+     * Indicates if the pipeline should include {@code "dev"} dependencies when checking for vulnerabilities.
+     *
+     * @default {@code "false"}
+     */
+    Boolean dev = false
 }
