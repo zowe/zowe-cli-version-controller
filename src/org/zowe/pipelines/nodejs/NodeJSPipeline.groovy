@@ -469,30 +469,17 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
-            def packageJSON = steps.readJSON file: 'package.json'
-            def devDeps = packageJSON.devDependencies
             if (!arguments.dev) {
                 // Clean the work space
-                steps.sh "rm -rf node_modules"
                 steps.sh "rm npm-shrinkwrap.json || exit 0"
                 steps.sh "rm package-lock.json || exit 0"
 
-                // Remove dev dependencies
-                packageJSON.devDependencies = [:]
-                steps.writeJSON file: 'package.json', json: packageJSON
-
                 // Create an production ready environment
-                steps.sh "npm install --no-package-lock"
+                steps.sh "npm prune --production --no-package-lock"
                 steps.sh "npm shrinkwrap"
             }
 
             steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
-
-            // Add dev deps back in
-            packageJSON.devDependencies = devDeps
-            steps.writeJSON file: 'package.json', json: packageJSON
-            // Touch the package.json to remove strange formatting
-            steps.sh "npm i --only=prod --package-lock-only --no-package-lock || exit 0"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
@@ -674,31 +661,15 @@ class NodeJSPipeline extends GenericPipeline {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
 
-                def packageJSON = steps.readJSON file: 'package.json'
-                def devDeps = packageJSON.devDependencies
-
-                // Clean the work space
-                steps.sh "rm -rf node_modules"
+                // Clean the work space && Create an production ready environment
                 steps.sh "rm npm-shrinkwrap.json || exit 0"
                 steps.sh "rm package-lock.json || exit 0"
-
-                // Remove dev dependencies
-                packageJSON.devDependencies = [:]
-                steps.writeJSON file: 'package.json', json: packageJSON
-
-                // Create an production ready environment
-                steps.sh "npm install --no-package-lock"
+                steps.sh "npm prune --production --no-package-lock"
                 steps.sh "npm shrinkwrap"
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
-                steps.sh "git tag v${packageJSON.version} && git push --tags"
-
-                // Add dev deps back in
-                packageJSON.devDependencies = devDeps
-                steps.writeJSON file: 'package.json', json: packageJSON
-                // Touch the package.json to remove strange formatting
-                steps.sh "npm i --only=prod --package-lock-only --no-package-lock || exit 0"
+                steps.sh "git tag v${steps.env.DEPLOY_VERSION} && git push --tags"
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
