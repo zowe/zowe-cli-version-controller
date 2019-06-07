@@ -436,18 +436,19 @@ class GenericPipeline extends Pipeline {
      * <p>If no changes were detected, the commit will not happen. If a commit occurs, the end of
      * of the commit message will be appended with the ci skip text.</p>
      * @param message The commit message
+     * @param amend Indicates if the commit should amend the previous commit
      * @return A boolean indicating if a commit was made. True indicates that a successful commit
      *         has occurred.
      * @throw {@link IllegalBuildException} when a commit operation happens on an illegal build type.
      */
-    boolean gitCommit(String message) {
+    boolean gitCommit(String message, Boolean amend = false) {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
         }
 
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
         if (ret == 0) {
-            steps.sh "git commit -m \"$message $_CI_SKIP\" --signoff"
+            steps.sh "git commit${amend? " --amend" : ""} -m \"$message $_CI_SKIP\" --signoff"
             return true
         } else {
             return false

@@ -408,16 +408,8 @@ class NodeJSPipeline extends GenericPipeline {
 
             // reset working directory before versioning
             steps.sh "git reset --hard"
-
-            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --signoff -m \"Bump version to %s $_CI_SKIP\""
-
-//            packageJSON.version = steps.env.DEPLOY_VERSION
-//            steps.writeJSON file: 'package.json', json: packageJSON
-//            // Touch the package.json to remove strange formatting
-//            steps.sh "npm i --only=prod --package-lock-only --no-package-lock || exit 0"
-//
-//            steps.sh "git add package.json"
-//            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
+            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version"
+            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
             gitPush()
         }
 
