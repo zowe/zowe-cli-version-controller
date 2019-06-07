@@ -675,8 +675,6 @@ class NodeJSPipeline extends GenericPipeline {
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
-                steps.sh "git tag v${steps.env.DEPLOY_VERSION} && git push --tags"
-
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
                     body: "<h3>${steps.env.JOB_NAME}</h3>" +
