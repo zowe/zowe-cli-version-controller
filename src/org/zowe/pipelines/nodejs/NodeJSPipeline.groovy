@@ -469,10 +469,16 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
+            def packageJSON = steps.readJSON file: 'package.json'
+            def devDeps = packageJSON.devDependencies
+
             if (!arguments.dev) {
                 // Clean the work space
                 steps.sh "rm npm-shrinkwrap.json || exit 0"
                 steps.sh "rm package-lock.json || exit 0"
+
+                packageJSON.devDependencies = [:]
+                steps.writeJSON file: 'package.json', json: packageJSON
 
                 // Create an production ready environment
                 steps.sh "npm prune --production --no-package-lock"
@@ -480,6 +486,9 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
+
+            packageJSON.devDependencies = devDeps
+            steps.writeJSON file: 'package.json', json: packageJSON
         }
 
         // Create the stage and ensure that the first one is the stage of reference
