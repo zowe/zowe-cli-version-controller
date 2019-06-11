@@ -54,7 +54,7 @@ node('ca-jenkins-agent') {
                 sh "mkdir temp || exit 0"
                 
                 // Looping through the list becuase brace expansion is unsupported given unwanted escaping
-                def filesVar = "package.json,.npmrc".split(',')
+                def filesVar = "${params.FILE_OVERWRITE}".split(',')
                 for (item in filesVar){
                     sh "cp ./${item} ./temp/"
                 }
