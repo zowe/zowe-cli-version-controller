@@ -111,10 +111,10 @@ node('ca-jenkins-agent') {
           echo "${e.getMessage()}"
       }
 
-      if (OLD_PKG_VER == PKG_VERSION) {
-        VERSIONS_MATCH = true
-        echo "Package: ${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION} already exists"
-      } else {
+      // if (OLD_PKG_VER == PKG_VERSION) {
+      //   VERSIONS_MATCH = true
+      //   echo "Package: ${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION} already exists"
+      // } else {
         VERSIONS_MATCH = false
         def fullPkgName = "${params.PKG_NAME}-${PKG_VERSION}.tgz"
         // Repackage the tar file with the new tgz after changing the publishConfig.registry and the version
@@ -124,7 +124,7 @@ node('ca-jenkins-agent') {
         // We want these package to be public
         sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public --dry-run"
         sh "rm -f ~/.npmrc || exit 0"
-      }
+      // }
     }
   } catch (e) {
     currentBuild.result = 'FAILURE'
