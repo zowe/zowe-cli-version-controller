@@ -33,14 +33,23 @@ mv package.json ../../$tarfile_package.json
 # Replace package json with our new one
 mv package_new.json package.json
 
-# Remove package-lock json ?
-#rm -f package-lock.json
+# Update npm-shrinkwrap.json if necessary
+if [ -e "npm-shrinkwrap.json" ] then
+    # debug
+    cat npm-shrinkwrap.json | grep perf-timing
+
+    mv npm-shrinkwrap.json package-lock.json
+    npm install $tarfile --registry $registry --pacakge-lock-only
+    npm shrinkwrap
+
+    # debug
+    cat npm-shrinkwrap.json | grep perf-timing
+fi
 
 npm pack
 
 # delete the original tar
 rm -f ../../$tarfile
-
 
 #move the new tar into the original directory
 mv *.tgz ../../$tarfile
