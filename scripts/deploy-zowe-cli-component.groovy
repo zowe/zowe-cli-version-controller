@@ -122,7 +122,7 @@ node('ca-jenkins-agent') {
         sh "./scripts/repackage_tar.sh ${fullPkgName} ${CONST.distRegistry} ${PKG_VERSION}"
 
         // We want these package to be public
-        sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
+        sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public --dry-run"
         sh "rm -f ~/.npmrc || exit 0"
       }
     }
