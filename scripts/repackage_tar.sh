@@ -38,9 +38,8 @@ if [ -e "npm-shrinkwrap.json" ]; then
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
 
-    mv npm-shrinkwrap.json npm-shrinkwrap1.json
-    npm install --verbose --registry "$registry" --only=prod --no-package-lock
-    # npm prune --production --no-package-lock
+    cp npm-shrinkwrap.json npm-shrinkwrap1.json
+    npm install --verbose --registry "$registry" --only=prod --no-shrinkwrap --package-lock-only --force
     npm shrinkwrap
     
     diff npm-shrinkwrap1.json npm-shrinkwrap.json
