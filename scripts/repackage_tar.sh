@@ -34,12 +34,12 @@ mv package.json ../../$tarfile_package.json
 mv package_new.json package.json
 
 # Update npm-shrinkwrap.json if necessary
-if [ -e "npm-shrinkwrap.json" ] then
+if [ -e "npm-shrinkwrap.json" ]; then
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
 
     mv npm-shrinkwrap.json package-lock.json
-    npm install $tarfile --registry $registry --pacakge-lock-only
+    npm install "$tarfile" --registry "$registry" --pacakge-lock-only
     npm shrinkwrap
 
     # debug
