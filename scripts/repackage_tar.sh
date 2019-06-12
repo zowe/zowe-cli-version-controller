@@ -38,12 +38,13 @@ if [ -e "npm-shrinkwrap.json" ]; then
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
 
-    rm npm-shrinkwrap.json
-    npm install -ddd --registry "$registry" --only=prod --pacakge-lock-only
+    mv npm-shrinkwrap.json package-lock.json
+    npm install --verbose --registry "$registry" --only=prod --pacakge-lock-only
     npm shrinkwrap
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
+    cat npm-shrinkwrap.json | grep gulp
 fi
 
 npm pack
