@@ -39,7 +39,7 @@ if [ -e "npm-shrinkwrap.json" ]; then
     cat npm-shrinkwrap.json | grep perf-timing
 
     mv npm-shrinkwrap.json package-lock.json
-    npm install "$tarfile" --registry "$registry" --pacakge-lock-only
+    npm install --registry "$registry" --pacakge-lock-only
     npm shrinkwrap
 
     # debug
