@@ -40,13 +40,14 @@ if [ -e "npm-shrinkwrap.json" ]; then
 
     mv npm-shrinkwrap.json npm-shrinkwrap1.json
     npm install --verbose --registry "$registry" --only=prod --no-package-lock
-    npm prune --production --no-package-lock
+    # npm prune --production --no-package-lock
     npm shrinkwrap
     
     diff npm-shrinkwrap1.json npm-shrinkwrap.json
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
+
     echo "look for gulp"
     cat npm-shrinkwrap.json | grep gulp
     echo "---------should be above this line----------"
