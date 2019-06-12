@@ -409,6 +409,7 @@ class NodeJSPipeline extends GenericPipeline {
             // reset working directory before versioning
             steps.sh "git reset --hard"
             steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version"
+            steps.sh "git tag -a v${steps.env.DEPLOY_VERSION} -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
             gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
             gitPush()
         }
@@ -672,6 +673,9 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "rm package-lock.json || exit 0"
                 steps.sh "npm prune --production --no-package-lock"
                 steps.sh "npm shrinkwrap"
+
+                // Install devDependencies to prevent any prepublishOnly from failing
+                steps.sh "npm install --only=dev --no-shrinkwrap"
 
                 steps.sh "npm publish --tag ${branch.tag}"
 
