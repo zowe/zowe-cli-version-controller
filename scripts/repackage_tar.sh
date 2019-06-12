@@ -39,10 +39,10 @@ if [ -e "npm-shrinkwrap.json" ]; then
     cat npm-shrinkwrap.json | grep perf-timing
 
     cp npm-shrinkwrap.json npm-shrinkwrap1.json
-    npm install --verbose --registry "$registry" --only=prod --no-shrinkwrap --package-lock-only --force
+    npm install --verbose --registry "$registry" --only=prod --no-shrinkwrap --force
     npm shrinkwrap
     
-    diff npm-shrinkwrap1.json npm-shrinkwrap.json
+    diff -d npm-shrinkwrap1.json npm-shrinkwrap.json
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
