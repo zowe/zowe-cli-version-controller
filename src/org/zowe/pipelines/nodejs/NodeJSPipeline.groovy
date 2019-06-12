@@ -408,8 +408,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             // reset working directory before versioning
             steps.sh "git reset --hard"
-            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version"
-            steps.sh "git tag -a v${steps.env.DEPLOY_VERSION} -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
+            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
             gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
             gitPush()
         }

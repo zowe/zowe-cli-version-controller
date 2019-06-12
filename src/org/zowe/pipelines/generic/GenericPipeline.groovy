@@ -470,7 +470,7 @@ class GenericPipeline extends Pipeline {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
 
-        steps.sh "git fetch --no-tags"
+        steps.sh "git fetch"
         String status = steps.sh returnStdout: true, script: "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
