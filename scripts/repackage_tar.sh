@@ -38,11 +38,19 @@ if [ -e "npm-shrinkwrap.json" ]; then
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
 
-    cp npm-shrinkwrap.json npm-shrinkwrap1.json
-    npm install --verbose --registry "$registry" --only=prod --no-shrinkwrap --force
-    npm shrinkwrap
-    
-    diff -d npm-shrinkwrap1.json npm-shrinkwrap.json
+    npm install --registry "$registry" --only=prod
+
+    gizafile="gizapackages.txt"
+    awk '/giza/ { print $2 }' npm-shrinkwrap.json | awk -F"@" '{ print $3 }' | awk -F".tgz" '{ print $1 }'| awk NF > $gizafile
+    cat $gizafile
+
+    depsfile="dependenciesfiles.txt"
+    node -e "package = require('./package.json');var logger = require('fs').createWriteStream('$depsfile', {flags:'a'});for(pkg in package.dependencies){logger.write(pkg + ' ' + package.dependencies[pkg]);};logger.end();"
+    cat $depsfile
+    install_package(){
+        echo "hi $1"
+    }
+    install_package "fernando"
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
