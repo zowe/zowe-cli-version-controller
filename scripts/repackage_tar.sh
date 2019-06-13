@@ -45,12 +45,16 @@ if [ -e "npm-shrinkwrap.json" ]; then
     cat $gizafile
 
     depsfile="dependenciesfiles.txt"
-    node -e "package = require('./package.json');var logger = require('fs').createWriteStream('$depsfile', {flags:'a'});for(pkg in package.dependencies){logger.write(pkg + ' ' + package.dependencies[pkg]);};logger.end();"
+    node -e "package = require('./package.json');var logger = require('fs').createWriteStream('$depsfile', {flags:'a'});for(pkg in package.dependencies){if(pkg.indexOf('@') >= 0)logger.write(pkg + ' ' + package.dependencies[pkg] + '\n');};logger.end();"
     cat $depsfile
+
+    #debug
+    echo "\nsecond dummy" >> $depsfile
+
     install_package(){
-        echo "hi $1"
+        echo "hi $1\n"
     }
-    install_package "fernando"
+    cat $depsfile | install_package
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
