@@ -50,11 +50,12 @@ if [ -e "npm-shrinkwrap.json" ]; then
 
     #debug
     echo "\nsecond dummy" >> $depsfile
+    cat $depsfile
 
     install_package(){
-        echo "hi $1\n"
+        echo "hi $1 --- $2 --- $3\r\n"
     }
-    cat $depsfile | install_package
+    install_package $(cat $depsfile)
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
