@@ -35,9 +35,9 @@ def rmProt(String url) {
 def opts = []
 opts.push(
     parameters([
-        string(name: 'PKG_NAME', defaultValue: 'imperative', description: 'Name of the package to be deployed'),
+        string(name: 'PKG_NAME', defaultValue: 'cli', description: 'Name of the package to be deployed'),
         string(name: 'PKG_TAG', defaultValue: 'daily', description: 'Tage to be distributed from artifactory'),
-        string(name: 'RECIPIENTS_LIST', defaultValue: 'fernando.rijocedeno@broadcom.com', description: 'List of emails to recevie build resutls (Override)')
+        string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to recevie build resutls (Override)')
     ])
 )
 opts.push(buildDiscarder(logRotator(numToKeepStr: '20')))
