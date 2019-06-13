@@ -48,14 +48,10 @@ if [ -e "npm-shrinkwrap.json" ]; then
     node -e "package = require('./package.json');var logger = require('fs').createWriteStream('$depsfile', {flags:'a'});for(pkg in package.dependencies){if(pkg.indexOf('@') >= 0)logger.write(pkg + ' ' + package.dependencies[pkg] + '\n');};logger.end();"
     cat $depsfile
 
-    #debug
-    echo "\nsecond dummy" >> $depsfile
-    cat $depsfile
-
     install_package(){
-        echo "hi $1 --- $2 --- $3\r\n"
+        echo $"hi $1 --- $2 --- $3\n"
     }
-    install_package $(cat $depsfile)
+    xargs install_package < $depsfile
 
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
