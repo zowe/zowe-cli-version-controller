@@ -35,9 +35,6 @@ mv package_new.json package.json
 
 # Update npm-shrinkwrap.json if necessary
 if [ -e "npm-shrinkwrap.json" ]; then
-    # debug
-    cat npm-shrinkwrap.json | grep perf-timing
-    
     # Create a production environment (taking in consideration the npm-shrinkwrap)
     npm install --only=prod --ignore-scripts
 
@@ -64,13 +61,6 @@ if [ -e "npm-shrinkwrap.json" ]; then
             fi
         done < $gizafile
     done < $depsfile
-
-    # debug
-    cat npm-shrinkwrap.json | grep perf-timing
-
-    echo "look for gulp"
-    cat npm-shrinkwrap.json | grep gulp
-    echo "---------should be above this line----------"
 fi
 
 npm pack
