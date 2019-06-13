@@ -38,7 +38,7 @@ if [ -e "npm-shrinkwrap.json" ]; then
     # debug
     cat npm-shrinkwrap.json | grep perf-timing
 
-    npm install --only=prod
+    npm install --only=prod --ignore-scripts
 
     gizafile="gizapackages.txt"
     awk '/giza/ { print $2 }' npm-shrinkwrap.json | awk -F"@" '{ print $3 }' | awk -F".tgz" '{ print $1 }'| awk NF > $gizafile
@@ -52,10 +52,10 @@ if [ -e "npm-shrinkwrap.json" ]; then
         echo "$p1"
         tpkg=$(echo $p1 | cut -d' ' -f 1)
         tver=$(echo $p1 | cut -d' ' -f 2)
-        temppkg="@$tpkg@$tver"
+        temppkg="$tpkg@$tver"
         echo "$tpkg --- $tver --- $temppkg"
         while read p2; do
-            if [[ $p2 == *$tpkg* ]]; then
+            if [[ $p2 == *$(echo $tpkg | cut -d@ -f 2)* ]]; then
                 npm install $temppkg --registry $registry --force
             fi
         done < $gizafile
