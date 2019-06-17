@@ -406,14 +406,93 @@ class NodeJSPipeline extends GenericPipeline {
                     addProviders: false
             )
 
-            packageJSON.version = steps.env.DEPLOY_VERSION
-            steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
-            steps.sh "git add package.json"
-            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
-            gitPush()
+            // reset working directory before versioning
+            steps.sh "git reset --hard"
+            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
+            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
+            gitPush(true)
         }
 
         super.versionGeneric(arguments)
+    }
+
+    /**
+     * Creates a stage that will execute a vulnerability check
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link CheckVulnerabilitiesStageArguments} class.
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Check Vulnerabilities</b></dt>
+     *     <dd>This stage is responsible for npm auditing your application source.</dd>
+     * </dl>
+     *
+     * @Conditions
+     *
+     * <p>
+     *     NONE
+     * </p>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions will be thrown if there is an error.
+     *
+     *     <dl>
+     *         <dt><b>{@link NodeJSPipelineException}</b></dt>
+     *         <dd>When stage is provided as an argument.</dd>
+     *         <dd>When operation is provided as an argument.</dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link CheckVulnerabilitiesStageArguments} used to define the stage.
+     */
+    void checkVulnerabilities(CheckVulnerabilitiesStageArguments arguments = [:]) {
+
+        NodeJSPipelineException preSetupException
+
+        if (arguments.stage) {
+            preSetupException = new NodeJSPipelineException("arguments.stage is an invalid option for checkVulnerabilities", arguments.name)
+        }
+        if (arguments.operation) {
+            preSetupException = new NodeJSPipelineException("arguments.operation is an invalid option for checkVulnerabilities", arguments.name)
+        }
+
+        arguments.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            def packageJSON = steps.readJSON file: 'package.json'
+            def devDeps = packageJSON.devDependencies
+
+            if (!arguments.dev) {
+                // Clean the work space
+                steps.sh "rm npm-shrinkwrap.json || exit 0"
+                steps.sh "rm package-lock.json || exit 0"
+
+                packageJSON.devDependencies = [:]
+                steps.writeJSON file: 'package.json', json: packageJSON
+
+                // Create an production ready environment
+                steps.sh "npm prune --production --no-package-lock"
+                steps.sh "npm shrinkwrap"
+            }
+
+            steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
+
+            packageJSON.devDependencies = devDeps
+            steps.writeJSON file: 'package.json', json: packageJSON
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage checkVuln = createStage(arguments)
+        if (!_control.checkVuln) {
+            _control.checkVuln = checkVuln
+        }
     }
 
     /**
@@ -588,6 +667,15 @@ class NodeJSPipeline extends GenericPipeline {
                 // Prevent npm publish from being affected by the local npmrc file
                 steps.sh "rm -f .npmrc || exit 0"
 
+                // Clean the work space && Create an production ready environment
+                steps.sh "rm npm-shrinkwrap.json || exit 0"
+                steps.sh "rm package-lock.json || exit 0"
+                steps.sh "npm prune --production --no-package-lock"
+                steps.sh "npm shrinkwrap"
+
+                // Install devDependencies to prevent any prepublishOnly from failing
+                steps.sh "npm install --only=dev --no-shrinkwrap"
+
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
@@ -603,7 +691,6 @@ class NodeJSPipeline extends GenericPipeline {
             } finally {
                 // Logout immediately
                 _logoutOfRegistry(publishConfig)
-
                 steps.echo "Deploy Complete, please check this step for errors"
             }
         }
@@ -612,177 +699,8 @@ class NodeJSPipeline extends GenericPipeline {
         if (versionArguments.size() <= 0) {
             super.deployGeneric(deployArguments)
         } else {
-            // Set the version operation for an npm pipeline
-            versionArguments.operation = { String stageName ->
-                if (versionException) {
-                    throw versionException
-                }
-
-                // Get the package.json
-                def packageJSON = steps.readJSON file: 'package.json'
-
-                // Extract the base version
-                def baseVersion = packageJSON.version.split("-")[0]
-
-                // Extract the raw version
-                def rawVersion = baseVersion.split("\\.")
-
-                NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
-
-                // Format the prerelease to be applied to every item
-                String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
-
-                List<String> availableVersions = ["$baseVersion$prereleaseString"]
-
-                // closure function to make semver increment easier
-                Closure addOne = { String number ->
-                    return Integer.parseInt(number) + 1
-                }
-
-                // This switch case has every statement fallthrough. This is so that we can add all the versions based
-                // on whichever has the lowest restriction
-                switch (branch.level) {
-                    case SemverLevel.MAJOR:
-                        availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
-                // falls through
-                    case SemverLevel.MINOR:
-                        availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
-                // falls through
-                    case SemverLevel.PATCH:
-                        availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
-                        break
-                }
-
-                steps.env.DEPLOY_PACKAGE = packageJSON.name
-                if (branch.autoDeploy) {
-                    steps.env.DEPLOY_VERSION = availableVersions.get(0)
-                    steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
-                } else if (admins.size == 0) {
-                    steps.echo "ERROR"
-                    throw new DeployStageException(
-                            "No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.",
-                            stageName
-                    )
-                } else {
-                    Stage currentStage = getStage(stageName)
-
-                    // Add a timeout of one minute less than the available stage execution time
-                    // This will allow the versioning task at least 1 minute to update the files and
-                    // move on to the next step.
-                    StageTimeout timeout = currentStage.args.timeout.subtract(time: 1, unit: TimeUnit.MINUTES)
-
-                    if (timeout.time <= 0) {
-                        throw new DeployStageException(
-                                "Unable to wait for input! Timeout for $stageName, must be greater than 1 minute." +
-                                        " Timeout was ${currentStage.args.timeout.toString()}", stageName
-                        )
-                    }
-
-                    long startTime = System.currentTimeMillis()
-                    try {
-                        // Sleep for 100 ms to ensure that the timeout catch logic will always work.
-                        // This implies that an abort within 100 ms of the timeout will result in
-                        // an ignore but who cares at this point.
-                        steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
-
-                        steps.timeout(time: timeout.time, unit: timeout.unit) {
-                            String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
-                                    "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
-
-                            String versionList = ""
-                            List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
-
-                            // Work backwards because of how the versioning works.
-                            // patch is always the last element
-                            // minor is always the second to last element when present
-                            // major is always the third to last element when present
-                            // default is always at 0 and there can never be more than 4 items
-                            for (int i = availableVersions.size() - 1; i > 0; i--) {
-                                String version = versionText.removeAt(0)
-                                versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
-                                        "necessary prerelease strings attached.</li>$versionList"
-                            }
-
-                            bodyText += "$versionList</ul></p>" +
-                                    "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
-                                    "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
-                                    "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
-
-                            sendHtmlEmail(
-                                    subjectTag: "APPROVAL REQUIRED",
-                                    body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                            "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" + bodyText + _getChangeSummary(),
-                                    to: admins.emailList,
-                                    addProviders: false
-                            )
-
-                            def inputMap = steps.input message: "Version Information Required", ok: "Publish",
-                                    submitter: admins.commaSeparated, submitterParameter: "DEPLOY_APPROVER",
-                                    parameters: [
-                                            steps.choice(
-                                                    name: "DEPLOY_VERSION",
-                                                    choices: availableVersions,
-                                                    description: "What version should be used?"
-                                            )
-                                    ]
-
-                            steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                            steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
-                        }
-                    } catch (FlowInterruptedException exception) {
-                        /*
-                         * Do some bs math to determine if we had a timeout because there is no other way.
-                         * Don't even suggest to me that there might be another way unless you can provide
-                         * the code that I couldn't find in 5 hours.
-                         *
-                         * The main problem is that when the timeout step kills the input step, the input
-                         * step fires out another FlowInterruptedException. This interrupted exception
-                         * takes precedent over the TimeoutException that should be thrown by the timeout step.
-                         *
-                         * Previously, I had checked to see if the exception.cause[0].user was SYSTEM and
-                         * would use that to indicate timeout. However this scenario happens for both a timeout
-                         * and a ui abort not on the input step. The consequence of this was that aborting
-                         * a build using the stop button would act like a timeout and the deploy would
-                         * auto-approve. This is not the desired behavior for an abort.
-                         *
-                         * It is because of these reasons that I have determined my cheeky timeout check
-                         * is the only feasible solution with the current state of Jenkins. If this
-                         * changes in the future, the logic can be revisited to adjust.
-                         *
-                         */
-                        if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
-                            steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                            steps.env.DEPLOY_VERSION = availableVersions.get(0)
-                        } else {
-                            throw exception
-                        }
-                    }
-                }
-
-                String approveName =
-                    steps.env.DEPLOY_APPROVER == TIMEOUT_APPROVE_ID ? TIMEOUT_APPROVE_ID :
-                        steps.env.DEPLOY_APPROVER == AUTO_APPROVE_ID ? AUTO_APPROVE_ID : admins.get(steps.env.DEPLOY_APPROVER).name
-
-                steps.echo "${steps.env.DEPLOY_VERSION} approved by $approveName"
-
-                sendHtmlEmail(
-                        subjectTag: "APPROVED",
-                        body: "<h3>${steps.env.JOB_NAME}</h3>" +
-                                "<p>Branch: <b>${steps.BRANCH_NAME}</b></p>" +
-                                "<p>Approved: <b>${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION}</b></p>" +
-                                "<p>Approved By: <b>${approveName}</b></p>",
-                        to: admins.emailList,
-                        addProviders: false
-                )
-
-                packageJSON.version = steps.env.DEPLOY_VERSION
-                steps.writeJSON file: 'package.json', json: packageJSON, pretty: 2
-                steps.sh "git add package.json"
-                gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
-                gitPush()
-            }
-
-            super.deployGeneric(deployArguments, versionArguments)
+            version(versionArguments)
+            super.deployGeneric(deployArguments, [:])
         }
     }
 
@@ -888,23 +806,10 @@ class NodeJSPipeline extends GenericPipeline {
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    def depInstall = "npm install"
-                    def devInstall = "npm install"
+                    branchProps.dependencies.each { npmPackage, version -> steps.sh "npm install --save $npmPackage@$version" }
+                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version" }
 
-                    // If this is a pull request, we don't want to make any commits
-                    if (changeInfo.isPullRequest) {
-                        depInstall += " --no-save"
-                        devInstall += " --no-save"
-                    }
-                    // Otherwise we need to save the version properly
-                    else {
-                        depInstall += " --save"
-                        devInstall += " --save-dev"
-                    }
-
-                    branchProps.dependencies.each { npmPackage, version -> steps.sh "$depInstall $npmPackage@$version" }
-                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "$devInstall $npmPackage@$version" }
-
+                    // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.

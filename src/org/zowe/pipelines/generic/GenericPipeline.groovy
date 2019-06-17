@@ -249,7 +249,7 @@ class GenericPipeline extends Pipeline {
         VersionStageException preSetupException
 
         if (args.stage) {
-            preSetupException = new VersionStageException("arguments.stage is an invalid option for deployGeneric", args.name)
+            preSetupException = new VersionStageException("arguments.stage is an invalid option for versionGeneric", args.name)
         }
 
         args.name = "Versioning${arguments.name ? ": ${arguments.name}" : ""}"
@@ -275,7 +275,7 @@ class GenericPipeline extends Pipeline {
             if (_control.build?.status != StageStatus.SUCCESS) {
                 throw new VersionStageException("Build must be successful to deploy", args.name)
             } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
-                throw new VersionStageException("All test stages before deploy must be successful or skipped!", args.name)
+                throw new VersionStageException("All test stages before versioning must be successful or skipped!", args.name)
             } else if (_control.preDeployTests.size() == 0) {
                 throw new VersionStageException("At least one test stage must be defined", args.name)
             }
@@ -436,18 +436,19 @@ class GenericPipeline extends Pipeline {
      * <p>If no changes were detected, the commit will not happen. If a commit occurs, the end of
      * of the commit message will be appended with the ci skip text.</p>
      * @param message The commit message
+     * @param amend Indicates if the commit should amend the previous commit
      * @return A boolean indicating if a commit was made. True indicates that a successful commit
      *         has occurred.
      * @throw {@link IllegalBuildException} when a commit operation happens on an illegal build type.
      */
-    boolean gitCommit(String message) {
+    boolean gitCommit(String message, Boolean amend = false) {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
         }
 
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
-        if (ret == 0) {
-            steps.sh "git commit -m \"$message $_CI_SKIP\" --signoff"
+        if (ret == 0 || amend) {
+            steps.sh "git commit${amend? " --amend" : ""} -m \"$message $_CI_SKIP\" --signoff"
             return true
         } else {
             return false
@@ -460,22 +461,24 @@ class GenericPipeline extends Pipeline {
      * <p>If the remote server has any changes then this method will throw an error indicating that
      * the branch is out of sync</p>
      *
+     * @param tags Indicates if we also want to push tags
      * @return A boolean indicating if the push was made. True indicates a successful push
      * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      */
-    boolean gitPush() throws GitException {
+    boolean gitPush(tags = false) throws GitException {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
 
-        steps.sh "git fetch --no-tags"
+        steps.sh "git fetch"
         String status = steps.sh returnStdout: true, script: "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
             steps.sh "git push --verbose"
+            if (tags) steps.sh "git push --tags"
             return true
         } else {
             return false
