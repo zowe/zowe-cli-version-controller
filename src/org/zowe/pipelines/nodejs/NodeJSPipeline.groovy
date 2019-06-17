@@ -806,23 +806,10 @@ class NodeJSPipeline extends GenericPipeline {
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    def depInstall = "npm install"
-                    def devInstall = "npm install"
+                    branchProps.dependencies.each { npmPackage, version -> steps.sh "npm install --save $npmPackage@$version" }
+                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version" }
 
-                    // If this is a pull request, we don't want to make any commits
-                    if (changeInfo.isPullRequest) {
-                        depInstall += " --no-save"
-                        devInstall += " --no-save"
-                    }
-                    // Otherwise we need to save the version properly
-                    else {
-                        depInstall += " --save"
-                        devInstall += " --save-dev"
-                    }
-
-                    branchProps.dependencies.each { npmPackage, version -> steps.sh "$depInstall $npmPackage@$version" }
-                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "$devInstall $npmPackage@$version" }
-
+                    // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
