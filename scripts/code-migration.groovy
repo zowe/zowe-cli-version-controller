@@ -11,7 +11,7 @@
 /**
  * List of people who will get all emails for master builds
  */
-def MASTER_RECIPIENTS_LIST = "christopher.boehm@broadcom.com, fernando.rijocedeno@broadcom.com"
+def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 
 /**
  * Options for the pipeline
@@ -84,7 +84,7 @@ node('ca-jenkins-agent') {
         currentBuild.result = "FAILURE"
         throw e
     } finally {
-        def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : MASTER_RECIPIENTS_LIST
+        def recipients = params.RECIPIENTS_LIST != '' ? "${params.RECIPIENTS_LIST},fernando.rijocedeno@broadcom.com" : MASTER_RECIPIENTS_LIST
         emailext(
             to: recipients,
             subject: "[${currentBuild.currentResult}] Branch propagated: ${params.SOURCE} => ${params.TARGET}",
