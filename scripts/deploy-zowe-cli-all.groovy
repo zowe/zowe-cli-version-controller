@@ -20,7 +20,7 @@ def CONST = [
   // Main deployment project
   cdJobName: 'zowe-cli-deploy-component',
   // Packages to be deployed
-  packages: ['imperative', 'perf-timing', 'cli', 'cics', 'db2', 'ims'],
+  packages: ['imperative', 'perf-timing', 'cli', 'cics', 'db2', 'ims', 'mq'],
   // Tags on each package to be deployed
   tags: ['daily', 'latest']
 ]
