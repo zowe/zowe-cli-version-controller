@@ -1,0 +1,48 @@
+#
+# This program and the accompanying materials are made available under the terms of the
+# Eclipse Public License v2.0 which accompanies this distribution, and is available at
+# https://www.eclipse.org/legal/epl-v20.html
+#
+# SPDX-License-Identifier: EPL-2.0
+#
+# Copyright Contributors to the Zowe Project.
+#
+
+# Tags currently used
+tags:
+  # Forward development only
+  fwd: &fwdTags
+    - "daily"
+    - "latest"
+  # latest only
+  latest:
+    - "latest"
+  # Long Term Support (LTS) only
+  lts: &ltsTags
+    - "lts-incremental"
+    - "lts-stable"
+  # All tags
+  all: &allTags
+    - "daily"
+    - "latest"
+    - "lts-incremental"
+    - "lts-stable"
+
+# Information for all packages to be deployed by CD pipelines
+# Each package must contain at least the following properties
+#   String[] tags: Contains all tags to be deployed
+packages:
+  "imperative":
+    tags: *fwdTags
+  "perf-timing":
+    tags: *fwdTags
+  "cli":
+    tags: *fwdTags
+  "cics":
+    tags: *fwdTags
+  "db2":
+    tags: *fwdTags
+  "ims":
+    tags: *fwdTags
+  "mq":
+    tags: *latest
