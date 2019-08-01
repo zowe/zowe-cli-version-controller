@@ -806,8 +806,8 @@ class NodeJSPipeline extends GenericPipeline {
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    branchProps.dependencies.each { npmPackage, version -> steps.sh "npm install --save $npmPackage@$version" }
-                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "npm install --save-dev $npmPackage@$version" }
+                    branchProps.dependencies.each { npmPackage, version -> steps.sh "npm install --save --save-exact $npmPackage@$version" }
+                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "npm install --save-dev --save-exact $npmPackage@$version" }
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
