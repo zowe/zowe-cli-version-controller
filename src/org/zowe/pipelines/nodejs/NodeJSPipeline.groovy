@@ -134,6 +134,14 @@ class NodeJSPipeline extends GenericPipeline {
      */
     RegistryConfig[] registryConfig
 
+
+    /**
+     * A registry connection information ojbect used by default on protected branches if specified.
+     *
+     * <p>The login operation will happen before the npm install in setup.</p>
+     */
+    RegistryConfig releaseRegistryConfig
+
     /**
      * Constructs the class.
      *
@@ -768,23 +776,27 @@ class NodeJSPipeline extends GenericPipeline {
 
         createStage(name: 'Install Node Package Dependencies', stage: {
             try {
+                // Keep track of when the default registry is used since it is only allowed to be used once
+                def didUseDefaultRegistry = false
+
+                steps.echo "Login to registries"
+
+                if (releaseRegistryConfig) {
+                    if (!releaseRegistryConfig.url) {
+                        didUseDefaultRegistry = true
+                    }
+                    _loginToRegistry(releaseRegistryConfig)
+                }
+
                 if (registryConfig) {
-                    // Only one is allowed to use the default registry
-                    // This will keep track of that
-                    def didUseDefaultRegistry = false
-
-                    steps.echo "Login to registries"
-
                     for (int i = 0; i < registryConfig.length; i++) {
                         def registry = registryConfig[i]
-
                         if (!registry.url) {
                             if (didUseDefaultRegistry) {
                                 throw new NodeJSPipelineException("No registry specified for registryConfig[${i}] and was already logged into the default")
                             }
                             didUseDefaultRegistry = true
                         }
-
                         _loginToRegistry(registry)
                     }
                 }
@@ -819,9 +831,11 @@ class NodeJSPipeline extends GenericPipeline {
                 }
             } finally {
                 // Always try to logout regardless of errors
+                steps.echo "Logout of registries"
+                if (releaseRegistryConfig) {
+                    _logoutOfRegistry(releaseRegistryConfig)
+                }
                 if (registryConfig) {
-                    steps.echo "Logout of registries"
-
                     for (int i = 0; i < registryConfig.length; i++) {
                         _logoutOfRegistry(registryConfig[i])
                     }
