@@ -43,7 +43,8 @@ def generateReport(pkgName) {
       def tempDir = "temp-${pkgName.split('/')[1]}"
       def repoInfo = expectJSON("npm view ${pkgName} repository")
       sh "rm -rf ${tempDir} || exit 0"
-      sh "git clone ${repoInfo.url.split('git\+')[1]} ${tempDir}"
+
+      sh "git clone ${repoInfo.url.substring(4)} ${tempDir}"
       dir("${tempDir}") {
         echo "Inside: ${tempDir}"
         sh "ls -al"
