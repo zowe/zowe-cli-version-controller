@@ -663,10 +663,16 @@ class NodeJSPipeline extends GenericPipeline {
             if (deployArguments.customLogin) {
                 deployArguments.customLogin()
             } else {
-                steps.sh "sudo npm config set registry ${publishConfig.scope ? "${publishConfig.scope}:" : ""}${publishConfig.url}"
+                def tempRegistry = publishConfig
+                // Use releaseRegistryConfig IFF this is not a PR, the branch is protected AND there is no prerelease set for it
+                if (!changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?trim()) {
+                    tempRegistry = releaseRegistryConfig
+                }
+
+                steps.sh "sudo npm config set registry ${tempRegistry.scope ? "${tempRegistry.scope}:" : ""}${tempRegistry.url}"
 
                 // Login to the publish registry
-                _loginToRegistry(publishConfig)
+                _loginToRegistry(tempRegistry)
             }
 
             NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
