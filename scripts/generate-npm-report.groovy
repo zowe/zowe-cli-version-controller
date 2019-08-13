@@ -56,17 +56,21 @@ def generateReport(name, isRepo = false) {
       dir("${tempDir}") {
         echo "Inside: ${tempDir}"
         sh "mkdir dev prod"
+        
+        pkgJson.dependencies = [:]
+        pkgJson.devDependencies = devDeps
         dir("dev"){
-          pkgJson.dependencies = [:]
-          pkgJson.devDependencies = devDeps
           writeJSON json: pkgJson, file: "package.json"
+          sh "cat package.json"
           sh "npm install --package-lock-only"
           sh "npm audit --json > ../${tempDir}.dev.json"
         }
+
+        pkgJson.dependencies = deps
+        pkgJson.devDependencies = [:]
         dir("prod"){
-          pkgJson.dependencies = deps
-          pkgJson.devDependencies = [:]
           writeJSON json: pkgJson, file: "package.json"
+          sh "cat package.json"
           sh "npm install --package-lock-only"
           sh "npm audit --json > ../${tempDir}.prod.json"
         }
@@ -84,9 +88,10 @@ node('ca-jenkins-agent') {
     orgPkgs.each{ pkgName, perm ->
       buildStages.put(pkgName, generateReport(pkgName))
     }
-    params.EXTRA_REPOS.split(',').each{ repoName ->
+    params.EXTRA_REPOS?.split(',').each{ repoName ->
       buildStages.put(repoName, generateReport(repoName, true))
     }
+    sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
     parallel(buildStages)
   } catch (e) {
     currentBuild.result = "FAILURE"
