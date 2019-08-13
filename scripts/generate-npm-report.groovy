@@ -20,6 +20,7 @@ def opts = []
 opts.push(
   parameters([
     string(name: 'ORG', defaultValue: 'zowe', description: 'Organization to gather packages from'),
+    string(name: 'EXTRA_REPOS', defaultValue: 'vscode-extension-for-zowe', description: 'Add additional repositories under Zowe on Public GitHub, (comma-separated)'),
     string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to recevie build resutls (Override)')
   ])
 )
@@ -33,21 +34,44 @@ properties(opts)
 def expectJSON(shellScript) {
   def _temp = sh returnStdout: true, script: shellScript
   def temp = readJSON text: _temp
-  if (!temp) throw "Unexpected JSON format: ${temp}"
+  if (!temp) throw "Unexpected JSON format: ${_temp}"
   return temp
 }
 
-def generateReport(pkgName) {
+def generateReport(name, isRepo = false) {
   return {
-    stage("Generate report: ${pkgName}") {
-      def tempDir = "temp-${pkgName.split('/')[1]}"
-      def repoInfo = expectJSON("npm view ${pkgName} repository")
+    stage("Generate report: ${name}") {
+      def (pkgJson, tempDir, deps, devDeps) = ["", ""]
+      if (isRepo) {
+        tempDir = "${name}"
+        pkgJson = expectJSON("curl https://raw.githubusercontent.com/zowe/${name}/master/package.json")
+      } else {
+        tempDir = "${name.split('/')[1]}"
+        pkgJson = expectJSON("npm view ${name} --json")
+      }
+      deps = pkgJson.dependencies
+      devDeps = pkgJson.devDependencies
       sh "rm -rf ${tempDir} || exit 0"
-
-      sh "git clone ${repoInfo.url.substring(4)} ${tempDir}"
+      sh "mkdir ${tempDir}"
       dir("${tempDir}") {
         echo "Inside: ${tempDir}"
+        sh "mkdir dev prod"
+        dir("dev"){
+          pkgJson.dependencies = [:]
+          pkgJson.devDependencies = devDeps
+          writeJSON json: pkgJson, file: "package.json"
+          sh "npm install --package-lock-only"
+          sh "npm audit --json > ../${tempDir}.dev.json"
+        }
+        dir("prod"){
+          pkgJson.dependencies = deps
+          pkgJson.devDependencies = [:]
+          writeJSON json: pkgJson, file: "package.json"
+          sh "npm install --package-lock-only"
+          sh "npm audit --json > ../${tempDir}.prod.json"
+        }
         sh "ls -al"
+        sh "cat *.json"
       }
     }
   }
@@ -58,7 +82,10 @@ node('ca-jenkins-agent') {
     def buildStages = [:]
     def orgPkgs = expectJSON("npm access ls-packages @${params.ORG}")
     orgPkgs.each{ pkgName, perm ->
-        buildStages.put(pkgName, generateReport(pkgName))
+      buildStages.put(pkgName, generateReport(pkgName))
+    }
+    params.EXTRA_REPOS.split(',').each{ repoName ->
+      buildStages.put(repoName, generateReport(repoName, true))
     }
     parallel(buildStages)
   } catch (e) {
