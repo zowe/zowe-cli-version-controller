@@ -54,16 +54,17 @@ def generateReport(name, isRepo = false) {
       sh "rm -rf ${tempDir} || exit 0"
       sh "mkdir ${tempDir}"
       dir("${tempDir}") {
-        echo "Inside: ${tempDir}"
+        sh "npm install --package-lock-only"
+        sh "npm audit --json > ${tempDir}.all.json || exit 0"
         sh "mkdir dev prod"
-        
+
         pkgJson.dependencies = [:]
         pkgJson.devDependencies = devDeps
         dir("dev"){
           writeJSON json: pkgJson, file: "package.json"
           sh "cat package.json"
           sh "npm install --package-lock-only"
-          sh "npm audit --json > ../${tempDir}.dev.json"
+          sh "npm audit --json > ../${tempDir}.dev.json || exit 0"
         }
 
         pkgJson.dependencies = deps
@@ -72,7 +73,7 @@ def generateReport(name, isRepo = false) {
           writeJSON json: pkgJson, file: "package.json"
           sh "cat package.json"
           sh "npm install --package-lock-only"
-          sh "npm audit --json > ../${tempDir}.prod.json"
+          sh "npm audit --json > ../${tempDir}.prod.json || exit 0"
         }
         sh "ls -al"
         sh "cat *.json"
