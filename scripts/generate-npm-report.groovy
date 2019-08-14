@@ -51,7 +51,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
   def devDeps = pkgJson.devDependencies
   sh "rm -rf $name || exit 0"
   sh "mkdir $name"
-  dir("$name") {
+  dir(name) {
     writeJSON json: pkgJson, file: "package.json"
     sh "npm install --package-lock-only"
     sh "npm audit --json > ../${getFileName(isRepo, name, 'all', pkgTag)} || exit 0"
@@ -131,11 +131,13 @@ node('ca-jenkins-agent') {
       def reportBranch = "npm-audit"
       withCredentials([usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
         sh "git clone https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
-        sh "git checkout $reportBranch"
-        sh "mkdir -p NpmAuditReports/zowe-cli || exit 0"
-        sh "cp $repoName NpmAuditReports/"
-        sh "cp *.json NpmAuditReports/zowe-cli/"
-        sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
+        dir(repoName) {
+          sh "git checkout $reportBranch"
+          sh "mkdir -p NpmAuditReports/zowe-cli || exit 0"
+          sh "cp $repoName NpmAuditReports/"
+          sh "cp *.json NpmAuditReports/zowe-cli/"
+          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
+        }
       }
 
     }
