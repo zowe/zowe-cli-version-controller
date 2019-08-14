@@ -123,9 +123,21 @@ node('ca-jenkins-agent') {
     }
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
-      def reportName = "reports.${dateTag}.tgz"
+      def reportName = "zowe-cli-reports.${dateTag}.tgz"
       sh "tar -czvf $reportName *.json"
-      archiveArtifacts artifacts: reportName
+      // archiveArtifacts artifacts: reportName
+
+      def repoName = "community-ghsa-v4w9-gcpp-4qr7"
+      def reportBranch = "npm-audit"
+      withCredentials([usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+        sh "git clone https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
+        sh "git checkout $reportBranch"
+        sh "mkdir -p NpmAuditReports/zowe-cli || exit 0"
+        sh "cp $repoName NpmAuditReports/"
+        sh "cp *.json NpmAuditReports/zowe-cli/"
+        sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
+      }
+
     }
   } catch (e) {
     currentBuild.result = "FAILURE"
@@ -136,7 +148,7 @@ node('ca-jenkins-agent') {
       to: recipients,
       subject: "[${currentBuild.currentResult}] Reports generated. ORG: ${params.ORG}",
       body: """
-      Build result: ${currentBuild.absoluteUrl}
+      ${currentBuild.currentResult} - Build result: ${currentBuild.absoluteUrl}
       """
     );
   }
