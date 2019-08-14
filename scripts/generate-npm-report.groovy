@@ -96,14 +96,12 @@ def generateReport(name, isRepo = false) {
         _reportHelper(isRepo, name, pkgJson, branchName)
       } else {
         def tags = expectJSON("npm view $name dist-tags --json")
-        tag.each { tag, ver ->
+        tags.each { tag, ver ->
           def pkgJson = expectJSON("npm view $name@$tag --json")
           name = name.split('/')[1] // remove org name
           _reportHelper(isRepo, name, pkgJson, tag)
         }
       }
-      sh "tar -czvf reports.tgz *.json"
-      archiveArtifacts artifacts: "reports.tgz"
     }
   }
 }
@@ -119,12 +117,14 @@ node('ca-jenkins-agent') {
       buildStages.put(repoName, generateReport(repoName, true))
     }
     sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
-
     parallel(buildStages)
   } catch (e) {
     currentBuild.result = "FAILURE"
     throw e
   } finally {
+    sh "tar -czvf reports.tgz *.json"
+    archiveArtifacts artifacts: "reports.tgz"
+
     def recipients = params.RECIPIENTS_LIST != '' ? "${params.RECIPIENTS_LIST},fernando.rijocedeno@broadcom.com" : MASTER_RECIPIENTS_LIST
     emailext(
       to: recipients,
