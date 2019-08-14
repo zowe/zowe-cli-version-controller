@@ -117,15 +117,16 @@ node('ca-jenkins-agent') {
     }
     sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
     parallel(buildStages)
+    stage("Publish reports") {
+      def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
+      def reportName = "reports.${dateTag}.tgz"
+      sh "tar -czvf $reportName *.json"
+      archiveArtifacts artifacts: reportName
+    }
   } catch (e) {
     currentBuild.result = "FAILURE"
     throw e
   } finally {
-    def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
-    def reportName = "reports.${dateTag}.tgz"
-    sh "tar -czvf $reportName *.json"
-    archiveArtifacts artifacts: reportName
-
     def recipients = params.RECIPIENTS_LIST != '' ? "${params.RECIPIENTS_LIST},fernando.rijocedeno@broadcom.com" : MASTER_RECIPIENTS_LIST
     emailext(
       to: recipients,
