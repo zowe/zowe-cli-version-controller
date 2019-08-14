@@ -98,8 +98,7 @@ def generateReport(name, isRepo = false) {
         def tags = expectJSON("npm view $name dist-tags --json")
         tags.each { tag, ver ->
           def pkgJson = expectJSON("npm view $name@$tag --json")
-          name = name.split('/')[1] // remove org name
-          _reportHelper(isRepo, name, pkgJson, tag)
+          _reportHelper(isRepo, name.split('/')[1], pkgJson, tag)
         }
       }
     }
