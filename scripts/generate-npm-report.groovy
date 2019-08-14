@@ -138,11 +138,11 @@ node('ca-jenkins-agent') {
           sh "cp ../*.json NpmAuditReports/zowe-cli/"
           sh "git config --global user.email \"zowe.robot@gmail.com\""
           sh "git config --global user.name \"zowe-robot\""
-          sh "git commit -am \"Add ${reportName.split('.tgz')[0]}\""
+          sh "git add ."
+          sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
           sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
-
     }
   } catch (e) {
     currentBuild.result = "FAILURE"
