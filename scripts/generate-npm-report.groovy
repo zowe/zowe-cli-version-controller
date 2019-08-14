@@ -106,16 +106,18 @@ def generateReport(name, isRepo = false) {
 }
 
 node('ca-jenkins-agent') {
+  def buildStages = [:]
   try {
-    def buildStages = [:]
-    def orgPkgs = expectJSON("npm access ls-packages @${params.ORG}")
-    orgPkgs.each{ pkgName, perm ->
-      buildStages.put(pkgName, generateReport(pkgName))
+    stage("Setup") {
+      def orgPkgs = expectJSON("npm access ls-packages @${params.ORG} --json")
+      orgPkgs.each{ pkgName, perm ->
+        buildStages.put(pkgName, generateReport(pkgName))
+      }
+      params.EXTRA_REPOS?.split(',').each{ repoName ->
+        buildStages.put(repoName, generateReport(repoName, true))
+      }
+      sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
     }
-    params.EXTRA_REPOS?.split(',').each{ repoName ->
-      buildStages.put(repoName, generateReport(repoName, true))
-    }
-    sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
     parallel(buildStages)
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
