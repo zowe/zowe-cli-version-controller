@@ -136,7 +136,7 @@ node('ca-jenkins-agent') {
           sh "mkdir -p NpmAuditReports/zowe-cli || exit 0"
           sh "cp ../$reportName NpmAuditReports/"
           sh "cp ../*.json NpmAuditReports/zowe-cli/"
-          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
+          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
 
