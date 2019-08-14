@@ -121,8 +121,10 @@ node('ca-jenkins-agent') {
     currentBuild.result = "FAILURE"
     throw e
   } finally {
-    sh "tar -czvf reports.tgz *.json"
-    archiveArtifacts artifacts: "reports.tgz"
+    def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
+    def reportName = "reports.${dateTag}.tgz"
+    sh "tar -czvf $reportName *.json"
+    archiveArtifacts artifacts: reportName
 
     def recipients = params.RECIPIENTS_LIST != '' ? "${params.RECIPIENTS_LIST},fernando.rijocedeno@broadcom.com" : MASTER_RECIPIENTS_LIST
     emailext(
