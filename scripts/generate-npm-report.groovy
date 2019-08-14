@@ -118,7 +118,9 @@ node('ca-jenkins-agent') {
       }
       sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
     }
-    parallel(buildStages)
+    stage("Generate reports") {
+      parallel(buildStages)
+    }
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
       def reportName = "reports.${dateTag}.tgz"
