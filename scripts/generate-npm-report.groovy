@@ -122,7 +122,7 @@ node('ca-jenkins-agent') {
     }
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
-      def reportName = "zowe-cli-reports.${dateTag}.tgz"
+      def reportName = "zowe-cli-json-reports.${dateTag}.tgz"
       sh "tar -czvf $reportName *.json"
       // archiveArtifacts artifacts: reportName
 
@@ -145,19 +145,16 @@ node('ca-jenkins-agent') {
             sh "mkdir -p temp || exit 0"
             dir ("temp") {
               sh "npm i npm-audit-html"
-              sh 'files=(../json/*.json);for tf in "${files[@]}"; do echo "Generate: ${tf%.json}" && (cat "$tf" | npx npm-audit-html -o "${tf%.json}.html"); done'
+              sh 'for tf in ../json/*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "${tf%.json}.html"; done'
             }
             sh "rm -rf temp"
-            sh "cp json/*.html html/"
+            sh "mv json/*.html html/"
           }
 
           // Publish reports
           sh "git add ."
-          sh "git status" // DEBUG
-          error "stop here"
-
-          // sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
-          // sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
+          sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
+          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
     }
