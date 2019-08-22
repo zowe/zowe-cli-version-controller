@@ -75,8 +75,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
   }
 }
 
-// TODO: Publish to advisory
-/*
+/* TODO: Fix the formating
 NpmAuditReports/zowe-cli/lts-incremental/pkg-name.all.json
 NpmAuditReports/zowe-cli/lts-incremental/pkg-name.prod.json
 NpmAuditReports/zowe-cli/lts-incremental/pkg-name.dev.json
@@ -129,18 +128,36 @@ node('ca-jenkins-agent') {
 
       def repoName = "community-ghsa-v4w9-gcpp-4qr7"
       def reportBranch = "npm-audit"
+      def dirName = "NpmAuditReports/zowe-cli"
       withCredentials([usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
         sh "git clone https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
         dir(repoName) {
+          // Setup to publish reports
           sh "git checkout $reportBranch"
-          sh "mkdir -p NpmAuditReports/zowe-cli || exit 0"
-          sh "cp ../$reportName NpmAuditReports/"
-          sh "cp ../*.json NpmAuditReports/zowe-cli/"
           sh "git config --global user.email \"zowe.robot@gmail.com\""
           sh "git config --global user.name \"zowe-robot\""
+          sh "mkdir -p $dirName/json || exit 0"
+          sh "cp ../$reportName $dirName/"
+          sh "cp ../*.json $dirName/json/"
+
+          dir(dirName) {
+            sh "mkdir -p html || exit 0"
+            sh "mkdir -p temp || exit 0"
+            dir ("temp") {
+              sh "npm i npm-audit-html"
+              sh 'files=(../json/*.json);for tf in "${files[@]}"; do echo "Generate: ${tf%.json}" && (cat "$tf" | npx npm-audit-html -o "${tf%.json}.html"); done'
+            }
+            sh "rm -rf temp"
+            sh "cp json/*.html html/"
+          }
+
+          // Publish reports
           sh "git add ."
-          sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
-          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
+          sh "git status" // DEBUG
+          error "stop here"
+
+          // sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
+          // sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
     }
@@ -153,7 +170,7 @@ node('ca-jenkins-agent') {
       to: recipients,
       subject: "[${currentBuild.currentResult}] Reports generated. ORG: ${params.ORG}",
       body: """
-      ${currentBuild.currentResult} - Build result: ${currentBuild.absoluteUrl}
+      ${currentBuild.currentResult} - Build result: ${currentBuild.absoluteUrl}console
       """
     );
   }
