@@ -13,26 +13,12 @@
  */
 def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 
-/**
- * Constants to be used throughout the pipeline
- */
-def CONST = [
-  // Main deployment project
-  cdJobName: 'zowe-cli-deploy-component',
-  // Packages to be deployed
-  packages: ['imperative', 'perf-timing', 'cli', 'cics', 'db2', 'ims'],
-  // Tags on each package to be deployed
-  tags: ['daily', 'latest']
-]
-
-import java.text.SimpleDateFormat;
-
-def deployTags(pkgName, tags, cdJobName) {
+def deployTags(pkgName, props) {
   return {
     stage("Deploy: @zowe/${pkgName}") {
-      tags.each { tagName ->
+      props.tags.each { tagName ->
         echo "Deploy @zowe/${pkgName}@${tagName}"
-        build job: cdJobName, parameters: [
+        build job: 'zowe-cli-deploy-component', parameters: [
           [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
           [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
         ]
@@ -44,9 +30,10 @@ def deployTags(pkgName, tags, cdJobName) {
 node('ca-jenkins-agent') {
   try {
     checkout scm
+    def constObj = readYaml file: "deploy-constants.yaml"
     def buildStages = [:]
-    CONST.packages.each { pkgName ->
-      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, CONST.tags, CONST.cdJobName))
+    constObj.packages.each { pkgName, props ->
+      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
     }
     parallel(buildStages)
   } catch (e) {

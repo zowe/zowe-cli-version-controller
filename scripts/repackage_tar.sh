@@ -33,14 +33,40 @@ mv package.json ../../$tarfile_package.json
 # Replace package json with our new one
 mv package_new.json package.json
 
-# Remove package-lock json ?
-#rm -f package-lock.json
+# Update npm-shrinkwrap.json if necessary
+if [ -e "npm-shrinkwrap.json" ]; then
+    # Create a production environment (taking in consideration the npm-shrinkwrap)
+    npm install --only=prod --ignore-scripts
+
+    # Gather all possible packages that match the giza registry
+    gizafile="gizapackages.txt"
+    awk '/giza/ { print $2 }' npm-shrinkwrap.json | awk -F"@" '{ print $3 }' | awk -F".tgz" '{ print $1 }'| awk NF > $gizafile
+    cat $gizafile
+
+    # Gather all scoped dependencies of this package
+    depsfile="dependenciesfiles.txt"
+    node -e "package = require('./package.json');var logger = require('fs').createWriteStream('$depsfile', {flags:'a'});for(pkg in package.dependencies){if(pkg.indexOf('@') >= 0)logger.write(pkg + ' ' + package.dependencies[pkg] + '\n');};logger.end();"
+    cat $depsfile
+
+    # loop through all scoped dependencies
+    while read p1; do
+        tpkg=$(echo $p1 | cut -d' ' -f 1)
+        tver=$(echo $p1 | cut -d' ' -f 2)
+        temppkg="$tpkg@$tver"
+
+        # look for the scoped dependency among the packages that reference the giza registry
+        while read p2; do
+            if [[ $p2 == *$(echo $tpkg | cut -d@ -f 2)* ]]; then
+                npm install $temppkg --registry $registry --only=prod --force
+            fi
+        done < $gizafile
+    done < $depsfile
+fi
 
 npm pack
 
 # delete the original tar
 rm -f ../../$tarfile
-
 
 #move the new tar into the original directory
 mv *.tgz ../../$tarfile
