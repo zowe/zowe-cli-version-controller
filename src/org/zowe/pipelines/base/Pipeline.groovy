@@ -139,6 +139,11 @@ class Pipeline {
     final PipelineAdmins admins = new PipelineAdmins()
 
     /**
+     * This is a generic list of comma-separated emails that should also get notified besides admins
+     */
+    String emailList = ""
+
+    /**
      * The number of historical builds kept for a non-protected branch.
      */
     String defaultBuildHistory = '5'
@@ -842,6 +847,9 @@ class Pipeline {
 
             try {
                 // send the email
+                if (emailList) {
+                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: emailList)
+                }
                 sendHtmlEmail(
                     subjectTag: subject,
                     body: bodyText,
