@@ -139,6 +139,11 @@ class Pipeline {
     final PipelineAdmins admins = new PipelineAdmins()
 
     /**
+     * This is a generic list of comma-separated emails that should also get notified besides admins
+     */
+    String emailList = ""
+
+    /**
      * The number of historical builds kept for a non-protected branch.
      */
     String defaultBuildHistory = '5'
@@ -842,11 +847,12 @@ class Pipeline {
 
             try {
                 // send the email
-                sendHtmlEmail(
-                    subjectTag: subject,
-                    body: bodyText,
-                    to: _isProtectedBranch ? admins.getCCList() : ""
-                )
+                if (emailList) {
+                    emailList = "$emailList${emailList[-1] != ',' && _isProtectedBranch ? ',' : ''}" // Add comma if required
+                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? "$emailList${admins.getCCList()}" : emailList)
+                } else {
+                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? admins.getCCList() : "")
+                }
             }
             catch (emailException) {
                 steps.echo "Exception encountered while attempting to send email!"
