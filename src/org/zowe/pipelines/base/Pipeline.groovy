@@ -848,13 +848,11 @@ class Pipeline {
             try {
                 // send the email
                 if (emailList) {
-                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: emailList)
+                    emailList = "$emailList${emailList[-1] != ',' && _isProtectedBranch ? ',' : ''}" // Add comma if required
+                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? "$emailList${admins.getCCList()}" : emailList)
+                } else {
+                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? admins.getCCList() : "")
                 }
-                sendHtmlEmail(
-                    subjectTag: subject,
-                    body: bodyText,
-                    to: _isProtectedBranch ? admins.getCCList() : ""
-                )
             }
             catch (emailException) {
                 steps.echo "Exception encountered while attempting to send email!"
