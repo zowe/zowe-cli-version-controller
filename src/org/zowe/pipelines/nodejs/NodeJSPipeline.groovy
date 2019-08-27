@@ -665,7 +665,8 @@ class NodeJSPipeline extends GenericPipeline {
             } else {
                 def tempRegistry = publishConfig
                 // Use releaseRegistryConfig IFF this is not a PR, the branch is protected AND there is no prerelease set for it
-                if (!changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?.trim()) {
+                // releaseRegistryConfig hass to be set for us to use it
+                if (releaseRegistryConfig && !changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?.trim()) {
                     tempRegistry = releaseRegistryConfig
                 }
 
