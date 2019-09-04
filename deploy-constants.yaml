@@ -46,3 +46,5 @@ packages:
     tags: *fwdTags
   "mq":
     tags: *latest
+  "zos-make-for-zowe-cli":
+    tags: *latest
