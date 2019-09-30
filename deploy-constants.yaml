@@ -33,13 +33,13 @@ packages:
     tags: *latest
   "cli":
     tags: *latest
-  "cics":
+  "cics-for-zowe-cli":
     tags: *latest
-  "db2":
+  "db2-for-zowe-cli":
     tags: *latest
-  "ims":
+  "ims-for-zowe-cli":
     tags: *latest
-  "mq":
+  "mq-for-zowe-cli":
     tags: *latest
   "zos-make-for-zowe-cli":
     tags: *latest
