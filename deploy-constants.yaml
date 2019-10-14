@@ -10,10 +10,6 @@
 
 # Tags currently used
 tags:
-  # Forward development only
-  fwd: &fwdTags
-    - "daily"
-    - "latest"
   # latest only
   latest: &latest
     - "latest"
@@ -23,7 +19,6 @@ tags:
     - "lts-stable"
   # All tags
   all: &allTags
-    - "daily"
     - "latest"
     - "lts-incremental"
     - "lts-stable"
@@ -33,16 +28,18 @@ tags:
 #   String[] tags: Contains all tags to be deployed
 packages:
   "imperative":
-    tags: *fwdTags
+    tags: *latest
   "perf-timing":
-    tags: *fwdTags
+    tags: *latest
   "cli":
-    tags: *fwdTags
-  "cics":
-    tags: *fwdTags
-  "db2":
-    tags: *fwdTags
-  "ims":
-    tags: *fwdTags
-  "mq":
+    tags: *latest
+  "cics-for-zowe-cli":
+    tags: *latest
+  "db2-for-zowe-cli":
+    tags: *latest
+  "ims-for-zowe-cli":
+    tags: *latest
+  "mq-for-zowe-cli":
+    tags: *latest
+  "zos-make-for-zowe-cli":
     tags: *latest
