@@ -33,7 +33,7 @@ class NodeJSProtectedBranch extends ProtectedBranch {
      * with the latest versions in the protected branch. For pull requests into a protected branch,
      * the dependencies required by the protected branch will be installed but not committed.</p>
      */
-    Map<String, String|DependencyDefinition> dependencies = [:]
+    Map<String, Object> dependencies = [:]
 
     /**
      * A map of devDependencies and their required installable tags for this
@@ -43,7 +43,7 @@ class NodeJSProtectedBranch extends ProtectedBranch {
      * with the latest versions in the protected branch. For pull requests into a protected branch,
      * the devDependencies required by the protected branch will be installed but not committed.</p>
      */
-    Map<String, String|DependencyDefinition> devDependencies = [:]
+    Map<String, Object> devDependencies = [:]
 
     /**
      * The max release level that will be prompted for the branch.
