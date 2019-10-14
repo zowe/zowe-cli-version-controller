@@ -901,16 +901,18 @@ class NodeJSPipeline extends GenericPipeline {
      *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
      * </ul>
      */
-     protected void _processDeps(String depName, String | DependencyDefinition depInfo, Boolean isDevDep) {
+     protected void _processDeps(String depName, Object depInfo, Boolean isDevDep) {
         steps.echo "Installing: ${depName}"
         if (depInfo instanceof CharSequence) {
             // Since this is a string, we just need to do what we did before
             steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
-        } else {
+        } else if (depInfo instanceof DependencyDefinition) {
             // Let's parse the object we got
             def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')-1) : ''}"
             def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
             steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+        } else {
+            steps.error "The library only supports CharSequence and DependencyDefinition types"
         }
     }
 
