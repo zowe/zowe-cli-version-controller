@@ -824,8 +824,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
-                    branchProps.dependencies.each { npmPackage, version -> _processDeps(npmPackage, version instanceof CharSequence ? version : (DependencyDefinition) version, false) }
-                    branchProps.devDependencies.each { npmPackage, version -> _processDeps(npmPackage, version instanceof CharSequence ? version : (DependencyDefinition) version, true) }
+                    _processDeps(branchProps.dependencies, false)
+                    _processDeps(branchProps.devDependencies, true)
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
@@ -891,8 +891,7 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Process provided dependencies in different approaches depending on the data.
      *
-     * @param depName Name or description of the dependency
-     * @param depInfo String specifing the version or tag OR greater details of the dependency based on {@link DependencyDefinition}
+     * @param depName Map containing all dependencies to be processed
      * @param isDevDep Specifies if the function is processing regualr dependencies or devDependencies
      *
      * @Note Dependencies can be processed in two different ways
@@ -901,20 +900,20 @@ class NodeJSPipeline extends GenericPipeline {
      *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
      * </ul>
      */
-     protected void _processDeps(String depName, Object depInfo, Boolean isDevDep) {
-        steps.echo "Installing: ${depName}"
-        if (depInfo instanceof CharSequence) {
-            // Since this is a string, we just need to do what we did before
-            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
-        } else if (depInfo instanceof DependencyDefinition) {
-            // Let's parse the object we got
-            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
-            steps.echo "depScope: $depScope"
-            def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-            steps.echo "depReg: $depReg"
-            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
-        } else {
-            steps.error "The library only supports CharSequence and DependencyDefinition types"
+    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep) {
+        deps.each { depName, depInfo ->
+            steps.echo "Installing: ${depName}"
+            if (depInfo instanceof CharSequence) {
+                // Since this is a string, we just need to do what we did before
+                steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
+            } else {
+                // Let's parse the object we got
+                def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
+                steps.echo "depScope: $depScope"
+                def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
+                steps.echo "depReg: $depReg"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+            }
         }
     }
 
