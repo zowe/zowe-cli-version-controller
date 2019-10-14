@@ -689,8 +689,8 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "npm shrinkwrap"
 
                 // Install devDependencies to prevent any prepublishOnly from failing
+                _processDeps(branch.devDependencies, true)
                 steps.sh "npm install --only=dev --no-shrinkwrap"
-
                 steps.sh "npm publish --tag ${branch.tag}"
 
                 sendHtmlEmail(
