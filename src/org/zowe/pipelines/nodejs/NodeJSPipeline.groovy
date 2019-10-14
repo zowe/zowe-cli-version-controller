@@ -824,8 +824,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
-                    branchProps.dependencies.each { npmPackage, version -> _processDeps(npmPackage, version, false) }
-                    branchProps.devDependencies.each { npmPackage, version -> _processDeps(npmPackage, version, true) }
+                    branchProps.dependencies.each { npmPackage, version -> _processDeps(npmPackage, version instanceof CharSequence ? version : (DependencyDefinition) version, false) }
+                    branchProps.devDependencies.each { npmPackage, version -> _processDeps(npmPackage, version instanceof CharSequence ? version : (DependencyDefinition) version, true) }
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
@@ -908,9 +908,10 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
         } else if (depInfo instanceof DependencyDefinition) {
             // Let's parse the object we got
-            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')-1) : ''}"
+            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
+            steps.echo "depScope: $depScope"
             def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-            steps.echo "testing: $depScope && $depReg"
+            steps.echo "depReg: $depReg"
             steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
         } else {
             steps.error "The library only supports CharSequence and DependencyDefinition types"
