@@ -909,9 +909,7 @@ class NodeJSPipeline extends GenericPipeline {
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
-                steps.echo "depScope: $depScope"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.echo "depReg: $depReg"
                 steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
