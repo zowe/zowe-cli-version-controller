@@ -849,9 +849,9 @@ class Pipeline {
                 // send the email
                 if (emailList) {
                     emailList = "$emailList${emailList[-1] != ',' && _isProtectedBranch ? ',' : ''}" // Add comma if required
-                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? "$emailList${admins.getCCList()}" : emailList)
+                    sendHtmlEmail(addProviders: false, subjectTag: subject, body: bodyText, to: _isProtectedBranch ? "$emailList${admins.getCCList()}" : emailList)
                 } else {
-                    sendHtmlEmail(subjectTag: subject, body: bodyText, to: _isProtectedBranch ? admins.getCCList() : "")
+                    sendHtmlEmail(addProviders: false, subjectTag: subject, body: bodyText, to: _isProtectedBranch ? admins.getCCList() : "")
                 }
             }
             catch (emailException) {
