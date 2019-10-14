@@ -824,25 +824,8 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
-
-                    // Process provided dependencies either way
-                    // - Simple format [{"@my-org/my-pkg" : "<version-number-OR-pkg-tag>"}]
-                    // - Defined format [{"my-pkg-description": {"name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"}}]
-                    def processDeps(depName, depInfo, isDevDep) {
-                        steps.echo "Installing: ${depName}"
-                        if (depInfo instanceof CharSequence) {
-                            // Since this is a string, we just need to do what we did before
-                            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
-                        } else {
-                            // Let's parse the object we got
-                            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')-1) : ''}"
-                            def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
-                        }
-                    }
-
-                    branchProps.dependencies.each { npmPackage, version -> processDeps(npmPackage, version, false) }
-                    branchProps.devDependencies.each { npmPackage, version -> processDeps(npmPackage, version, true) }
+                    branchProps.dependencies.each { npmPackage, version -> _processDeps(npmPackage, version, false) }
+                    branchProps.devDependencies.each { npmPackage, version -> _processDeps(npmPackage, version, true) }
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
@@ -903,6 +886,32 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         super.testGeneric(arguments)
+    }
+
+    /**
+     * Process provided dependencies in different approaches depending on the data.
+     *
+     * @param depName Name or description of the dependency
+     * @param depInfo String specifing the version or tag OR greater details of the dependency based on {@link DependencyDefinition}
+     * @param isDevDep Specifies if the function is processing regualr dependencies or devDependencies
+     *
+     * @Note Dependencies can be processed in two different ways
+     * <ul>
+     *     <li>Simple format: <code>["@my-org/my-pkg" : "<version-number-OR-pkg-tag>"]</code></li>
+     *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
+     * </ul>
+     */
+     protected void _processDeps(String depName, String | DependencyDefinition depInfo, Boolean isDevDep) {
+        steps.echo "Installing: ${depName}"
+        if (depInfo instanceof CharSequence) {
+            // Since this is a string, we just need to do what we did before
+            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
+        } else {
+            // Let's parse the object we got
+            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')-1) : ''}"
+            def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
+            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+        }
     }
 
     /**
