@@ -825,8 +825,24 @@ class NodeJSPipeline extends GenericPipeline {
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
 
-                    branchProps.dependencies.each { npmPackage, version -> steps.sh "npm install --save --save-exact $npmPackage@$version" }
-                    branchProps.devDependencies.each { npmPackage, version -> steps.sh "npm install --save-dev --save-exact $npmPackage@$version" }
+                    // Process provided dependencies either way
+                    // - Simple format [{"@my-org/my-pkg" : "<version-number-OR-pkg-tag>"}]
+                    // - Defined format [{"my-pkg-description": {"name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"}}]
+                    def processDeps(depName, depInfo, isDevDep) {
+                        steps.echo "Installing: ${depName}"
+                        if (depInfo instanceof CharSequence) {
+                            // Since this is a string, we just need to do what we did before
+                            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
+                        } else {
+                            // Let's parse the object we got
+                            def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')-1) : ''}"
+                            def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
+                            steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                        }
+                    }
+
+                    branchProps.dependencies.each { npmPackage, version -> processDeps(npmPackage, version, false) }
+                    branchProps.devDependencies.each { npmPackage, version -> processDeps(npmPackage, version, true) }
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
