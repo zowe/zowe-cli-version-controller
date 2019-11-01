@@ -43,3 +43,5 @@ packages:
     tags: *latest
   "zos-make-for-zowe-cli":
     tags: *latest
+  "tasks-for-zowe-cli":
+    tags: *latest
