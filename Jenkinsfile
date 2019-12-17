@@ -34,7 +34,7 @@ node('ca-jenkins-agent') {
 
     nodejs.publishConfig = [
         email: nodejs.gitConfig.email,
-        credentialsId: 'GizaArtifactory'
+        credentialsId: 'zowe.jfrog.io'
     ]
 
     nodejs.setup()

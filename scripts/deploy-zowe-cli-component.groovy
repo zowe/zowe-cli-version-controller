@@ -20,9 +20,9 @@ def CONST = [
     // Project scope
     scope: '@zowe',
     // Artifactory URL
-    artifactory: 'https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-local-release/',
+    artifactory: 'https://zowe.jfrog.io/zowe/api/npm/npm-local-release/',
     // Artifactory credential ID
-    artifactoryId: 'GizaArtifactory',
+    artifactoryId: 'zowe.jfrog.io',
     // Public registry
     distRegistry: 'https://registry.npmjs.org/',
     // Distribution Registry credential ID
