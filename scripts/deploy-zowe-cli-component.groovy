@@ -20,9 +20,9 @@ def CONST = [
     // Project scope
     scope: '@zowe',
     // Artifactory URL
-    artifactory: 'https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-local-release/',
+    artifactory: 'https://zowe.jfrog.io/zowe/api/npm/npm-local-release/',
     // Artifactory credential ID
-    artifactoryId: 'GizaArtifactory',
+    artifactoryId: 'zowe.jfrog.io',
     // Public registry
     distRegistry: 'https://registry.npmjs.org/',
     // Distribution Registry credential ID
@@ -81,24 +81,18 @@ node('ca-jenkins-agent') {
       sh "rm -f ~/.npmrc || exit 0"
       sh "chmod +x ./scripts/npm_login.sh"
 
-      withCredentials([usernamePassword(credentialsId: CONST.artifactoryId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-        sh "./scripts/npm_login.sh $USERNAME $PASSWORD dummy@example.com ${CONST.artifactory} ${CONST.scope}"
-
-        def tgzUrl = ""
-        def viewOpts = "--${CONST.scope}:registry=${CONST.artifactory}"
-        try {
-          PKG_VERSION = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}", viewOpts, "version")
-          tgzUrl = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}", viewOpts, "dist.tarball")
-        } catch (e) {
-          error "${e.getMessage()}"
-        }
-        sh "npm logout --registry=${CONST.artifactory} --scope=${CONST.scope}"
-
-        // Download the tgz file
-        def artAuth = "$USERNAME:\"$PASSWORD\""
-        sh "curl --silent -u$artAuth \"${tgzUrl}\" > ${params.PKG_NAME}-${PKG_VERSION}.tgz"
+      def tgzUrl = ""
+      def viewOpts = "--${CONST.scope}:registry=${CONST.artifactory}"
+      try {
+        PKG_VERSION = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}", viewOpts, "version")
+        tgzUrl = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_TAG}", viewOpts, "dist.tarball")
+      } catch (e) {
+        error "${e.getMessage()}"
       }
-      
+
+      // Download the tgz file
+      sh "curl --silent \"${tgzUrl}\" > ${params.PKG_NAME}-${PKG_VERSION}.tgz"
+
       withCredentials([usernamePassword(credentialsId: CONST.distId, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
         sh "echo \"//${rmProt(CONST.distRegistry)}:_authToken=$TOKEN\" > ~/.npmrc"
         sh "echo \"registry=${CONST.distRegistry}\" >> ~/.npmrc"
