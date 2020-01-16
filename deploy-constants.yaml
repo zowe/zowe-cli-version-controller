@@ -13,6 +13,7 @@ tags:
   # latest only
   latest: &latest
     - "latest"
+    - "zowe-v1-lts"
   # latest only
   npmTags: &npmTags
     - "latest"
