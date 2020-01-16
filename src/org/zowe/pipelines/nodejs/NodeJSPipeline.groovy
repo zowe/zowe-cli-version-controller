@@ -693,10 +693,6 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "npm install --only=dev --no-shrinkwrap"
                 steps.sh "npm publish --tag ${branch.tag}"
 
-                for (String tag in branch.aliasTags) {
-                    steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
-                }
-
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
                     body: "<h3>${steps.env.JOB_NAME}</h3>" +
@@ -708,6 +704,15 @@ class NodeJSPipeline extends GenericPipeline {
                     addProviders: false
                 )
             } finally {
+                // Apply alias tags, even if no new version was published
+                try {
+                    for (String tag in branch.aliasTags) {
+                        steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
+                    }
+                } catch (Exception e) {
+                    // Do nothing
+                }
+
                 // Logout immediately
                 _logoutOfRegistry(publishConfig)
                 steps.echo "Deploy Complete, please check this step for errors"
