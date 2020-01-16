@@ -709,7 +709,7 @@ class NodeJSPipeline extends GenericPipeline {
                     for (String tag in branch.aliasTags) {
                         steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
                     }
-                } catch {
+                } catch (Exception e) {
                     // Do nothing
                 }
 
