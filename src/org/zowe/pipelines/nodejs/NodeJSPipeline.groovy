@@ -189,11 +189,11 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "mkdir -p temp"
 
             steps.dir("temp") {
-                def json = steps.readJSON file: "../package.json"
+                def packageJSON = steps.readJSON file: "../package.json"
                 def revision = steps.sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 
                 // Replace special file character names
-                def name = json.name.replaceAll("@", "")
+                def name = packageJSON.name.replaceAll("@", "")
                     .replaceAll("/", "-")
 
                 def archiveName = "${name}.revision.${revision}.tgz"
@@ -201,6 +201,10 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName "
                 steps.archiveArtifacts archiveName
                 steps.sh "rm -f $archiveName"
+
+                // Set environment variables needed by later stages
+                steps.env.DEPLOY_PACKAGE = packageJSON.name
+                steps.env.DEPLOY_VERSION = packageJSON.version
             }
         }])
     }
@@ -262,11 +266,8 @@ class NodeJSPipeline extends GenericPipeline {
                 throw versionException
             }
 
-            // Get the package.json
-            def packageJSON = steps.readJSON file: 'package.json'
-
             // Extract the base version
-            def baseVersion = packageJSON.version.split("-")[0]
+            def baseVersion = steps.env.DEPLOY_VERSION.split("-")[0]
 
             // Extract the raw version
             def rawVersion = baseVersion.split("\\.")
@@ -297,7 +298,6 @@ class NodeJSPipeline extends GenericPipeline {
                     break
             }
 
-            steps.env.DEPLOY_PACKAGE = packageJSON.name
             if (branch.autoDeploy) {
                 steps.env.DEPLOY_VERSION = availableVersions.get(0)
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
@@ -692,6 +692,10 @@ class NodeJSPipeline extends GenericPipeline {
                 _processDeps(branch.devDependencies, true)
                 steps.sh "npm install --only=dev --no-shrinkwrap"
                 steps.sh "npm publish --tag ${branch.tag}"
+
+                for (String tag in branch.aliasTags) {
+                    steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
+                }
 
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
