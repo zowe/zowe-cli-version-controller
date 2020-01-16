@@ -693,6 +693,10 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "npm install --only=dev --no-shrinkwrap"
                 steps.sh "npm publish --tag ${branch.tag}"
 
+                for (String tag in branch.aliasTags) {
+                    steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
+                }
+
                 sendHtmlEmail(
                     subjectTag: "DEPLOYED",
                     body: "<h3>${steps.env.JOB_NAME}</h3>" +
