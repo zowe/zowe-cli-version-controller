@@ -13,6 +13,10 @@ tags:
   # latest only
   latest: &latest
     - "latest"
+  # latest only
+  npmTags: &npmTags
+    - "latest"
+    - "next"
   # Long Term Support (LTS) only
   lts: &ltsTags
     - "lts-incremental"
@@ -28,7 +32,7 @@ tags:
 #   String[] tags: Contains all tags to be deployed
 packages:
   "imperative":
-    tags: *latest
+    tags: *npmTags
   "perf-timing":
     tags: *latest
   "cli":
@@ -42,4 +46,6 @@ packages:
   "mq-for-zowe-cli":
     tags: *latest
   "zos-make-for-zowe-cli":
+    tags: *latest
+  "tasks-for-zowe-cli":
     tags: *latest

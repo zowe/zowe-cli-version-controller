@@ -69,5 +69,10 @@ class NodeJSProtectedBranch extends ProtectedBranch {
      * property is left null, then the branch will not be published.
      */
     String tag
+
+    /**
+     * A list of additional tags that will be applied when the branch is published.
+     */
+    String[] aliasTags = []
 }
 

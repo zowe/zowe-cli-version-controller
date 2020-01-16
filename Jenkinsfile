@@ -10,15 +10,15 @@
 
 node('ca-jenkins-agent') {
     def branch = ""
-    
+
     try {
         branch = CHANGE_BRANCH
     } catch (MissingPropertyException e) {
         branch = BRANCH_NAME
     }
-    
+
     def lib = library("shared-pipelines@$branch").org.zowe.pipelines.nodejs
-    
+
     def nodejs = lib.NodeJSPipeline.new(this)
 
     nodejs.admins.add("zfernand0","markackert")
@@ -34,7 +34,7 @@ node('ca-jenkins-agent') {
 
     nodejs.publishConfig = [
         email: nodejs.gitConfig.email,
-        credentialsId: 'GizaArtifactory'
+        credentialsId: 'zowe.jfrog.io'
     ]
 
     nodejs.setup()
