@@ -90,8 +90,9 @@ node('ca-jenkins-agent') {
         error "${e.getMessage()}"
       }
 
+      def fullPkgName = "${params.PKG_NAME}-${PKG_VERSION}.tgz"
       // Download the tgz file
-      sh "curl --silent \"${tgzUrl}\" > ${params.PKG_NAME}-${PKG_VERSION}.tgz"
+      sh "curl --silent \"${tgzUrl}\" > ${fullPkgName}"
 
       withCredentials([usernamePassword(credentialsId: CONST.distId, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
         sh "echo \"//${rmProt(CONST.distRegistry)}:_authToken=$TOKEN\" > ~/.npmrc"
@@ -109,15 +110,18 @@ node('ca-jenkins-agent') {
         VERSIONS_MATCH = true
         echo "Package: ${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION} already exists"
       } else {
-        VERSIONS_MATCH = false
-        def fullPkgName = "${params.PKG_NAME}-${PKG_VERSION}.tgz"
-        // Repackage the tar file with the new tgz after changing the publishConfig.registry and the version
-        sh "chmod +x ./scripts/repackage_tar.sh"
-        sh "./scripts/repackage_tar.sh ${fullPkgName} ${CONST.distRegistry} ${PKG_VERSION}"
-
-        // We want these package to be public
-        sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
-        sh "rm -f ~/.npmrc || exit 0"
+        try {
+          OLD_PKG_VER = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION}")
+          VERSIONS_MATCH = true
+          echo "Package: ${CONST.PKG_SCOPE}/${params.PKG_NAME}@${PKG_VERSION} already exists, adding tag ${PKG_TAG}"
+          sh "npm dist-tag add ${CONST.PKG_SCOPE}/${params.PKG_NAME}@${PKG_VERSION} ${PKG_TAG}"
+        } catch (e) {
+          VERSIONS_MATCH = false
+          sh "chmod +x ./scripts/repackage_tar.sh"
+          sh "./scripts/repackage_tar.sh ${fullPkgName} ${CONST.distRegistry} ${PKG_VERSION}"
+          sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
+          sh "rm -f ~/.npmrc || exit 0"
+        }
       }
     }
   } catch (e) {
