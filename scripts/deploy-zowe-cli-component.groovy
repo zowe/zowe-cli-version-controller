@@ -113,8 +113,8 @@ node('ca-jenkins-agent') {
         try {
           OLD_PKG_VER = getPkgInfo("${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION}")
           VERSIONS_MATCH = true
-          echo "Package: ${CONST.PKG_SCOPE}/${params.PKG_NAME}@${PKG_VERSION} already exists, adding tag ${PKG_TAG}"
-          sh "npm dist-tag add ${CONST.PKG_SCOPE}/${params.PKG_NAME}@${PKG_VERSION} ${PKG_TAG}"
+          echo "Package: ${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION} already exists, adding tag ${PKG_TAG}"
+          sh "npm dist-tag add ${CONST.scope}/${params.PKG_NAME}@${PKG_VERSION} ${PKG_TAG}"
         } catch (e) {
           VERSIONS_MATCH = false
           sh "chmod +x ./scripts/repackage_tar.sh"
