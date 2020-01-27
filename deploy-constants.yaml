@@ -34,9 +34,9 @@ packages:
   "cli":
     tags: *ltsTags
   "cics-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
   "db2-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
   "ims-for-zowe-cli":
     tags: *latest
   "mq-for-zowe-cli":
