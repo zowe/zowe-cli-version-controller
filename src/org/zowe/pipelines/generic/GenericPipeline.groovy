@@ -486,6 +486,29 @@ class GenericPipeline extends Pipeline {
     }
 
     /**
+     * Tag a code version during pipeline execution.
+     *
+     * @param label Indicates the label to use to the tag
+     * @param description The tag description
+     * @return A boolean indicating if a tag was created or not.
+     * @throw {@link IllegalBuildException} when a gitTag operation happens on an illegal build type.
+     */
+    boolean gitTag(String label, String description) {
+        if (changeInfo.isPullRequest) {
+            throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
+        }
+
+        try {
+            steps.sh "git tag $label -m \"$description\""
+            steps.sh "git push --tags"
+            return true
+        } catch (Exception e) {
+            // Do nothing
+            return false
+        }
+    }
+
+    /**
      * Calls {@link org.zowe.pipelines.base.Pipeline#setupBase()} to setup the build.
      *
      * @Stages
@@ -636,7 +659,7 @@ class GenericPipeline extends Pipeline {
      * @Exceptions
      * <p>
      *     The test stage can throw the following exceptions:
-     *     
+     *
      *     <dl>
      *         <dt><b>{@link TestStageException}</b></dt>
      *         <dd>When a test stage is created before a call to {@link #buildGeneric(Map)}</dd>
