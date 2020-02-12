@@ -498,11 +498,12 @@ class GenericPipeline extends Pipeline {
             throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
         }
 
-        def ret = steps.sh returnStatus: true, script: "git tag $label -m \"$description\""
-        if (ret == 0) {
+        try {
+            steps.sh "git tag $label -m \"$description\""
             steps.sh "git push --tags"
             return true
-        } else {
+        } catch (Exception e) {
+            // Do nothing
             return false
         }
     }
