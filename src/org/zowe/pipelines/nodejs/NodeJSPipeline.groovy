@@ -289,10 +289,10 @@ class NodeJSPipeline extends GenericPipeline {
             switch(branch.level) {
                 case SemverLevel.MAJOR:
                     availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
-            // falls through
+                // falls through
                 case SemverLevel.MINOR:
                     availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
-            // falls through
+                // falls through
                 case SemverLevel.PATCH:
                     availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
                     break
@@ -416,9 +416,13 @@ class NodeJSPipeline extends GenericPipeline {
 
             // reset working directory before versioning
             steps.sh "git reset --hard"
-            steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
-            gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
-            gitPush(arguments.gitTag ? arguments.gitTag : true)
+            if (baseVersion == steps.env.DEPLOY_VERSION) {
+                gitTag("v$baseVersion", "Create release $baseVersion for ${branch.tag}")
+            } else {
+                steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
+                gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
+                gitPush(arguments.gitTag ? arguments.gitTag : true)
+            }
         }
 
         super.versionGeneric(arguments)
