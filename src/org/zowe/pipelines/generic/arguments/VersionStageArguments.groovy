@@ -21,4 +21,11 @@ class VersionStageArguments extends GenericStageArguments {
      * @default {@code "Package"}
      */
     String name = "Package"
+
+    /**
+     * Specifies whether we should push the tags to the repo or not.
+     *
+     * @default {@code true}
+     */
+    Boolean gitTag = true
 }
