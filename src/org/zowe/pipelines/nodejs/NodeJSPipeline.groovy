@@ -277,7 +277,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            List<String> availableVersions = ["$baseVersion$prereleaseString"]
+            String[] availableVersions = ["$baseVersion$prereleaseString"]
 
             // closure function to make semver increment easier
             Closure addOne = {String number ->
@@ -288,18 +288,18 @@ class NodeJSPipeline extends GenericPipeline {
             // on whichever has the lowest restriction
             switch(branch.level) {
                 case SemverLevel.MAJOR:
-                    availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
+                    availableVersions.push("${addOne(rawVersion[0])}.0.0$prereleaseString")
                 // falls through
                 case SemverLevel.MINOR:
-                    availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
+                    availableVersions.push("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
                 // falls through
                 case SemverLevel.PATCH:
-                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
+                    availableVersions.push("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
                     break
             }
 
             if (branch.autoDeploy) {
-                steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                steps.env.DEPLOY_VERSION = availableVersions[0]
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
@@ -325,7 +325,7 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
 
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
+                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions[0]} [DEFAULT]</b>: " +
                                 "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
 
                         // Add labels next to version numbers to help the person decide what version they should choose
@@ -343,13 +343,13 @@ class NodeJSPipeline extends GenericPipeline {
                         for (int i = availableVersions.size() - 1; i > 0; i--) {
                             String version = versionText.removeAt(0)
                             tempAvailableVersions[i] = "${tempAvailableVersions[i]} - $version"
-                            versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
+                            versionList = "<li><b>${availableVersions[i]} [$version]</b>: $version update with any " +
                                     "necessary prerelease strings attached.</li>$versionList"
                         }
 
                         bodyText += "$versionList</ul></p>" +
                                 "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
-                                "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
+                                "${timeout.toString()}, the default version (${availableVersions[0]}) will be the " +
                                 "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
 
                         sendHtmlEmail(
@@ -396,7 +396,7 @@ class NodeJSPipeline extends GenericPipeline {
                      */
                     if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
                         steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                        steps.env.DEPLOY_VERSION = availableVersions[0]
                     } else {
                         throw exception
                     }
