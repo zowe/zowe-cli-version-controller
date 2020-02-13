@@ -277,7 +277,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            String[] availableVersions = ["$baseVersion$prereleaseString"]
+            def availableVersions = ["$baseVersion$prereleaseString"]
 
             // closure function to make semver increment easier
             Closure addOne = {String number ->
@@ -288,13 +288,13 @@ class NodeJSPipeline extends GenericPipeline {
             // on whichever has the lowest restriction
             switch(branch.level) {
                 case SemverLevel.MAJOR:
-                    availableVersions.push("${addOne(rawVersion[0])}.0.0$prereleaseString")
+                    availableVersions.add("${addOne(rawVersion[0])}.0.0$prereleaseString")
                 // falls through
                 case SemverLevel.MINOR:
-                    availableVersions.push("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
+                    availableVersions.add("${rawVersion[0]}.${addOne(rawVersion[1])}.0$prereleaseString")
                 // falls through
                 case SemverLevel.PATCH:
-                    availableVersions.push("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
+                    availableVersions.add("${rawVersion[0]}.${rawVersion[1]}.${addOne(rawVersion[2])}$prereleaseString")
                     break
             }
 
