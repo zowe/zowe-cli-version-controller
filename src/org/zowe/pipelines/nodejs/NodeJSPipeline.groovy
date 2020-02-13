@@ -210,6 +210,43 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Creates a stage that will lint the project.
+     *
+     * If {@link org.zowe.pipelines.generic.arguments.LintStageArguments#operation} is not
+     * provided, the stage will default to executing {@code npm run lint}.
+     *
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.LintStageArguments}
+     *                  used to define the stage.
+     */
+    void lint(Map arguments = [:]) {
+        NodeJSPipelineException preSetupException
+
+        if (arguments.stage) {
+            preSetupException = new NodeJSPipelineException("arguments.stage is an invalid option for lint", arguments.name)
+        }
+        if (!arguments.operation) {
+            arguments.operation = {
+                steps.sh "npm run lint"
+            }
+        }
+
+        arguments.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
+            if (preSetupException) {String strageName
+                throw preSetupException
+            }
+
+            arguments.operation(stageName)
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage lint = createStage(arguments)
+        if (!_control.lint) {
+            _control.lint = lint
+        }
+    }
+
+    /**
      * Manage versions of a NodeJSPipeline package.
      *
      * <p>Arguments passed to this function will map to the
