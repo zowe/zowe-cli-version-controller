@@ -328,6 +328,10 @@ class NodeJSPipeline extends GenericPipeline {
                         String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
                                 "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
 
+                        // Add labels next to version numbers to help the person decide what version they should choose
+                        String[] tempAvailableVersions = availableVersions
+                        tempAvailableVersions[0] = "${tempAvailableVersions[0]} - CURRENT"
+
                         String versionList = ""
                         List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
 
@@ -338,6 +342,7 @@ class NodeJSPipeline extends GenericPipeline {
                         // default is always at 0 and there can never be more than 4 items
                         for (int i = availableVersions.size() - 1; i > 0; i--) {
                             String version = versionText.removeAt(0)
+                            tempAvailableVersions[i] = "${tempAvailableVersions[i]} - $version"
                             versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
                                     "necessary prerelease strings attached.</li>$versionList"
                         }
@@ -360,13 +365,13 @@ class NodeJSPipeline extends GenericPipeline {
                                 parameters: [
                                         steps.choice(
                                                 name: "DEPLOY_VERSION",
-                                                choices: availableVersions,
+                                                choices: tempAvailableVersions,
                                                 description: "What version should be used?"
                                         )
                                 ]
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION.split(" - ")[0]
                     }
                 } catch (FlowInterruptedException exception) {
                     /*
