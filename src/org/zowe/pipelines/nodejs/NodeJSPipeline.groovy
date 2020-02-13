@@ -329,7 +329,7 @@ class NodeJSPipeline extends GenericPipeline {
                                 "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
 
                         // Add labels next to version numbers to help the person decide what version they should choose
-                        String[] tempAvailableVersions = availableVersions
+                        def tempAvailableVersions = availableVersions
                         tempAvailableVersions[0] = "${tempAvailableVersions[0]} - CURRENT"
 
                         String versionList = ""
