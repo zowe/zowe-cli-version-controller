@@ -218,7 +218,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.LintStageArguments}
      *                  used to define the stage.
      */
-    void lint(Map arguments = [:]) {
+    void lint(LintStageArguments arguments = [:]) {
         NodeJSPipelineException preSetupException
 
         if (arguments.stage) {
