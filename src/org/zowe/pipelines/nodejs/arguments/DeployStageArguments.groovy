@@ -18,13 +18,6 @@ import org.zowe.pipelines.generic.arguments.GenericStageArguments
  */
 class DeployStageArguments extends GenericStageArguments {
     /**
-     * The name of the Deploy step.
-     *
-     * @default {@code "Package"}
-     */
-    String name = "Package"
-
-    /**
      * The custom login operation.
      *
      * <p>This closure is used by the deploy stage method to perform any required login operations.
