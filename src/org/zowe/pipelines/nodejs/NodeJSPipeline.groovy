@@ -290,7 +290,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.VersionStageArguments} used to
      *                  define the stage.
      */
-    void version(Map arguments = [:]) {
+    void version(VersionStageArguments arguments = [:]) {
         IllegalArgumentException versionException
 
         if (arguments.operation) {
