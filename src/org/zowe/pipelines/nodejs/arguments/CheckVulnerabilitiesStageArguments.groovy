@@ -14,7 +14,7 @@ import org.zowe.pipelines.generic.arguments.GenericStageArguments
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#deploy(java.util.Map, java.util.Map)} method.
+ * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#checkVulnerabilities(java.util.Map, java.util.Map)} method.
  */
 class CheckVulnerabilitiesStageArguments extends GenericStageArguments {
     /**

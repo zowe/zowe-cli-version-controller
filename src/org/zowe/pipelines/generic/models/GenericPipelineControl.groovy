@@ -30,6 +30,13 @@ class GenericPipelineControl extends PipelineControl {
     List<Stage> preDeployTests = []
 
     /**
+     * Lint stage.
+     *
+     * <p>This stage requires the build to be successful</p>
+     */
+    Stage lint
+
+    /**
      * Check Vulnerabilities stage.
      *
      * <p>This stage requires the build to be successful</p>

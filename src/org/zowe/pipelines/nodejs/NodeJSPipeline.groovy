@@ -210,6 +210,43 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Creates a stage that will lint the project.
+     *
+     * If {@link org.zowe.pipelines.generic.arguments.LintStageArguments#operation} is not
+     * provided, the stage will default to executing {@code npm run lint}.
+     *
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.LintStageArguments}
+     *                  used to define the stage.
+     */
+    void lint(LintStageArguments arguments = [:]) {
+        NodeJSPipelineException preSetupException
+
+        if (arguments.stage) {
+            preSetupException = new NodeJSPipelineException("arguments.stage is an invalid option for lint", arguments.name)
+        }
+        if (!arguments.operation) {
+            arguments.operation = {
+                steps.sh "npm run lint"
+            }
+        }
+
+        arguments.stage = { String stageName ->
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
+            if (preSetupException) {String strageName
+                throw preSetupException
+            }
+
+            arguments.operation(stageName)
+        }
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage lint = createStage(arguments)
+        if (!_control.lint) {
+            _control.lint = lint
+        }
+    }
+
+    /**
      * Manage versions of a NodeJSPipeline package.
      *
      * <p>Arguments passed to this function will map to the
@@ -277,7 +314,7 @@ class NodeJSPipeline extends GenericPipeline {
             // Format the prerelease to be applied to every item
             String prereleaseString = branch.prerelease ? "-${branch.prerelease}." + new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC")) : ""
 
-            List<String> availableVersions = ["$baseVersion$prereleaseString"]
+            def availableVersions = ["$baseVersion$prereleaseString"]
 
             // closure function to make semver increment easier
             Closure addOne = {String number ->
@@ -299,7 +336,7 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             if (branch.autoDeploy) {
-                steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                steps.env.DEPLOY_VERSION = availableVersions[0]
                 steps.env.DEPLOY_APPROVER = AUTO_APPROVE_ID
             } else if (admins.size == 0) {
                 steps.echo "ERROR"
@@ -325,8 +362,12 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sleep time: 100, unit: TimeUnit.MILLISECONDS
 
                     steps.timeout(time: timeout.time, unit: timeout.unit) {
-                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions.get(0)} [DEFAULT]</b>: " +
+                        String bodyText = "<p>Below is the list of versions to choose from:<ul><li><b>${availableVersions[0]} [DEFAULT]</b>: " +
                                 "This version was derived from the package.json version by only adding/removing a prerelease string as needed.</li>"
+
+                        // Add labels next to version numbers to help the person decide what version they should choose
+                        def tempAvailableVersions = availableVersions
+                        tempAvailableVersions[0] = "${tempAvailableVersions[0]} - CURRENT"
 
                         String versionList = ""
                         List<String> versionText = ["PATCH", "MINOR", "MAJOR"]
@@ -338,13 +379,14 @@ class NodeJSPipeline extends GenericPipeline {
                         // default is always at 0 and there can never be more than 4 items
                         for (int i = availableVersions.size() - 1; i > 0; i--) {
                             String version = versionText.removeAt(0)
-                            versionList = "<li><b>${availableVersions.get(i)} [$version]</b>: $version update with any " +
+                            tempAvailableVersions[i] = "${tempAvailableVersions[i]} - $version"
+                            versionList = "<li><b>${availableVersions[i]} [$version]</b>: $version update with any " +
                                     "necessary prerelease strings attached.</li>$versionList"
                         }
 
                         bodyText += "$versionList</ul></p>" +
                                 "<p>Versioning information is required before the pipeline can continue. If no input is provided within " +
-                                "${timeout.toString()}, the default version (${availableVersions.get(0)}) will be the " +
+                                "${timeout.toString()}, the default version (${availableVersions[0]}) will be the " +
                                 "deployed version. Please provide the required input <a href=\"${steps.RUN_DISPLAY_URL}\">HERE</a></p>"
 
                         sendHtmlEmail(
@@ -360,13 +402,13 @@ class NodeJSPipeline extends GenericPipeline {
                                 parameters: [
                                         steps.choice(
                                                 name: "DEPLOY_VERSION",
-                                                choices: availableVersions,
+                                                choices: tempAvailableVersions,
                                                 description: "What version should be used?"
                                         )
                                 ]
 
                         steps.env.DEPLOY_APPROVER = inputMap.DEPLOY_APPROVER
-                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION
+                        steps.env.DEPLOY_VERSION = inputMap.DEPLOY_VERSION.split(" - ")[0]
                     }
                 } catch (FlowInterruptedException exception) {
                     /*
@@ -391,7 +433,7 @@ class NodeJSPipeline extends GenericPipeline {
                      */
                     if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
                         steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                        steps.env.DEPLOY_VERSION = availableVersions.get(0)
+                        steps.env.DEPLOY_VERSION = availableVersions[0]
                     } else {
                         throw exception
                     }
