@@ -15,7 +15,7 @@ import org.zowe.pipelines.base.arguments.StageArguments
 /**
  * Arguments available to stage creation methods present in {@link org.zowe.pipelines.generic.GenericPipeline}
  */
-class GenericStageArguments extends StageArguments{
+class GenericStageArguments extends StageArguments {
     /**
      * The stage operation.
      *
