@@ -185,6 +185,11 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh 'npm run build'
             }
 
+            if (arguments.archiveOperation) {
+              arguments.archiveOperation(stageName)
+              return;
+            }
+
             // archive the build
             steps.sh "mkdir -p temp"
 
