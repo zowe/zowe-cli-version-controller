@@ -185,31 +185,30 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh 'npm run build'
             }
 
+            // Set environment variables needed by later stages
+            def packageJSON = steps.readJSON file: "package.json"
+            steps.env.DEPLOY_PACKAGE = packageJSON.name
+            steps.env.DEPLOY_VERSION = packageJSON.version
+
             if (arguments.archiveOperation) {
               arguments.archiveOperation(stageName)
-              return;
-            }
+            } else {
+                // archive the build
+                steps.sh "mkdir -p temp"
 
-            // archive the build
-            steps.sh "mkdir -p temp"
+                steps.dir("temp") {
+                    def revision = steps.sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 
-            steps.dir("temp") {
-                def packageJSON = steps.readJSON file: "../package.json"
-                def revision = steps.sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+                    // Replace special file character names
+                    def name = packageJSON.name.replaceAll("@", "")
+                        .replaceAll("/", "-")
 
-                // Replace special file character names
-                def name = packageJSON.name.replaceAll("@", "")
-                    .replaceAll("/", "-")
+                    def archiveName = "${name}.revision.${revision}.tgz"
 
-                def archiveName = "${name}.revision.${revision}.tgz"
-
-                steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName "
-                steps.archiveArtifacts archiveName
-                steps.sh "rm -f $archiveName"
-
-                // Set environment variables needed by later stages
-                steps.env.DEPLOY_PACKAGE = packageJSON.name
-                steps.env.DEPLOY_VERSION = packageJSON.version
+                    steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName "
+                    steps.archiveArtifacts archiveName
+                    steps.sh "rm -f $archiveName"
+                }
             }
         }])
     }
