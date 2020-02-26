@@ -21,4 +21,11 @@ class BuildStageArguments extends GenericStageArguments {
      * @default {@code "Source"}
      */
     String name = "Source"
+
+    /**
+     * The archive operation.
+     *
+     * This closure is used by the the user to perform their own archiving operation
+     */
+    Closure archiveOperation
 }
