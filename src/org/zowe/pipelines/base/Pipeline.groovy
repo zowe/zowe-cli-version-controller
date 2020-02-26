@@ -390,7 +390,6 @@ class Pipeline {
      * @param args Arguments for the end method.
      *
      */
-     @NonCPS
     final void endBase(EndArguments args) {
         // Create this stage so that the pipeline has a place to log all the
         // post build actions. If the build has not thrown an exception or been
@@ -468,6 +467,7 @@ class Pipeline {
      *
      * @return The stage object for the requested stage.
      */
+     @NonCPS
     final Stage getStage(String stageName) {
         return _stages.getStage(stageName)
     }
