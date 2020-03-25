@@ -13,15 +13,15 @@ tags:
   # latest only
   latest: &latest
     - "latest"
-  # latest only
+  # latest and LTS (Long Term Support)
+  lts: &ltsTags
+    - "latest"
+    - "zowe-v1-lts"
+  # latest, LTS, and next
   npmTags: &npmTags
     - "latest"
     - "zowe-v1-lts"
     - "next"
-  # Long Term Support (LTS) only
-  lts: &ltsTags
-    - "latest"
-    - "zowe-v1-lts"
 
 # Information for all packages to be deployed by CD pipelines
 # Each package must contain at least the following properties
@@ -46,4 +46,6 @@ packages:
   "tasks-for-zowe-cli":
     tags: *latest
   "zos-ftp-for-zowe-cli":
+    tags: *latest
+  "secure-credential-store-for-zowe-cli":
     tags: *latest
