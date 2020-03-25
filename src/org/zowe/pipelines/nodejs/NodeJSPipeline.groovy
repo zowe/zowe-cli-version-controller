@@ -959,7 +959,7 @@ class NodeJSPipeline extends GenericPipeline {
     void updateChangelog(Map arguments = [:]) {\
         ChangelogStageArguments args = arguments
         args.name = "Update Changelog"
-        if (protectedBranches.isProtected(branch)) {
+        if (protectedBranches.isProtected(changeInfo.branchName)) {
             createStage(name: "Update Changelog", stage: {
                 String head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
                 if (head.contains(args.header)) {
