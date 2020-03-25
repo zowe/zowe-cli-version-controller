@@ -16,6 +16,7 @@ import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
 import org.zowe.pipelines.generic.arguments.VersionStageArguments
+import org.zowe.pipelines.generic.arguments.ChangelogStageArguments
 import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
 import org.zowe.pipelines.nodejs.models.*
@@ -945,6 +946,34 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         super.testGeneric(arguments)
+    }
+
+    /**
+     * Update the header in the changelog
+     *
+     * @param file Indicates the file to be updated
+     * @param lines Indicates the number of lines to check for the header
+     * @param header Indicates the header that should exist in the changelog
+     * @return void
+     */
+    void updateChangelog(Map arguments = [:]) {\
+        ChangelogStageArguments args = arguments
+        args.name = "Update Changelog"
+        if (protectedBranches.isProtected(changeInfo.branchName)) {
+            createStage(name: "Update Changelog", stage: {
+                String head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
+                if (head.contains(args.header)) {
+                    def packageJSON = readJSON file: 'package.json'
+                    def packageJSONVersion = packageJSON.version
+                    steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
+                    steps.sh "git add ${args.file}"
+                    steps.sh "git commit -m 'Update Changelog [ci skip]'"
+                    steps.sh "git push"
+                } else {
+                    steps.error "Changelog version update could not be completed. Could not find specified header."
+                }
+            })
+        }
     }
 
     /**
