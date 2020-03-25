@@ -27,12 +27,12 @@ tags:
 # Each package must contain at least the following properties
 #   String[] tags: Contains all tags to be deployed
 packages:
-  "imperative":
-    tags: *npmTags
   "perf-timing":
     tags: *ltsTags
+  "imperative":
+    tags: *npmTags
   "cli":
-    tags: *ltsTags
+    tags: *npmTags
   "cics-for-zowe-cli":
     tags: *ltsTags
   "db2-for-zowe-cli":
@@ -40,12 +40,12 @@ packages:
   "ims-for-zowe-cli":
     tags: *latest
   "mq-for-zowe-cli":
-    tags: *latest
-  "zos-make-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
+  "secure-credential-store-for-zowe-cli":
+    tags: *ltsTags
   "tasks-for-zowe-cli":
     tags: *latest
   "zos-ftp-for-zowe-cli":
-    tags: *latest
-  "secure-credential-store-for-zowe-cli":
+    tags: *ltsTags
+  "zos-make-for-zowe-cli":
     tags: *latest

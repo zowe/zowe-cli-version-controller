@@ -8,8 +8,10 @@ bin
 out
 
 .idea
+.settings
 .vscode
 target
+.classpath
 .project
 *.iml
 package-lock.json
