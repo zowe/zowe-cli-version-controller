@@ -13,37 +13,39 @@ tags:
   # latest only
   latest: &latest
     - "latest"
-  # latest only
+  # latest and LTS (Long Term Support)
+  lts: &ltsTags
+    - "latest"
+    - "zowe-v1-lts"
+  # latest, LTS, and next
   npmTags: &npmTags
     - "latest"
     - "zowe-v1-lts"
     - "next"
-  # Long Term Support (LTS) only
-  lts: &ltsTags
-    - "latest"
-    - "zowe-v1-lts"
 
 # Information for all packages to be deployed by CD pipelines
 # Each package must contain at least the following properties
 #   String[] tags: Contains all tags to be deployed
 packages:
-  "imperative":
-    tags: *npmTags
   "perf-timing":
     tags: *ltsTags
+  "imperative":
+    tags: *npmTags
   "cli":
-    tags: *ltsTags
+    tags: *npmTags
   "cics-for-zowe-cli":
     tags: *ltsTags
   "db2-for-zowe-cli":
     tags: *ltsTags
   "ims-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
   "mq-for-zowe-cli":
-    tags: *latest
-  "zos-make-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
+  "secure-credential-store-for-zowe-cli":
+    tags: *ltsTags
   "tasks-for-zowe-cli":
     tags: *latest
   "zos-ftp-for-zowe-cli":
+    tags: *ltsTags
+  "zos-make-for-zowe-cli":
     tags: *latest
