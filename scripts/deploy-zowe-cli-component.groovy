@@ -119,7 +119,11 @@ node('ca-jenkins-agent') {
           VERSIONS_MATCH = false
           sh "chmod +x ./scripts/repackage_tar.sh"
           sh "./scripts/repackage_tar.sh ${fullPkgName} ${CONST.distRegistry} ${PKG_VERSION}"
-          sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
+          if (PKG_TAG != PKG_VERSION) {
+            sh "npm publish ${fullPkgName} --tag ${PKG_TAG} --access public"
+          } else {
+            sh "npm publish ${fullPkgName} --access public"
+          }
           sh "rm -f ~/.npmrc || exit 0"
         }
       }
