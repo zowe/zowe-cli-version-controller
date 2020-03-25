@@ -948,6 +948,32 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Update the header in the changelog
+     *
+     * @param file Indicates the file to be updated
+     * @param lines Indicates the number of lines to check for the header
+     * @param header Indicates the header that should exist in the changelog
+     * @return void
+     */
+    void updateChangelog(String file, int lines, String header) {
+        if (protectedBranches.isProtected(branch)) {
+            createStage(name: "Update Changelog", stage: {
+                String head = steps.sh(returnStdout: true, script: "head -${lines} ${file}").trim()
+                if (head.contains(header)) {
+                    def packageJSON = readJSON file: 'package.json'
+                    def packageJSONVersion = packageJSON.version
+                    steps.sh "sed -i 's/${header}/## `${packageJSONVersion}`/' ${file}"
+                    steps.sh "git add ${file}"
+                    steps.sh "git commit -m 'Update Changelog [ci skip]'"
+                    steps.sh "git push"
+                } else {
+                    steps.error "Changelog version update could not be completed. Could not find specified header."
+                }
+            })
+        }
+    }
+
+    /**
      * Process provided dependencies in different approaches depending on the data.
      *
      * @param depName Map containing all dependencies to be processed
