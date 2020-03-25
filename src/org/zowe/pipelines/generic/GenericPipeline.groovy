@@ -517,14 +517,15 @@ class GenericPipeline extends Pipeline {
      * @return void
      */
 
-    void checkChangelog(String file, int lines, String header) {
+    void checkChangelog(Map arguments = [:]) {
+        ChangelogStageArguments args = arguments
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
                 steps.sh "git --no-pager fetch"
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/master --name-only").trim()
-                if (changedFiles.contains(file)) {
-                    def head = steps.sh(returnStdout: true, script: "head -${lines} ${file}").trim()
-                    if (head.contains(header)) {
+                if (changedFiles.contains(args.file)) {
+                    def head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
+                    if (head.contains(args.header)) {
                         steps.echo "Header found"
                     } else {
                         steps.error "Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."

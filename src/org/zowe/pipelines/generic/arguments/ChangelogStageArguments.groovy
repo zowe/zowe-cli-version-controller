@@ -14,7 +14,7 @@ package org.zowe.pipelines.generic.arguments
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#versionGeneric(java.util.Map)} method.
  */
-class CheckChangelogStageArguments extends GenericStageArguments {
+class ChangelogStageArguments extends GenericStageArguments {
     /**
      * The name of the step.
      *
