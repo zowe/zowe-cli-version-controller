@@ -38,7 +38,7 @@ packages:
   "db2-for-zowe-cli":
     tags: *ltsTags
   "ims-for-zowe-cli":
-    tags: *latest
+    tags: *ltsTags
   "mq-for-zowe-cli":
     tags: *ltsTags
   "secure-credential-store-for-zowe-cli":
