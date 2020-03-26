@@ -961,16 +961,21 @@ class NodeJSPipeline extends GenericPipeline {
         args.name = "Update Changelog"
         if (protectedBranches.isProtected(changeInfo.branchName)) {
             createStage(name: "Update Changelog", stage: {
+                String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                 String head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
-                if (head.contains(args.header)) {
-                    def packageJSON = steps.readJSON file: 'package.json'
-                    def packageJSONVersion = packageJSON.version
-                    steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
-                    steps.sh "git add ${args.file}"
-                    steps.sh "git commit -m 'Update Changelog [ci skip]'"
-                    steps.sh "git push"
+                def packageJSON = steps.readJSON file: 'package.json'
+                def packageJSONVersion = packageJSON.version
+                if (contents.contains("## `$packageJSONVersion`")) {
+                    steps.echo "Version header already contained within changelog file. Update not required."
                 } else {
-                    steps.error "Changelog version update could not be completed. Could not find specified header."
+                    if (head.contains(args.header)) {
+                        steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
+                        steps.sh "git add ${args.file}"
+                        steps.sh "git commit -m 'Update Changelog [ci skip]'"
+                        steps.sh "git push"
+                    } else {
+                        steps.error "Changelog version update could not be completed. Could not find specified header."
+                    }
                 }
             })
         }
