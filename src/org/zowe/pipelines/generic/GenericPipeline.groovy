@@ -522,7 +522,8 @@ class GenericPipeline extends Pipeline {
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
                 steps.sh "git --no-pager fetch"
-                String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/master --name-only").trim()
+                String target = steps.CHANGE_TARGET
+                String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 if (changedFiles.contains(args.file)) {
                     def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                     if (contents.contains(args.header)) {
