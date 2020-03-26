@@ -30,13 +30,6 @@ class ChangelogStageArguments extends GenericStageArguments {
     String file = "CHANGELOG.md"
 
     /**
-     * The number of lines from the head of the CHANGELOG to check for header
-     *
-     * @default {@code 10}
-     */
-    int lines = 10
-
-    /**
      * The header to check for in the changelog
      *
      * @default {@code "## Recent Changes"}
