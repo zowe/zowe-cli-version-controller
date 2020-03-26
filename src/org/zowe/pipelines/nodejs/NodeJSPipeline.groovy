@@ -963,7 +963,7 @@ class NodeJSPipeline extends GenericPipeline {
             createStage(name: "Update Changelog", stage: {
                 String head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
                 if (head.contains(args.header)) {
-                    def packageJSON = readJSON file: 'package.json'
+                    def packageJSON = steps.readJSON file: 'package.json'
                     def packageJSONVersion = packageJSON.version
                     steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
                     steps.sh "git add ${args.file}"
