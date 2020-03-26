@@ -524,8 +524,8 @@ class GenericPipeline extends Pipeline {
                 steps.sh "git --no-pager fetch"
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/master --name-only").trim()
                 if (changedFiles.contains(args.file)) {
-                    def head = steps.sh(returnStdout: true, script: "head -${args.lines} ${args.file}").trim()
-                    if (head.contains(args.header)) {
+                    def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
+                    if (contents.contains(args.header)) {
                         steps.echo "Header found"
                     } else {
                         steps.error "Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
