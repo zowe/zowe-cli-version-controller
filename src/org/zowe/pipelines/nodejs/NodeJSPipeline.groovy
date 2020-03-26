@@ -969,8 +969,8 @@ class NodeJSPipeline extends GenericPipeline {
                 } else if (contents.contains(args.header)) {
                     steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
                     steps.sh "git add ${args.file}"
-                    steps.sh "git commit -m 'Update Changelog [ci skip]'"
-                    steps.sh "git push"
+                    gitCommit("Update Changelog [ci skip]")
+                    gitPush()
                 } else {
                     steps.error "Changelog version update could not be completed. Could not find specified header."
                 }
