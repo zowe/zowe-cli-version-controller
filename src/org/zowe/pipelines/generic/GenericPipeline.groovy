@@ -516,7 +516,7 @@ class GenericPipeline extends Pipeline {
         def prId = scmHead.getId()
 
         steps.withCredentials([steps.usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            def json = steps.sh(returnStdout: true, script: "curl -u ${USERNAME}:${PASSWORD} https://api.github.com/repos/${owner}/${repo}/issues/${prId}")
+            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/${owner}/${repo}/issues/${prId}")
             def prInfo = steps.readJSON(text: json)
             labels = prInfo.labels
         }
