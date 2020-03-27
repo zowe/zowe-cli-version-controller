@@ -510,7 +510,7 @@ class GenericPipeline extends Pipeline {
 
     String getLabels() {
         def labels
-        def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(currentBuild.rawBuild.getParent())
+        def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
         def owner = scmHead.getSourceOwner()
         def repo = scmHead.getSourceRepo()
         def prId = scmHead.getId()
