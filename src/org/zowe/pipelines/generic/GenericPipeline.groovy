@@ -508,6 +508,23 @@ class GenericPipeline extends Pipeline {
         }
     }
 
+    String getLabels() {
+        def labels
+        def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
+        def owner = scmHead.getSourceOwner()
+        def repo = scmHead.getSourceRepo()
+        def prId = scmHead.getId()
+
+        steps.withCredentials([steps.usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/${owner}/${repo}/issues/${prId}")
+            def prInfo = steps.readJSON(text: json)
+            labels = prInfo.labels
+        }
+
+        return labels
+    }
+
+
     /**
      * Verify that the changelog has been modified.
      *
@@ -524,7 +541,10 @@ class GenericPipeline extends Pipeline {
                 steps.sh "git --no-pager fetch"
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
-                if (changedFiles.contains(args.file)) {
+                String labels = getLabels()
+                if (labels.contains("no-changelog")) {
+                    steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
+                } else if (changedFiles.contains(args.file)) {
                     def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                     if (contents.contains(args.header)) {
                         steps.echo "Header found"
