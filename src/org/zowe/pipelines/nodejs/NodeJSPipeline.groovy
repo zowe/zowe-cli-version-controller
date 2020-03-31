@@ -543,8 +543,12 @@ class NodeJSPipeline extends GenericPipeline {
 
             steps.sh "npm audit${arguments.registry != "" ? " --registry ${arguments.registry}" : ""}"
 
+            // Return package.json back to normal
             packageJSON.devDependencies = devDeps
             steps.writeJSON file: 'package.json', json: packageJSON
+
+            // Install dev dependencies back
+            steps.sh "npm install --only=dev || exit 0"
         }
 
         // Create the stage and ensure that the first one is the stage of reference
