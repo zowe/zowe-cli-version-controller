@@ -358,8 +358,7 @@ class GenericPipeline extends Pipeline {
             preSetupException = new DeployStageException("arguments.stage is an invalid option for deployGeneric", args.name)
         }
 
-        // Execute the stage if this is a protected branch and the original should execute function
-        // are both true
+        // Execute the stage if this is a protected branch and the original should execute function are both true
         args.shouldExecute = {
             boolean shouldExecute = true
 
@@ -371,8 +370,7 @@ class GenericPipeline extends Pipeline {
         }
 
         args.stage = { String stageName ->
-            // If there were any exceptions during the setup, throw them here so proper email notifications
-            // can be sent.
+            // If there were any exceptions during the setup, throw them here so proper email notifications can be sent.
             if (preSetupException) {
                 throw preSetupException
             }
@@ -390,18 +388,6 @@ class GenericPipeline extends Pipeline {
 
         createStage(args)
     }
-
-//    Closure getExecutionForProtected(Closure input) {
-//        return {
-//            boolean shouldExecute = true
-//
-//            if (input) {
-//                shouldExecute = input()
-//            }
-//
-//            return shouldExecute && _isProtectedBranch
-//        }
-//    }
 
     /**
      * Signal that no more stages will be added and begin pipeline execution.
@@ -441,7 +427,7 @@ class GenericPipeline extends Pipeline {
      *         has occurred.
      * @throw {@link IllegalBuildException} when a commit operation happens on an illegal build type.
      */
-    boolean gitCommit(String message, Boolean amend = false) {
+    boolean gitCommit(String message, boolean amend = false) {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.COMMIT, BuildType.PULL_REQUEST)
         }
@@ -463,15 +449,15 @@ class GenericPipeline extends Pipeline {
      * <p>If the remote server has any changes then this method will throw an error indicating that
      * the branch is out of sync</p>
      *
-     * @param force Indicates if we should attempt to push whether or not there are changes
      * @param tags Indicates if we also want to push tags
+     * @param force Indicates if we should try to push even if there is nothing to push
      * @param forcePush Indicates if we should force-push the changes
      * @return A boolean indicating if the push was made. True indicates a successful push
      * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      * @throw {@link GitException} when there is nothing to push
      */
-    boolean gitPush(Boolean force = false, Boolean tags = false, Boolean forcePush = false) throws GitException {
+    boolean gitPush(boolean tags = false, boolean force = false, boolean forcePush = false) throws GitException {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
@@ -483,7 +469,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find() && !forcePush) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force || forcePush) {
-            steps.sh "git push --verbose ${forcePush ? '--force' : ''}"
+            steps.sh "git push -u origin --verbose ${forcePush ? '--force' : ''}"
             if (tags) steps.sh "git push --tags"
         } else {
             throw new GitException("Nothing to push")
