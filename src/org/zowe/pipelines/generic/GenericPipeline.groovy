@@ -511,12 +511,11 @@ class GenericPipeline extends Pipeline {
     String getLabels() {
         def labels
         def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
-        def owner = scmHead.getSourceOwner()
         def repo = scmHead.getSourceRepo()
         def prId = scmHead.getId()
 
         steps.withCredentials([steps.usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/${owner}/${repo}/issues/${prId}")
+            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
             def prInfo = steps.readJSON(text: json)
             labels = prInfo.labels
         }
