@@ -465,6 +465,7 @@ class GenericPipeline extends Pipeline {
      * @return A boolean indicating if the push was made. True indicates a successful push
      * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
+     * @throw {@link GitException} when there is nothing to push
      */
     boolean gitPush(tags = false) throws GitException {
         if (changeInfo.isPullRequest) {
@@ -473,16 +474,18 @@ class GenericPipeline extends Pipeline {
 
         steps.sh "git fetch"
         String status = steps.sh returnStdout: true, script: "git status"
+        steps.sh "git status"
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
             steps.sh "git push --verbose"
             if (tags) steps.sh "git push --tags"
-            return true
         } else {
-            return false
+            throw new GitException("Nothing to push")
         }
+
+        return true
     }
 
     /**
