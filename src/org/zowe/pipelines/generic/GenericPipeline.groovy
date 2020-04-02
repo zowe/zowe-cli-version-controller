@@ -447,6 +447,8 @@ class GenericPipeline extends Pipeline {
         }
 
         def ret = steps.sh returnStatus: true, script: "git status | grep 'Changes to be committed:'"
+        steps.sh "git status"
+
         if (ret == 0 || amend) {
             steps.sh "git commit${amend? " --amend" : ""} -m \"$message $_CI_SKIP\" --signoff"
             return true
@@ -478,9 +480,9 @@ class GenericPipeline extends Pipeline {
         String status = steps.sh returnStdout: true, script: "git status"
         steps.sh "git status"
 
-        if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
+        if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find() && !forcePush) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
-        } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force) {
+        } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force || forcePush) {
             steps.sh "git push --verbose ${forcePush ? '--force' : ''}"
             if (tags) steps.sh "git push --tags"
         } else {
