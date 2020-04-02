@@ -461,13 +461,15 @@ class GenericPipeline extends Pipeline {
      * <p>If the remote server has any changes then this method will throw an error indicating that
      * the branch is out of sync</p>
      *
+     * @param force Indicates if we should attempt to push whether or not there are changes
      * @param tags Indicates if we also want to push tags
+     * @param forcePush Indicates if we should force-push the changes
      * @return A boolean indicating if the push was made. True indicates a successful push
      * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
      * @throw {@link GitException} when there is nothing to push
      */
-    boolean gitPush(tags = false) throws GitException {
+    boolean gitPush(Boolean force = false, Boolean tags = false, Boolean forcePush = false) throws GitException {
         if (changeInfo.isPullRequest) {
             throw new IllegalBuildException(GitOperation.PUSH, BuildType.PULL_REQUEST)
         }
@@ -478,8 +480,8 @@ class GenericPipeline extends Pipeline {
 
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find()) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
-        } else if (Pattern.compile("Your branch is ahead of").matcher(status).find()) {
-            steps.sh "git push --verbose"
+        } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force) {
+            steps.sh "git push --verbose ${forcePush ? '--force' : ''}"
             if (tags) steps.sh "git push --tags"
         } else {
             throw new GitException("Nothing to push")

@@ -468,7 +468,7 @@ class NodeJSPipeline extends GenericPipeline {
             } else {
                 steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
-                gitPush(arguments.gitTag ? arguments.gitTag : true)
+                gitPush(true, arguments.gitTag ? arguments.gitTag : true)
             }
         }
 
