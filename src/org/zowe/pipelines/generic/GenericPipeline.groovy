@@ -469,7 +469,7 @@ class GenericPipeline extends Pipeline {
         if (Pattern.compile("Your branch and '.*' have diverged").matcher(status).find() && !forcePush) {
             throw new BehindRemoteException("Remote branch is ahead of the local branch!", changeInfo.branchName)
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force || forcePush) {
-            steps.sh "git push -u origin --verbose ${forcePush ? '--force' : ''}"
+            steps.sh "git push --set-upstream origin --verbose ${forcePush ? '--force' : ''}"
             if (tags) steps.sh "git push --tags"
         } else {
             throw new GitException("Nothing to push")
