@@ -960,7 +960,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @param header Indicates the header that should exist in the changelog
      * @return void
      */
-    void updateChangelog(Map arguments = [:]) {\
+    void updateChangelog(Map arguments = [:]) {
         ChangelogStageArguments args = arguments
         args.name = "Update Changelog"
         if (protectedBranches.isProtected(changeInfo.branchName)) {
@@ -986,7 +986,10 @@ class NodeJSPipeline extends GenericPipeline {
      * Process provided dependencies in different approaches depending on the data.
      *
      * @param depName Map containing all dependencies to be processed
-     * @param isDevDep Specifies if the function is processing regualr dependencies or devDependencies
+     * @param isDevDep Specifies if the function is processing regualr dependencies or devDependencies.
+     *
+     * @Note Regular dependencies will be saved with the exact resolved number from the tag.
+     * @Note Development dependencies will be saved with a caret (^) next to the resolved number from the tag.
      *
      * @Note Dependencies can be processed in two different ways
      * <ul>
@@ -999,12 +1002,12 @@ class NodeJSPipeline extends GenericPipeline {
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depName@$depInfo"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depName@$depInfo"
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.sh "npm install --save${isDevDep ? '-dev' : ''} --save-exact $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
     }
