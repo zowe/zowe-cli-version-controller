@@ -744,7 +744,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.sh "npm shrinkwrap"
 
                 // Install devDependencies to prevent any prepublishOnly from failing
-                _processDeps(branch.devDependencies, true)
+                _processDeps(branch.devDependencies, true, true)
                 steps.sh "npm install --only=dev --no-shrinkwrap"
                 steps.sh "npm publish --tag ${branch.tag}"
 
@@ -997,17 +997,17 @@ class NodeJSPipeline extends GenericPipeline {
      *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
      * </ul>
      */
-    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep) {
+    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep, Boolean noShrinkwrap = false) {
         deps.each { depName, depInfo ->
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depName@$depInfo"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
     }
