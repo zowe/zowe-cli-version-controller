@@ -988,10 +988,15 @@ class NodeJSPipeline extends GenericPipeline {
      * @return void
      */
     void sonarScan() {
-        def sonarProjectFile = 'sonar-project.properties'
         createStage(
             name: "SonarCloud Scan",
             stage: {
+                def sonarProjectFile = 'sonar-project.properties'
+                def sonarFileExists = fileExists sonarProjectFile
+                if (!sonarFileExists) {
+                    steps.error "Failed to load SonarCloud configuration. The file ${sonarProjectFile} was not found."
+                }
+
                 // append sonar.projectVersion, sonar.links.ci, and sonar.branch.name or sonar.pullrequest to sonar-project.properties
                 def packageJson = readJSON file: 'package.json'
                 sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
@@ -1012,9 +1017,6 @@ class NodeJSPipeline extends GenericPipeline {
                 withSonarQubeEnv('sonarcloud-server') {
                     sh "${scannerHome}/bin/sonar-scanner"
                 }
-            },
-            shouldExecute: {
-                return fileExists sonarProjectFile
             }
         )
     }
