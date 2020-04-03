@@ -992,30 +992,30 @@ class NodeJSPipeline extends GenericPipeline {
             name: "SonarCloud Scan",
             stage: {
                 def sonarProjectFile = 'sonar-project.properties'
-                def sonarFileExists = fileExists sonarProjectFile
+                def sonarFileExists = steps.fileExists sonarProjectFile
                 if (!sonarFileExists) {
                     steps.error "Failed to load SonarCloud configuration. The file ${sonarProjectFile} was not found."
                 }
 
                 // append sonar.projectVersion, sonar.links.ci, and sonar.branch.name or sonar.pullrequest to sonar-project.properties
-                def packageJson = readJSON file: 'package.json'
-                sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
-                sh "echo sonar.links.ci=${env.BUILD_URL} >> ${sonarProjectFile}"
+                def packageJson = steps.readJSON file: 'package.json'
+                steps.sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
+                steps.sh "echo sonar.links.ci=${env.BUILD_URL} >> ${sonarProjectFile}"
                 if (env.CHANGE_BRANCH) { // is pull request
-                    sh "echo sonar.pullrequest.key=${env.CHANGE_ID} >> ${sonarProjectFile}"
+                    steps.sh "echo sonar.pullrequest.key=${env.CHANGE_ID} >> ${sonarProjectFile}"
                     // we may see warnings like these
                     //  WARN: Parameter 'sonar.pullrequest.branch' can be omitted because the project on SonarCloud is linked to the source repository.
                     //  WARN: Parameter 'sonar.pullrequest.base' can be omitted because the project on SonarCloud is linked to the source repository.
                     // if we provide parameters below
-                    sh "echo sonar.pullrequest.branch=${env.CHANGE_BRANCH} >> ${sonarProjectFile}"
-                    sh "echo sonar.pullrequest.base=${env.CHANGE_TARGET} >> ${sonarProjectFile}"
+                    steps.sh "echo sonar.pullrequest.branch=${env.CHANGE_BRANCH} >> ${sonarProjectFile}"
+                    steps.sh "echo sonar.pullrequest.base=${env.CHANGE_TARGET} >> ${sonarProjectFile}"
                 } else {
-                    sh "echo sonar.branch.name=${env.BRANCH_NAME} >> ${sonarProjectFile}"
+                    steps.sh "echo sonar.branch.name=${env.BRANCH_NAME} >> ${sonarProjectFile}"
                 }
 
-                def scannerHome = tool 'sonar-scanner-4.0.0'
-                withSonarQubeEnv('sonarcloud-server') {
-                    sh "${scannerHome}/bin/sonar-scanner"
+                def scannerHome = steps.tool 'sonar-scanner-4.0.0'
+                steps.withSonarQubeEnv('sonarcloud-server') {
+                    steps.sh "${scannerHome}/bin/sonar-scanner"
                 }
             }
         )
