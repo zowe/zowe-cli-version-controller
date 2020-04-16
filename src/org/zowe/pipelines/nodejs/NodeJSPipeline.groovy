@@ -983,6 +983,45 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Creates a stage that will perform SonarCloud static scanning.
+     *
+     * @return void
+     */
+    void sonarScan() {
+        createStage(
+            name: "SonarCloud Scan",
+            stage: {
+                def sonarProjectFile = 'sonar-project.properties'
+                def sonarFileExists = steps.fileExists sonarProjectFile
+                if (!sonarFileExists) {
+                    steps.error "Failed to load SonarCloud configuration. The file ${sonarProjectFile} was not found."
+                }
+
+                // append sonar.projectVersion, sonar.links.ci, and sonar.branch.name or sonar.pullrequest to sonar-project.properties
+                def packageJson = steps.readJSON file: 'package.json'
+                steps.sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
+                steps.sh "echo sonar.links.ci=${steps.BUILD_URL} >> ${sonarProjectFile}"
+                if (changeInfo.isPullRequest) {
+                    steps.sh "echo sonar.pullrequest.key=${steps.CHANGE_ID} >> ${sonarProjectFile}"
+                    // we may see warnings like these
+                    //  WARN: Parameter 'sonar.pullrequest.branch' can be omitted because the project on SonarCloud is linked to the source repository.
+                    //  WARN: Parameter 'sonar.pullrequest.base' can be omitted because the project on SonarCloud is linked to the source repository.
+                    // if we provide parameters below
+                    steps.sh "echo sonar.pullrequest.branch=${changeInfo.changeBranch} >> ${sonarProjectFile}"
+                    steps.sh "echo sonar.pullrequest.base=${changeInfo.baseBranch} >> ${sonarProjectFile}"
+                } else {
+                    steps.sh "echo sonar.branch.name=${changeInfo.branchName} >> ${sonarProjectFile}"
+                }
+
+                def scannerHome = steps.tool 'sonar-scanner-4.0.0'
+                steps.withSonarQubeEnv('sonarcloud-server') {
+                    steps.sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        )
+    }
+
+    /**
      * Process provided dependencies in different approaches depending on the data.
      *
      * @param depName Map containing all dependencies to be processed
