@@ -126,8 +126,8 @@ node('ca-jenkins-agent') {
       sh "tar -czvf $reportName *.json"
       // archiveArtifacts artifacts: reportName
 
-      def repoName = "community-ghsa-v4w9-gcpp-4qr7"
-      def reportBranch = "npm-audit"
+      def repoName = "security-reports"
+      def reportBranch = "master"
       def dirName = "NpmAuditReports/zowe-cli"
       withCredentials([usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
         sh "git clone https://$USERNAME:$PASSWORD@github.com/zowe/$repoName"
