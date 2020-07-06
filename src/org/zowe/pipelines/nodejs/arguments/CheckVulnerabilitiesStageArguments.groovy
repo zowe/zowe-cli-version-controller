@@ -30,6 +30,11 @@ class CheckVulnerabilitiesStageArguments extends GenericStageArguments {
     String registry = ""
 
     /**
+     * The audit level allowed on npm-audit.
+     */
+    String auditLevel = "moderate"
+
+    /**
      * Indicates if the pipeline should include {@code "dev"} dependencies when checking for vulnerabilities.
      *
      * @default {@code "false"}
