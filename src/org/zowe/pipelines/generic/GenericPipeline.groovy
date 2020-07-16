@@ -595,7 +595,7 @@ class GenericPipeline extends Pipeline {
             steps.sh "git status"
 
             // If the branch is protected, setup the proper configuration
-            if (_isProtectedBranch) {
+            // if (_isProtectedBranch) {
                 String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
 
                 // Only execute the credential code if the url does not already contain credentials
@@ -604,7 +604,7 @@ class GenericPipeline extends Pipeline {
                 // Set the push url to the correct one
                 steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
                 steps.sh "git remote set-url --delete origin $remoteUrl"
-            }
+            // }
         }, isSkippable: false, timeout: timeouts.gitSetup, shouldExecute: {
             // Disable commits and pushes
             // return !changeInfo.isPullRequest
