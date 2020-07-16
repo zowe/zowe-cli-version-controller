@@ -591,7 +591,7 @@ class GenericPipeline extends Pipeline {
             }
 
             // Setup the branch to track it's remote
-            steps.sh "git checkout ${changeInfo.branchName}"
+            if (!changeInfo.isPullRequest) steps.sh "git checkout ${changeInfo.branchName}"
             steps.sh "git status"
 
             // If the branch is protected, setup the proper configuration
