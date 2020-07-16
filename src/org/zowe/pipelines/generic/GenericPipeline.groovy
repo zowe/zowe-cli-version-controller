@@ -607,7 +607,8 @@ class GenericPipeline extends Pipeline {
             }
         }, isSkippable: false, timeout: timeouts.gitSetup, shouldExecute: {
             // Disable commits and pushes
-            return !changeInfo.isPullRequest
+            // return !changeInfo.isPullRequest
+            return true
         })
 
         createStage(name: 'Check for CI Skip', stage: {
