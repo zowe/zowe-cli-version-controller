@@ -531,7 +531,8 @@ class GenericPipeline extends Pipeline {
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
                 try {
-                    def fetchOutput = steps.sh(returnStderr: true, script: "git --no-pager fetch").trim()
+                    def fetchOutput = steps.sh(returnStdout: true, script: "git --no-pager fetch 2>&1").trim()
+                    steps.echo fetchOutput
                     if (fetchOutput.toLowerCase().contains("could not read username")) {
                         configureGit(true, true)
                     }
