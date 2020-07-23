@@ -508,14 +508,15 @@ class GenericPipeline extends Pipeline {
         def prId = scmHead.getId()
 
         def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
-        def apiUrl = steps.scm.getApi().doJson()
-        steps.echo "OMG ----------- ${apiUrl}"
-        steps.withCredentials([steps.usernamePassword(credentialsId: gitConfig.credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
-            def prInfo = steps.readJSON(text: json)
-            labels = prInfo.labels
+        if (scmUrl.contains("github.com")) {
+            steps.withCredentials([steps.usernamePassword(credentialsId: gitConfig.credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
+                def prInfo = steps.readJSON(text: json)
+                labels = prInfo.labels
+            }
+        } else {
+          labels = null
         }
-
         return labels
     }
 
@@ -544,7 +545,10 @@ class GenericPipeline extends Pipeline {
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 String labels = getLabels()
-                if (labels.contains("no-changelog")) {
+                if (labels == null) {
+                  steps.echo "Unable to read labels for this Pull Request. Forcing changelog check."
+                }
+                if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
                 } else if (changedFiles.contains(args.file)) {
                     def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
