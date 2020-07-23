@@ -531,13 +531,14 @@ class GenericPipeline extends Pipeline {
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
                 try {
-                    def fetchOutput = steps.sh(returnStdout: true, script: "git --no-pager fetch").trim()
+                    def fetchOutput = steps.sh(returnStderr: true, script: "git --no-pager fetch").trim()
                     if (fetchOutput.toLowerCase().contains("could not read username")) {
                         configureGit(true, true)
                     }
                 } catch (err) {
-                    steps.error "OMG ------------ ${err.message}"
+                    steps.error "OMG ------------ ${err}"
                 }
+                steps.error "NO THROW"
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 String labels = getLabels()
