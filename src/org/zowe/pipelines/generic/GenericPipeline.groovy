@@ -530,7 +530,14 @@ class GenericPipeline extends Pipeline {
         ChangelogStageArguments args = arguments
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
-                steps.sh "git --no-pager fetch"
+                try {
+                    def fetchOutput = steps.sh(returnStdout: true, "git --no-pager fetch").trim()
+                    if (fetchOutput.toLowerCase().contains("could not read username")) {
+                        configureGit(true, true)
+                    }
+                } catch (err) {
+                    steps.error "OMG ------------ ${err.message}"
+                }
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 String labels = getLabels()
@@ -547,6 +554,34 @@ class GenericPipeline extends Pipeline {
                     steps.error "Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
                 }
             })
+        }
+    }
+
+    void configureGit(boolean stayInContext = false, boolean forceAuth = false) {
+        steps.withCredentials([steps.usernamePassword(
+            credentialsId: gitConfig.credentialsId,
+            passwordVariable: "NOT_USED",
+            usernameVariable: "GIT_USER_NAME"
+        )]) {
+            steps.sh "git config user.name \$GIT_USER_NAME"
+            steps.sh "git config user.email \"${gitConfig.email}\""
+            steps.sh "git config push.default simple"
+        }
+
+        // Setup the branch to track it's remote
+        if (stayInContext) steps.sh "git checkout ${changeInfo.branchName}"
+        steps.sh "git status"
+
+        // If the branch is protected, setup the proper configuration
+        if (_isProtectedBranch || forceAuth) {
+            String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+
+            // Only execute the credential code if the url does not already contain credentials
+            String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
+
+            // Set the push url to the correct one
+            steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+            steps.sh "git remote set-url --delete origin $remoteUrl"
         }
     }
 
@@ -580,35 +615,10 @@ class GenericPipeline extends Pipeline {
         super.setupBase(timeouts)
 
         createStage(name: 'Configure Git', stage: {
-            steps.withCredentials([steps.usernamePassword(
-                credentialsId: gitConfig.credentialsId,
-                passwordVariable: "NOT_USED",
-                usernameVariable: "GIT_USER_NAME"
-            )]) {
-                steps.sh "git config user.name \$GIT_USER_NAME"
-                steps.sh "git config user.email \"${gitConfig.email}\""
-                steps.sh "git config push.default simple"
-            }
-
-            // Setup the branch to track it's remote
-            if (!changeInfo.isPullRequest) steps.sh "git checkout ${changeInfo.branchName}"
-            steps.sh "git status"
-
-            // If the branch is protected, setup the proper configuration
-            // if (_isProtectedBranch) {
-                String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
-
-                // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
-
-                // Set the push url to the correct one
-                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
-                steps.sh "git remote set-url --delete origin $remoteUrl"
-            // }
+          configureGit()
         }, isSkippable: false, timeout: timeouts.gitSetup, shouldExecute: {
             // Disable commits and pushes
-            // return !changeInfo.isPullRequest
-            return true
+            return !changeInfo.isPullRequest
         })
 
         createStage(name: 'Check for CI Skip', stage: {
