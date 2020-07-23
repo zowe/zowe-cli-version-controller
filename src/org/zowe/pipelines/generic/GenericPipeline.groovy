@@ -532,14 +532,12 @@ class GenericPipeline extends Pipeline {
             createStage(name: "Check Changelog", stage: {
                 try {
                     def fetchOutput = steps.sh(returnStdout: true, script: "git --no-pager fetch 2>&1 || exit 0").trim()
-                    steps.echo fetchOutput
                     if (fetchOutput.toLowerCase().contains("could not read username")) {
                         configureGit(true, true)
                     }
                 } catch (err) {
-                    steps.error "OMG ------------ ${err}"
+                    steps.error "${err.message}"
                 }
-                steps.error "NO THROW"
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 String labels = getLabels()
@@ -571,7 +569,7 @@ class GenericPipeline extends Pipeline {
         }
 
         // Setup the branch to track it's remote
-        if (stayInContext) steps.sh "git checkout ${changeInfo.branchName}"
+        if (!stayInContext) steps.sh "git checkout ${changeInfo.branchName}"
         steps.sh "git status"
 
         // If the branch is protected, setup the proper configuration
