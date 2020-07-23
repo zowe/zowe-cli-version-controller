@@ -507,9 +507,9 @@ class GenericPipeline extends Pipeline {
         def repo = scmHead.getSourceRepo()
         def prId = scmHead.getId()
 
-        def scmUrl = scm.getUserRemoteConfigs()[0].getUrl()
+        def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
         steps.echo "OMG ----------- ${scmUrl}"
-        def apiUrl = scm.getApi().getSearchUrl()
+        def apiUrl = steps.scm.getApi().getSearchUrl()
         steps.echo "OMG ----------- ${apiUrl}"
         steps.withCredentials([steps.usernamePassword(credentialsId: gitConfig.credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
