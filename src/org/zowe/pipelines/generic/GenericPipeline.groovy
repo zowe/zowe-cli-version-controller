@@ -501,20 +501,24 @@ class GenericPipeline extends Pipeline {
         }
     }
 
+    String getApiEndpoint() {
+        def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
+        if (scmUrl.contains("github.com")) return "https://api.github.com"
+        def scmUrlParts = scmUrl.split("/");
+        return (scmUrlParts[0].contains("https") ? "https://" : "http://") + scmUrlParts[2] + "/api/v3"
+    }
+
     String getLabels() {
         def labels
         def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
-        def repo = scmHead.getSourceRepo()
-        def prId = scmHead.getId()
-
-        def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
-        if (scmUrl.contains("github.com")) {
+        def fullEndpoint = "${getApiEndpoint()}/repos/${scmHead.getSourceOwner()}/${scmHead.getSourceRepo()}/issues/${scmHead.getId()}"
+        try {
             steps.withCredentials([steps.usernamePassword(credentialsId: gitConfig.credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
+                def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD ${fullEndpoint}")
                 def prInfo = steps.readJSON(text: json)
                 labels = prInfo.labels
             }
-        } else {
+        } catch(err) {
           labels = null
         }
         return labels
