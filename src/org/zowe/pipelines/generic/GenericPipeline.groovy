@@ -501,18 +501,26 @@ class GenericPipeline extends Pipeline {
         }
     }
 
+    String getApiEndpoint() {
+        def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
+        if (scmUrl.contains("github.com")) return "https://api.github.com"
+        def scmUrlParts = scmUrl.split("/");
+        return (scmUrlParts[0].contains("https") ? "https://" : "http://") + scmUrlParts[2] + "/api/v3"
+    }
+
     String getLabels() {
         def labels
         def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
-        def repo = scmHead.getSourceRepo()
-        def prId = scmHead.getId()
-
-        steps.withCredentials([steps.usernamePassword(credentialsId: 'zowe-robot-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD https://api.github.com/repos/zowe/${repo}/issues/${prId}")
-            def prInfo = steps.readJSON(text: json)
-            labels = prInfo.labels
+        def fullEndpoint = "${getApiEndpoint()}/repos/${scmHead.getSourceOwner()}/${scmHead.getSourceRepo()}/issues/${scmHead.getId()}"
+        try {
+            steps.withCredentials([steps.usernamePassword(credentialsId: gitConfig.credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                def json = steps.sh(returnStdout: true, script: "curl -u \$USERNAME:\$PASSWORD ${fullEndpoint}")
+                def prInfo = steps.readJSON(text: json)
+                labels = prInfo.labels
+            }
+        } catch(err) {
+          labels = null
         }
-
         return labels
     }
 
@@ -530,11 +538,21 @@ class GenericPipeline extends Pipeline {
         ChangelogStageArguments args = arguments
         if (changeInfo.isPullRequest) {
             createStage(name: "Check Changelog", stage: {
-                steps.sh "git --no-pager fetch"
+                try {
+                    def fetchOutput = steps.sh(returnStdout: true, script: "git --no-pager fetch 2>&1 || exit 0").trim()
+                    if (fetchOutput.toLowerCase().contains("could not read username")) {
+                        configureGit(true, true)
+                    }
+                } catch (err) {
+                    steps.error "${err.message}"
+                }
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
                 String labels = getLabels()
-                if (labels.contains("no-changelog")) {
+                if (labels == null) {
+                  steps.echo "Unable to read labels for this Pull Request. Forcing changelog check."
+                }
+                if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
                 } else if (changedFiles.contains(args.file)) {
                     def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
@@ -547,6 +565,34 @@ class GenericPipeline extends Pipeline {
                     steps.error "Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
                 }
             })
+        }
+    }
+
+    void configureGit(boolean stayInContext = false, boolean forceAuth = false) {
+        steps.withCredentials([steps.usernamePassword(
+            credentialsId: gitConfig.credentialsId,
+            passwordVariable: "NOT_USED",
+            usernameVariable: "GIT_USER_NAME"
+        )]) {
+            steps.sh "git config user.name \$GIT_USER_NAME"
+            steps.sh "git config user.email \"${gitConfig.email}\""
+            steps.sh "git config push.default simple"
+        }
+
+        // Setup the branch to track it's remote
+        if (!stayInContext) steps.sh "git checkout ${changeInfo.branchName}"
+        steps.sh "git status"
+
+        // If the branch is protected, setup the proper configuration
+        if (_isProtectedBranch || forceAuth) {
+            String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
+
+            // Only execute the credential code if the url does not already contain credentials
+            String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
+
+            // Set the push url to the correct one
+            steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
+            steps.sh "git remote set-url --delete origin $remoteUrl"
         }
     }
 
@@ -580,31 +626,7 @@ class GenericPipeline extends Pipeline {
         super.setupBase(timeouts)
 
         createStage(name: 'Configure Git', stage: {
-            steps.withCredentials([steps.usernamePassword(
-                credentialsId: gitConfig.credentialsId,
-                passwordVariable: "NOT_USED",
-                usernameVariable: "GIT_USER_NAME"
-            )]) {
-                steps.sh "git config user.name \$GIT_USER_NAME"
-                steps.sh "git config user.email \"${gitConfig.email}\""
-                steps.sh "git config push.default simple"
-            }
-
-            // Setup the branch to track it's remote
-            steps.sh "git checkout ${changeInfo.branchName}"
-            steps.sh "git status"
-
-            // If the branch is protected, setup the proper configuration
-            if (_isProtectedBranch) {
-                String remoteUrl = steps.sh(returnStdout: true, script: "git remote get-url --all origin").trim()
-
-                // Only execute the credential code if the url does not already contain credentials
-                String remoteUrlWithCreds = remoteUrl.replaceFirst("https://", "https://\\\$$_TOKEN@")
-
-                // Set the push url to the correct one
-                steps.sh "git remote set-url --add origin $remoteUrlWithCreds"
-                steps.sh "git remote set-url --delete origin $remoteUrl"
-            }
+          configureGit()
         }, isSkippable: false, timeout: timeouts.gitSetup, shouldExecute: {
             // Disable commits and pushes
             return !changeInfo.isPullRequest
