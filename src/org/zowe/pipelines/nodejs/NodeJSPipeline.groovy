@@ -466,9 +466,18 @@ class NodeJSPipeline extends GenericPipeline {
             if (baseVersion == steps.env.DEPLOY_VERSION) {
                 gitTag("v$baseVersion", "Create release $baseVersion for ${branch.tag}")
             } else {
-                steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
-                gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
-                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+                // steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version -m \"Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}\""
+                // gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}", true)
+                // gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+
+                // If we have NPM do the Git tagging, we can't alter the commit message without breaking
+                // the tag reference. So we commit and tag manually instead of having NPM do it.
+                steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --no-git-tag-version"
+                steps.sh "git add -u"
+                gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
+                // gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
+                // gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+                gitPush(false, true)
             }
         }
 
