@@ -557,7 +557,9 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
-            steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+            runForEachMonorepoPackage(false) {
+                steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+            }
         }
 
         // Create the stage and ensure that the first one is the stage of reference
