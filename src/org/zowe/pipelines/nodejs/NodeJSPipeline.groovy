@@ -1145,8 +1145,8 @@ expect {
     }
 
     protected Map _getLernaPkgInfo(Boolean onlyChanged = false) {
-        def cmdOutput = cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${onlyChanged ? "changed" : "ls"} --json --toposort").trim()
-        return steps.readJSON text: cmdOutput
+        def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${onlyChanged ? "changed" : "ls"} --json --toposort").trim()
+        return steps.readJSON(text: cmdOutput)
     }
 
     protected void runForEachMonorepoPackage(Boolean onlyIfChanged, Closure body) {
