@@ -1144,11 +1144,30 @@ expect {
         }
     }
 
+    /**
+     * Retrieve information about Lerna packages in the Node.js repository.
+     *
+     * @param onlyChanged Specify true to only list changed packages.
+     * @returns List of JSON objects containing info for each package.
+     *
+     * @Note Each object contains these keys: name, version, private, location
+     */
     protected Map _getLernaPkgInfo(Boolean onlyChanged = false) {
-        def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${onlyChanged ? "changed" : "ls"} --json --toposort").trim()
+        def lernaCmd = onlyChanged ? "changed" : "list"
+        def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
     }
 
+    /**
+     * Run a closure for each package in a monorepo. In a single package repo,
+     * the closure will run once in the root directory. In a monorepo, the
+     * closure will run in each package directory.
+     *
+     * @param onlyIfChanged Specify true to only run for changed packages.
+     * @param body Closure to run for each package
+     *
+     * @Note The onlyIfChanged param has no effect for single package repos.
+     */
     protected void runForEachMonorepoPackage(Boolean onlyIfChanged, Closure body) {
         if (!isLernaMonorepo) {
             body()
