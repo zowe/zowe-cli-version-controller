@@ -1152,7 +1152,7 @@ expect {
      *
      * @Note Each object contains these keys: name, version, private, location
      */
-    protected Map _getLernaPkgInfo(Boolean onlyChanged = false) {
+    protected List<Map> _getLernaPkgInfo(Boolean onlyChanged = false) {
         def lernaCmd = onlyChanged ? "changed" : "list"
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
