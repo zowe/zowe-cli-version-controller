@@ -148,6 +148,11 @@ class NodeJSPipeline extends GenericPipeline {
     Boolean isLernaMonorepo = false
 
     /**
+     * Cached info listing Lerna changed packages.
+     */
+    List<Map> _cachedLernaPkgInfo
+
+    /**
      * Constructs the class.
      *
      * <p>When invoking from a Jenkins pipeline script, the NodeJSPipeline must be passed
@@ -1164,9 +1169,16 @@ expect {
      * @Note Each object contains these keys: name, version, private, location
      */
     protected List<Map> _getLernaPkgInfo(Boolean onlyChanged = false) {
+        if (onlyChanged && _cachedLernaPkgInfo) {
+            return _cachedLernaPkgInfo
+        }
         def lernaCmd = onlyChanged ? "changed" : "list"
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
-        return steps.readJSON(text: cmdOutput)
+        def pkgInfo = steps.readJSON(text: cmdOutput)
+        if (onlyChanged) {
+            _cachedLernaPkgInfo = pkgInfo
+        }
+        return pkgInfo
     }
 
     /**

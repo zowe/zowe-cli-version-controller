@@ -272,13 +272,14 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
-            if (_control.build?.status != StageStatus.SUCCESS) {
-                throw new VersionStageException("Build must be successful to deploy", args.name)
-            } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
-                throw new VersionStageException("All test stages before versioning must be successful or skipped!", args.name)
-            } else if (_control.preDeployTests.size() == 0) {
-                throw new VersionStageException("At least one test stage must be defined", args.name)
-            }
+            // TODO TAJ Renable checks below
+            // if (_control.build?.status != StageStatus.SUCCESS) {
+            //     throw new VersionStageException("Build must be successful to deploy", args.name)
+            // } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
+            //     throw new VersionStageException("All test stages before versioning must be successful or skipped!", args.name)
+            // } else if (_control.preDeployTests.size() == 0) {
+            //     throw new VersionStageException("At least one test stage must be defined", args.name)
+            // }
 
             args.operation(stageName)
         }
@@ -375,6 +376,7 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
+            // TODO TAJ Renable checks below
             // if (_control.build?.status != StageStatus.SUCCESS) {
             //     throw new DeployStageException("Build must be successful to deploy", args.name)
             // } else if (_control.preDeployTests && _control.preDeployTests.findIndexOf {it.status <= StageStatus.FAIL} != -1) {
