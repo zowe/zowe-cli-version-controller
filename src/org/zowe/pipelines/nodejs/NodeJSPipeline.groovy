@@ -885,7 +885,8 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
 
-                steps.sh "npm install"
+                def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
+                steps.sh "npm install ${npmArgs}"
 
                 // Get the branch that will be used to install dependencies for
                 String branch
@@ -901,9 +902,15 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
-                    if (!isLernaMonorepo) {  // TODO Handle deps for monorepo
-                        _processDeps(branchProps.dependencies, false)
-                        _processDeps(branchProps.devDependencies, true)
+                    _processDeps(branchProps.dependencies, false)
+                    _processDeps(branchProps.devDependencies, true)
+
+                    if (isLernaMonorepo) {
+                        def depList = branchProps.dependencies.keySet() + branchProps.devDependencies.keySet()
+                        if (depList.size() > 0) {
+                            steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
+                        }
+                        steps.sh "npm install"
                     }
 
                     // Commits will be avoided on PRs
