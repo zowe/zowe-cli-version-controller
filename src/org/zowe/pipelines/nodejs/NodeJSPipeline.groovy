@@ -901,8 +901,10 @@ class NodeJSPipeline extends GenericPipeline {
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
-                    _processDeps(branchProps.dependencies, false)
-                    _processDeps(branchProps.devDependencies, true)
+                    if (!isLernaMonorepo) {  // TODO Handle deps for monorepo
+                        _processDeps(branchProps.dependencies, false)
+                        _processDeps(branchProps.devDependencies, true)
+                    }
 
                     // Commits will be avoided on PRs
                     if (!changeInfo.isPullRequest) {
@@ -1056,20 +1058,12 @@ class NodeJSPipeline extends GenericPipeline {
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                if (!isLernaMonorepo) {
-                    steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
-                } else {
-                    steps.sh "npx lerna add $depName@$depInfo ${isDevDep ? '--dev' : '--exact'} --scope=${steps.env.DEPLOY_PACKAGE}"
-                }
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                if (!isLernaMonorepo) {
-                    steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
-                } else {
-                    steps.sh "npx lerna add $depName@$depInfo ${isDevDep ? '--dev' : '--exact'} --scope=${steps.env.DEPLOY_PACKAGE} ${depInfo.registry ? depReg : ''}"
-                }
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
     }
