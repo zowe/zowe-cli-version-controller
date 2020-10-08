@@ -885,9 +885,6 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
 
-                def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
-                steps.sh "npm install ${npmArgs}"
-
                 // Get the branch that will be used to install dependencies for
                 String branch
 
@@ -899,6 +896,9 @@ class NodeJSPipeline extends GenericPipeline {
                 else {
                     branch = changeInfo.branchName
                 }
+
+                def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
+                steps.sh "npm install ${npmArgs}"
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
