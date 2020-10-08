@@ -1056,12 +1056,20 @@ class NodeJSPipeline extends GenericPipeline {
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
+                if (!isLernaMonorepo) {
+                    steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
+                } else {
+                    steps.sh "npx lerna add $depName@$depInfo ${isDevDep ? '--dev' : '--exact'} --scope=${steps.env.DEPLOY_PACKAGE}"
+                }
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                if (!isLernaMonorepo) {
+                    steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                } else {
+                    steps.sh "npx lerna add $depName@$depInfo ${isDevDep ? '--dev' : '--exact'} --scope=${steps.env.DEPLOY_PACKAGE} ${depInfo.registry ? depReg : ''}"
+                }
             }
         }
     }
