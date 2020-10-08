@@ -1105,7 +1105,7 @@ send "\$EXPECT_EMAIL\\r"
 
 expect {
    timeout      exit 1
-   eof
+   expect eof
 }
 """
         // Echo the command that was run
