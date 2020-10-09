@@ -744,7 +744,7 @@ class NodeJSPipeline extends GenericPipeline {
                         tempRegistry = releaseRegistryConfig
                     }
 
-                    steps.sh "sudo npm config set registry ${tempRegistry.scope ? "${tempRegistry.scope}:" : ""}${tempRegistry.url}"
+                    steps.sh "sudo npm config set ${tempRegistry.scope ? "${tempRegistry.scope}:" : ""}registry ${tempRegistry.url}"
 
                     // Login to the publish registry
                     _loginToRegistry(tempRegistry)
