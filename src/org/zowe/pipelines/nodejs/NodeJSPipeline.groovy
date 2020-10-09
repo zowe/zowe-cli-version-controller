@@ -982,6 +982,21 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
+     * Verify that the changelog has been modified.
+     *
+     * @param file Indicates the file to be checked
+     * @param lines Indicates the number of lines to check for the header
+     * @param header Indicates the header that should exist in the changelog
+     * @return void
+     */
+
+    void checkChangelog(Map arguments = [:]) {
+        runForEachMonorepoPackage(true) {
+            super.checkChangelog(arguments)
+        }
+    }
+
+    /**
      * Update the header in the changelog
      *
      * @param file Indicates the file to be updated
