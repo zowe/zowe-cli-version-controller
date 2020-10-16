@@ -150,7 +150,7 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Cached info listing Lerna changed packages.
      */
-    List<Map> _cachedLernaPkgInfo
+    private List<Map> _cachedLernaPkgInfo
 
     /**
      * Constructs the class.
@@ -904,6 +904,7 @@ class NodeJSPipeline extends GenericPipeline {
                     branch = changeInfo.branchName
                 }
 
+                // For a Lerna monorepo, we skip the postinstall script "lerna bootstrap" here and run it later
                 def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
                 steps.sh "npm install ${npmArgs}"
 
@@ -913,6 +914,7 @@ class NodeJSPipeline extends GenericPipeline {
                     _processDeps(branchProps.devDependencies, true)
 
                     if (isLernaMonorepo) {
+                        // Update dependencies to have matching versions across all packages
                         def depList = branchProps.dependencies.keySet() + branchProps.devDependencies.keySet()
                         if (depList.size() > 0) {
                             steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
@@ -1023,12 +1025,12 @@ class NodeJSPipeline extends GenericPipeline {
                     } else if (contents.contains(args.header)) {
                         steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
                         steps.sh "git add ${args.file}"
-                        gitCommit("Update Changelog")
-                        gitPush()
                     } else {
                         steps.error "Changelog version update could not be completed. Could not find specified header."
                     }
                 }
+                gitCommit("Update Changelog")  // Only commits if there are changes
+                gitPush()
             })
         }
     }
