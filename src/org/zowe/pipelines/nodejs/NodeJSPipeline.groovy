@@ -991,14 +991,17 @@ class NodeJSPipeline extends GenericPipeline {
      * @param header Indicates the header that should exist in the changelog
      * @return void
      */
-
     void checkChangelog(Map arguments = [:]) {
-        runForEachMonorepoPackage(true) {
-            try {
-                super.checkChangelog(arguments)
-            } catch (Exception e) {
-                // Prepend package name to error message
-                steps.error "[${steps.env.DEPLOY_PACKAGE}] ${e.getMessage()}"
+        if (!isLernaMonorepo) {
+            super.checkChangelog(arguments)
+        } else {
+            runForEachMonorepoPackage(true) {
+                try {
+                    super.checkChangelog(arguments)
+                } catch (Exception e) {
+                    // Prepend package name to error message
+                    steps.error "[${steps.env.DEPLOY_PACKAGE}] ${e.getMessage()}"
+                }
             }
         }
     }
