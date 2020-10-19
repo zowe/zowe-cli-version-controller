@@ -993,12 +993,14 @@ class NodeJSPipeline extends GenericPipeline {
      */
 
     void checkChangelog(Map arguments = [:]) {
-        runForEachMonorepoPackage(true) {
-            try {
-                super.checkChangelog(arguments)
-            } catch (Exception e) {
-                // Prepend package name to error message
-                steps.error "[${steps.env.DEPLOY_PACKAGE}] ${e.getMessage()}"
+        if (isLernaMonorepo) {
+            runForEachMonorepoPackage(true) {
+                try {
+                    super.checkChangelog(arguments)
+                } catch (Exception e) {
+                    // Prepend package name to error message
+                    steps.error "[${steps.env.DEPLOY_PACKAGE}] ${e.getMessage()}"
+                }
             }
         }
     }
