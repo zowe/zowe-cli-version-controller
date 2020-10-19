@@ -554,15 +554,32 @@ class GenericPipeline extends Pipeline {
                 }
                 if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
-                } else if (changedFiles.contains(args.file)) {
-                    def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
-                    if (contents.contains(args.header)) {
-                        steps.echo "Header found"
+                } else if (args._dirs.isEmpty()) {
+                    if (changedFiles.contains(args.file)) {
+                        def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
+                        if (contents.contains(args.header)) {
+                            steps.echo "Header found"
+                        } else {
+                            steps.error "Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
+                        }
                     } else {
-                        steps.error "Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
+                        steps.error "Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
                     }
                 } else {
-                    steps.error "Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
+                    for (dirname in args._dirs) {
+                        steps.dir(dirname) {
+                            if (changedFiles.contains(args.file)) {
+                                def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
+                                if (contents.contains(args.header)) {
+                                    steps.echo "[${dirname}] Header found"
+                                } else {
+                                    steps.error "[${dirname}] Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
+                                }
+                            } else {
+                                steps.error "[${dirname}] Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
+                            }
+                        }
+                    }
                 }
             })
         }
