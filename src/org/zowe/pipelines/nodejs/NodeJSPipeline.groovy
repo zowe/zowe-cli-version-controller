@@ -992,18 +992,11 @@ class NodeJSPipeline extends GenericPipeline {
      * @return void
      */
     void checkChangelog(Map arguments = [:]) {
-        if (!isLernaMonorepo) {
-            super.checkChangelog(arguments)
-        } else {
-            runForEachMonorepoPackage(true) {
-                try {
-                    super.checkChangelog(arguments)
-                } catch (Exception e) {
-                    // Prepend package name to error message
-                    steps.error "[${steps.env.DEPLOY_PACKAGE}] ${e.getMessage()}"
-                }
-            }
+        if (isLernaMonorepo && arguments._dirs.isEmpty()) {
+            arguments._dirs = _getLernaPkgInfo(true).collect { it.location } as String[]
         }
+
+        super.checkChangelog(arguments)
     }
 
     /**
