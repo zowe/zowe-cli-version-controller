@@ -992,7 +992,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @return void
      */
     void checkChangelog(Map arguments = [:]) {
-        if (isLernaMonorepo && arguments._dirs.isEmpty()) {
+        if (isLernaMonorepo && arguments._dirs.length == 0) {
             arguments._dirs = _getLernaPkgInfo(true).collect { it.location } as String[]
         }
 
