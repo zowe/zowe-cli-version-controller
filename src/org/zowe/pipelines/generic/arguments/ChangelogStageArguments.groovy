@@ -39,8 +39,6 @@ class ChangelogStageArguments extends GenericStageArguments {
     /**
      * List of directories to check for changelog files in.
      * If not specified, only the root directory is checked.
-     *
-     * @default {@code []}
      */
-    String[] _dirs = []
+    protected String[] _dirs
 }

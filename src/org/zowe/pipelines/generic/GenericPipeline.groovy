@@ -554,7 +554,7 @@ class GenericPipeline extends Pipeline {
                 }
                 if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
-                } else if (args._dirs.length == 0) {
+                } else if (args._dirs == null) {
                     if (changedFiles.contains(args.file)) {
                         def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                         if (contents.contains(args.header)) {
