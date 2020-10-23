@@ -564,8 +564,21 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
-            runForEachMonorepoPackage(false) {
-                steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+            steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+
+            if (isLernaMonorepo) {
+                // Bootstrap again to unhoist any dependencies missing from package-lock files
+                steps.sh "npx lerna bootstrap --no-ci"
+
+                // Remove dependencies from package.json files that would cause ELOCKVERIFY error
+                prunePackageJsonsBeforeAudit()
+
+                runForEachMonorepoPackage(false) {
+                    steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+                }
+
+                // Revert package.json files to their old contents
+                steps.sh "git checkout **/package.json"
             }
         }
 
@@ -984,22 +997,6 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
-     * Verify that the changelog has been modified.
-     *
-     * @param file Indicates the file to be checked
-     * @param lines Indicates the number of lines to check for the header
-     * @param header Indicates the header that should exist in the changelog
-     * @return void
-     */
-    void checkChangelog(Map arguments = [:]) {
-        if (isLernaMonorepo && arguments._dirs == null) {
-            arguments._dirs = _getLernaPkgInfo(true).collect { it.location } as String[]
-        }
-
-        super.checkChangelog(arguments)
-    }
-
-    /**
      * Update the header in the changelog
      *
      * @param file Indicates the file to be updated
@@ -1222,5 +1219,57 @@ expect {
                 }
             }
         }
+    }
+
+    /**
+     * Remove dependencies from package.json files that point to other packages
+     * in the same monorepo. This prevents ELOCKVERIFY errors when audit is run.
+     * See https://github.com/lerna/lerna/issues/1663#issuecomment-559010254
+     */
+    protected void prunePackageJsonsBeforeAudit() {
+        def lernaPkgInfo = _getLernaPkgInfo(false)
+        def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
+
+        for (pkgInfo in lernaPkgInfo) {
+            steps.dir(pkgInfo.location) {
+                def packageJSON = steps.readJSON file: "package.json"
+                def numPruned = 0
+
+                if (packageJSON.dependencies != null) {
+                    for (def pkgName in packageJSON.dependencies.keySet()) {
+                        if (lernaPkgNames.contains(pkgName)) {
+                            packageJSON.dependencies.remove(pkgName)
+                            numPruned++
+                        }
+                    }
+                }
+
+                if (packageJSON.devDependencies != null) {
+                    for (def pkgName in packageJSON.devDependencies.keySet()) {
+                        if (lernaPkgNames.contains(pkgName)) {
+                            packageJSON.devDependencies.remove(pkgName)
+                            numPruned++
+                        }
+                    }
+                }
+
+                if (numPruned > 0) {
+                    steps.writeJSON file: "package.json", json: packageJSON, pretty: 2
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns list of package directories to check for changelog files in.
+     * If the list is empty, only the root directory is checked.
+     * For a monorepo project, override this method to return a non-empty list.
+     */
+    String[] getProjectDirs() {
+        if (isLernaMonorepo) {
+            return _getLernaPkgInfo(true).collect { it.location } as String[]
+        }
+
+        return super.getProjectDirs()
     }
 }
