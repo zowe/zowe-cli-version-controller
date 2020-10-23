@@ -564,8 +564,11 @@ class NodeJSPipeline extends GenericPipeline {
                 throw preSetupException
             }
 
-            runForEachMonorepoPackage(false) {
-                steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+            steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+
+            if (isLernaMonorepo) {
+                runForEachMonorepoPackage(false) {
+                    steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
             }
         }
 
