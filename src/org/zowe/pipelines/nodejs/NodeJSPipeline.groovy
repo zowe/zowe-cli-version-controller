@@ -567,6 +567,9 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
 
             if (isLernaMonorepo) {
+                // Bootstrap again to unhoist any dependencies missing from package-lock files
+                steps.sh "npx lerna bootstrap --no-ci"
+
                 // Remove dependencies from package.json files that would cause ELOCKVERIFY error
                 prunePackageJsonsBeforeAudit()
 
@@ -1226,7 +1229,6 @@ expect {
     protected void prunePackageJsonsBeforeAudit() {
         def lernaPkgInfo = _getLernaPkgInfo(false)
         def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
-        NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
 
         for (pkgInfo in lernaPkgInfo) {
             steps.dir(pkgInfo.location) {
@@ -1235,7 +1237,7 @@ expect {
 
                 if (packageJSON.dependencies != null) {
                     for (def pkgName in packageJSON.dependencies.keySet()) {
-                        if (branch.dependencies.containsKey(pkgName) || lernaPkgNames.contains(pkgName)) {
+                        if (lernaPkgNames.contains(pkgName)) {
                             packageJSON.dependencies.remove(pkgName)
                             numPruned++
                         }
@@ -1244,7 +1246,7 @@ expect {
 
                 if (packageJSON.devDependencies != null) {
                     for (def pkgName in packageJSON.devDependencies.keySet()) {
-                        if (branch.devDependencies.containsKey(pkgName) || lernaPkgNames.contains(pkgName)) {
+                        if (lernaPkgNames.contains(pkgName)) {
                             packageJSON.devDependencies.remove(pkgName)
                             numPruned++
                         }
