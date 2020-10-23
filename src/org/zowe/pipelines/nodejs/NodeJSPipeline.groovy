@@ -568,7 +568,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             if (isLernaMonorepo) {
                 // Bootstrap again to unhoist any dependencies that may be missing from package-lock files
-                steps.sh "npx lerna bootstrap"
+                steps.sh "npx lerna bootstrap --no-ci"
 
                 runForEachMonorepoPackage(false) {
                     steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
