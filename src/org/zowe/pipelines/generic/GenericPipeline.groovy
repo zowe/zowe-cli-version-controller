@@ -894,7 +894,7 @@ class GenericPipeline extends Pipeline {
      * If the list is empty, only the root directory is checked.
      * For a monorepo project, override this method to return a non-empty list.
      */
-    String[] getProjectDirs {
+    String[] getProjectDirs() {
         return []
     }
 }
