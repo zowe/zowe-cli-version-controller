@@ -984,22 +984,6 @@ class NodeJSPipeline extends GenericPipeline {
     }
 
     /**
-     * Verify that the changelog has been modified.
-     *
-     * @param file Indicates the file to be checked
-     * @param lines Indicates the number of lines to check for the header
-     * @param header Indicates the header that should exist in the changelog
-     * @return void
-     */
-    void checkChangelog(Map arguments = [:]) {
-        if (isLernaMonorepo && arguments._dirs == null) {
-            arguments._dirs = _getLernaPkgInfo(true).collect { it.location } as String[]
-        }
-
-        super.checkChangelog(arguments)
-    }
-
-    /**
      * Update the header in the changelog
      *
      * @param file Indicates the file to be updated
@@ -1222,5 +1206,18 @@ expect {
                 }
             }
         }
+    }
+
+    /**
+     * Returns list of package directories to check for changelog files in.
+     * If the list is empty, only the root directory is checked.
+     * For a monorepo project, override this method to return a non-empty list.
+     */
+    String[] getProjectDirs() {
+        if (isLernaMonorepo) {
+            return _getLernaPkgInfo(true).collect { it.location } as String[]
+        }
+
+        return super.getProjectDirs()
     }
 }

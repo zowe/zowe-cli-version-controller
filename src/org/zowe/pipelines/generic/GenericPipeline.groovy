@@ -546,15 +546,18 @@ class GenericPipeline extends Pipeline {
                 } catch (err) {
                     steps.error "${err.message}"
                 }
-                String target = steps.CHANGE_TARGET
-                String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
+
                 String labels = getLabels()
                 if (labels == null) {
                   steps.echo "Unable to read labels for this Pull Request. Forcing changelog check."
                 }
+
+                String target = steps.CHANGE_TARGET
+                String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
+                String[] projectDirs = getProjectDirs()
                 if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
-                } else if (args._dirs == null) {
+                } else if (projectDirs.length == 0) {
                     if (changedFiles.contains(args.file)) {
                         def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                         if (contents.contains(args.header)) {
@@ -566,7 +569,7 @@ class GenericPipeline extends Pipeline {
                         steps.error "Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
                     }
                 } else {
-                    for (dirname in args._dirs) {
+                    for (dirname in projectDirs) {
                         steps.dir(dirname) {
                             if (changedFiles.contains(args.file)) {
                                 def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
@@ -884,5 +887,14 @@ class GenericPipeline extends Pipeline {
         if (!report.name) {
             throw new TestStageException("${reportName} is missing property `name`", stageName)
         }
+    }
+
+    /**
+     * Returns list of package directories to check for changelog files in.
+     * If the list is empty, only the root directory is checked.
+     * For a monorepo project, override this method to return a non-empty list.
+     */
+    String[] getProjectDirs {
+        return []
     }
 }

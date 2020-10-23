@@ -35,10 +35,4 @@ class ChangelogStageArguments extends GenericStageArguments {
      * @default {@code "## Recent Changes"}
      */
     String header = "## Recent Changes"
-
-    /**
-     * List of directories to check for changelog files in.
-     * If not specified, only the root directory is checked.
-     */
-    protected String[] _dirs
 }
