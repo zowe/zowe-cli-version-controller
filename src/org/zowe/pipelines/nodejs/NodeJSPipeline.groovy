@@ -569,6 +569,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (isLernaMonorepo) {
                 runForEachMonorepoPackage(false) {
                     steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
+                }
             }
         }
 
