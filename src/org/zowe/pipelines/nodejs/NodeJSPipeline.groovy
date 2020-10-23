@@ -569,7 +569,8 @@ class NodeJSPipeline extends GenericPipeline {
             if (isLernaMonorepo) {
                 // Bootstrap again to unhoist any dependencies missing from package-lock files
                 steps.sh "npx lerna bootstrap --no-ci"
-// Remove dependencies from package.json files that would cause ELOCKVERIFY error
+
+                // Remove dependencies from package.json files that would cause ELOCKVERIFY error
                 prunePackageJsonsBeforeAudit()
 
                 runForEachMonorepoPackage(false) {
