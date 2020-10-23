@@ -567,11 +567,8 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
 
             if (isLernaMonorepo) {
-                // Bootstrap again to unhoist any dependencies that may be missing from package-lock files
-                steps.sh "npx lerna bootstrap --no-ci"
-
-                // Replace local sibling version ranges with relative file: specifiers in package.json files
-                steps.sh "npx lerna link convert"
+                // Remove dependencies from package.json files that would cause ELOCKVERIFY error
+                prunePackageJsonsBeforeAudit()
 
                 runForEachMonorepoPackage(false) {
                     steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
@@ -1216,6 +1213,46 @@ expect {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
                 steps.dir(pkgInfo.location) {
                     body()
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove dependencies from package.json files that point to other packages
+     * in the same monorepo. This prevents ELOCKVERIFY errors when audit is run.
+     * See https://github.com/lerna/lerna/issues/1663#issuecomment-559010254
+     */
+    protected void prunePackageJsonsBeforeAudit() {
+        def lernaPkgInfo = _getLernaPkgInfo(false)
+        def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
+        NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
+
+        for (pkgInfo in lernaPkgInfo) {
+            steps.dir(pkgInfo.location) {
+                def packageJSON = steps.readJSON file: "package.json"
+                def numPruned = 0
+
+                if (packageJSON.dependencies != null) {
+                    for (def pkgName in packageJSON.dependencies.keySet()) {
+                        if (branch.dependencies.containsKey(pkgName) || lernaPkgNames.contains(pkgName)) {
+                            packageJSON.dependencies.remove(pkgName)
+                            numPruned++
+                        }
+                    }
+                }
+
+                if (packageJSON.devDependencies != null) {
+                    for (def pkgName in packageJSON.devDependencies.keySet()) {
+                        if (branch.devDependencies.containsKey(pkgName) || lernaPkgNames.contains(pkgName)) {
+                            packageJSON.devDependencies.remove(pkgName)
+                            numPruned++
+                        }
+                    }
+                }
+
+                if (numPruned > 0) {
+                    writeJSON file: "package.json", json: packageJSON, pretty: 2
                 }
             }
         }
