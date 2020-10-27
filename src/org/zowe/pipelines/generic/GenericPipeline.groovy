@@ -455,7 +455,7 @@ class GenericPipeline extends Pipeline {
      * @return A boolean indicating if the push was made. True indicates a successful push
      * @throw {@link IllegalBuildException} when a push operation happens on an illegal build type.
      * @throw {@link BehindRemoteException} when pushing to a branch that has forward commits from this build
-     * @throw {@link GitException} when there is nothing to push
+     * @throw {@link GitException} when there is nothing to push and force is true
      */
     boolean gitPush(boolean tags = false, boolean force = false, boolean forcePush = false) throws GitException {
         if (changeInfo.isPullRequest) {
@@ -471,8 +471,10 @@ class GenericPipeline extends Pipeline {
         } else if (Pattern.compile("Your branch is ahead of").matcher(status).find() || force || forcePush) {
             steps.sh "git push --set-upstream origin ${changeInfo.branchName} --verbose ${forcePush ? '--force' : ''}"
             if (tags) steps.sh "git push --tags"
-        } else {
+        } else if (force) {
             throw new GitException("Nothing to push")
+        } else {
+            return false
         }
 
         return true
