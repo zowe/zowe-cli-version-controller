@@ -491,6 +491,11 @@ class NodeJSPipeline extends GenericPipeline {
 
             // reset working directory before versioning
             steps.sh "git reset --hard"
+            if (isLernaMonorepo) {
+                // Cache changed package info before versioning
+                _getLernaPkgInfo(true)
+            }
+
             if (baseVersion == steps.env.DEPLOY_VERSION) {
                 gitTag("v$baseVersion", "Create release $baseVersion for ${branch.tag}")
             } else {
@@ -500,8 +505,6 @@ class NodeJSPipeline extends GenericPipeline {
                     // the tag to point to an invalid commit hash.
                     steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --no-git-tag-version"
                 } else {
-                    // Cache changed package info before versioning
-                    _getLernaPkgInfo(true)
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
@@ -773,7 +776,6 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "rm npm-shrinkwrap.json || exit 0"
                     steps.sh "rm package-lock.json || exit 0"
                     steps.sh "npm prune --production --no-package-lock"
-                    steps.sh "npm shrinkwrap"
 
                     // Install devDependencies to prevent any prepublishOnly from failing
                     _processDeps(branch.devDependencies, true, true)
