@@ -33,6 +33,24 @@ packages:
     tags: *npmTags
   "cli":
     tags: *npmTags
+  "core-for-zowe-sdk":
+    tags: *ltsTags
+  "provisioning-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-console-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-files-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-jobs-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-tso-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-uss-for-zowe-sdk":
+    tags: *ltsTags
+  "zos-workflows-for-zowe-sdk":
+    tags: *ltsTags
+  "zosmf-for-zowe-sdk":
+    tags: *ltsTags
   "cics-for-zowe-cli":
     tags: *ltsTags
   "db2-for-zowe-cli":
