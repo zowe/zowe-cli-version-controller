@@ -776,7 +776,6 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "rm npm-shrinkwrap.json || exit 0"
                     steps.sh "rm package-lock.json || exit 0"
                     steps.sh "npm prune --production --no-package-lock"
-                    steps.sh "npm shrinkwrap"
 
                     // Install devDependencies to prevent any prepublishOnly from failing
                     _processDeps(branch.devDependencies, true, true)
