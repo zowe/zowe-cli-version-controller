@@ -15,7 +15,6 @@ import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
-import org.zowe.pipelines.generic.arguments.VersionStageArguments
 import org.zowe.pipelines.generic.arguments.ChangelogStageArguments
 import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
@@ -319,7 +318,7 @@ class NodeJSPipeline extends GenericPipeline {
      *     </dl>
      * </p>
      *
-     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.generic.arguments.VersionStageArguments} used to
+     * @param arguments A map of arguments to be applied to the {@link org.zowe.pipelines.nodejs.arguments.NodeJSVersionStageArguments} used to
      *                  define the stage.
      */
     void version(Map arguments = [:]) {
@@ -508,6 +507,9 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
+                if (arguments.updateChangelogArgs && arguments.updateChangelogArgs.size() > 0) {
+                    this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
+                }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
                 gitPush(arguments.gitTag ? arguments.gitTag : true, true)
@@ -1001,6 +1003,7 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Update the header in the changelog
      *
+     * @deprecated Pass updateChangelogArgs to the version stage instead
      * @param file Indicates the file to be updated
      * @param lines Indicates the number of lines to check for the header
      * @param header Indicates the header that should exist in the changelog
@@ -1011,19 +1014,7 @@ class NodeJSPipeline extends GenericPipeline {
         args.name = "Update Changelog"
         if (protectedBranches.isProtected(changeInfo.branchName)) {
             createStage(name: "Update Changelog", stage: {
-                runForEachMonorepoPackage(true) {
-                    String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
-                    def packageJSON = steps.readJSON file: 'package.json'
-                    def packageJSONVersion = packageJSON.version
-                    if (contents.contains("## `$packageJSONVersion`")) {
-                        steps.echo "Version header already contained within changelog file. Update not required."
-                    } else if (contents.contains(args.header)) {
-                        steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
-                        steps.sh "git add ${args.file}"
-                    } else {
-                        steps.error "Changelog version update could not be completed. Could not find specified header."
-                    }
-                }
+                this._updateChangelog(args)
                 gitCommit("Update Changelog")  // Only commits if there are changes
                 gitPush()
             })
@@ -1176,6 +1167,28 @@ expect {
             steps.sh "npm logout ${registry.url ? "--registry ${registry.url}" : ""}${registry.scope ? " --scope=${registry.scope}" : ""}"
         } catch (e) {
             steps.echo "Failed logout but will continue"
+        }
+    }
+
+    /**
+     * Bump version number in changelog for newly versioned package(s).
+     * Does not commit or push changes. That must be handled by the invoker.
+     *
+     * @param args Object of type {@link org.zowe.pipelines.generic.arguments.ChangelogStageArguments}
+     */
+    void _updateChangelog(ChangelogStageArguments args) {
+        runForEachMonorepoPackage(true) {
+            String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
+            def packageJSON = steps.readJSON file: 'package.json'
+            def packageJSONVersion = packageJSON.version
+            if (contents.contains("## `$packageJSONVersion`")) {
+                steps.echo "Version header already contained within changelog file. Update not required."
+            } else if (contents.contains(args.header)) {
+                steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
+                steps.sh "git add ${args.file}"
+            } else {
+                steps.error "Changelog version update could not be completed. Could not find specified header."
+            }
         }
     }
 
