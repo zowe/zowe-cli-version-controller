@@ -583,7 +583,7 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 // Revert package.json files to their old contents
-                steps.sh "git checkout **/package.json"
+                steps.sh "git reset --hard"
             }
         }
 
