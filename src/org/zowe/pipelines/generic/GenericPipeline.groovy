@@ -556,7 +556,7 @@ class GenericPipeline extends Pipeline {
 
                 String target = steps.CHANGE_TARGET
                 String changedFiles = steps.sh(returnStdout: true, script: "git --no-pager diff origin/${target} --name-only").trim()
-                String[] projectDirs = getProjectDirs()
+                String[] projectDirs = getChangedDirs()
                 if (labels != null && labels.contains("no-changelog")) {
                     steps.echo "no-changelog label found on Pull Request. Skipping changelog check."
                 } else if (projectDirs.length == 0) {
@@ -896,7 +896,7 @@ class GenericPipeline extends Pipeline {
      * If the list is empty, only the root directory is checked.
      * For a monorepo project, override this method to return a non-empty list.
      */
-    String[] getProjectDirs() {
+    String[] getChangedDirs() {
         return []
     }
 }
