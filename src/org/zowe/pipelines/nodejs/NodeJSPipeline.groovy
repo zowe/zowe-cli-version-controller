@@ -1212,7 +1212,7 @@ expect {
         } else if (filter == LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
             lernaCmd += " --since --exclude-dependents --include-merged-tags"
         } else if (filter == LernaFilter.CHANGED_IN_BRANCH) {
-            lernaCmd += " --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
+            lernaCmd += " --since origin/${steps.env.CHANGE_TARGET} --exclude-dependents"
         }
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
