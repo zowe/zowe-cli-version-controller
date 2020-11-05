@@ -940,6 +940,8 @@ class NodeJSPipeline extends GenericPipeline {
                             steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
                         }
                         steps.sh "npm install"
+                        // Rebuild list of changed packages to be deployed
+                        _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                     }
 
                     // Commits will be avoided on PRs
