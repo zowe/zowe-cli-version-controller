@@ -10,6 +10,8 @@
 
 package org.zowe.pipelines.nodejs.arguments
 
+import org.zowe.pipelines.generic.arguments.VersionStageArguments
+
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.nodejs.NodeJSPipeline#version(java.util.Map)} method.
