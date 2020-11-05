@@ -324,16 +324,14 @@ class NodeJSPipeline extends GenericPipeline {
      *                  define the stage.
      */
     void version(Map arguments = [:]) {
-        VersionStageArguments args = arguments as VersionStageArguments
-
         IllegalArgumentException versionException
 
-        if (args.operation) {
+        if (arguments.operation) {
             versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
         }
 
         // Set the version operation for an npm pipeline
-        args.operation = { String stageName ->
+        arguments.operation = { String stageName ->
             if (versionException) {
                 throw versionException
             }
@@ -512,11 +510,11 @@ class NodeJSPipeline extends GenericPipeline {
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
-                gitPush(args.gitTag ? args.gitTag : true, true)
+                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
             }
         }
 
-        super.versionGeneric(args)
+        super.versionGeneric(arguments)
     }
 
     /**
