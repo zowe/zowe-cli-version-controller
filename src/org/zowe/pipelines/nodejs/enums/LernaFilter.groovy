@@ -32,7 +32,8 @@ enum LernaFilter {
     CHANGED_EXCLUDE_DEPENDENTS,
 
     /**
-     * List only packages that have changed in this branch or PR.
+     * List only packages that have changed in this PR.
+     * Not supported in branch builds.
      */
-    CHANGED_IN_BRANCH
+    CHANGED_IN_PR
 }

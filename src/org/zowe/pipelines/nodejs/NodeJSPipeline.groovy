@@ -1211,8 +1211,11 @@ expect {
             lernaCmd += " --since --include-merged-tags"
         } else if (filter == LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
             lernaCmd += " --since --exclude-dependents --include-merged-tags"
-        } else if (filter == LernaFilter.CHANGED_IN_BRANCH) {
-            lernaCmd += " --since origin/${steps.env.CHANGE_TARGET} --exclude-dependents"
+        } else if (filter == LernaFilter.CHANGED_IN_PR) {
+            if (!steps.env.CHANGE_TARGET) {
+                return null;  // This filter isn't supported in branch builds
+            }
+            lernaCmd += " --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
         }
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
@@ -1287,7 +1290,7 @@ expect {
      */
     String[] getChangedDirs() {
         if (isLernaMonorepo) {
-            return _lernaPkgInfo[LernaFilter.CHANGED_IN_BRANCH].collect { it.location } as String[]
+            return _lernaPkgInfo[LernaFilter.CHANGED_IN_PR].collect { it.location } as String[]
         }
 
         return super.getChangedDirs()
