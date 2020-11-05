@@ -20,8 +20,6 @@ class NodeJSVersionStageArguments extends VersionStageArguments {
     /**
      * If any arguments are defined, the update changelog stage will be invoked
      * with them.
-     *
-     * @default {@code [:]}
      */
-    Map updateChangelogArgs = [:]
+    Map<String, String> updateChangelogArgs
 }

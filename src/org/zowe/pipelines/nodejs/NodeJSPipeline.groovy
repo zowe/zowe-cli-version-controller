@@ -507,7 +507,7 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
-                if (arguments.updateChangelogArgs && arguments.updateChangelogArgs.size() > 0) {
+                if (arguments.updateChangelogArgs) {
                     this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
