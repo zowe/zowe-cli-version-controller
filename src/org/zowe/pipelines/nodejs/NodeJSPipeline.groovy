@@ -20,6 +20,7 @@ import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
 import org.zowe.pipelines.nodejs.models.*
 import org.zowe.pipelines.nodejs.exceptions.*
+import org.zowe.pipelines.nodejs.enums.LernaFilter
 
 import java.util.concurrent.TimeUnit
 
@@ -149,7 +150,7 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Cached info listing Lerna changed packages.
      */
-    private List<Map> _cachedLernaPkgInfo
+    private Map<LernaFilter, List<Map>> _lernaPkgInfo = [:]
 
     /**
      * Constructs the class.
@@ -224,7 +225,7 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.archiveArtifacts archiveName
                         steps.sh "rm -f $archiveName"
                     } else {
-                        for (pkgInfo in _getLernaPkgInfo()) {
+                        for (pkgInfo in _lernaPkgInfo[LernaFilter.ALL]) {
                             // Replace special file character names
                             def name = pkgInfo.name.replaceAll("@", "").replaceAll("/", "-")
 
@@ -490,10 +491,6 @@ class NodeJSPipeline extends GenericPipeline {
 
             // reset working directory before versioning
             steps.sh "git reset --hard"
-            if (isLernaMonorepo) {
-                // Cache changed package info before versioning
-                _getLernaPkgInfo(true)
-            }
 
             if (baseVersion == steps.env.DEPLOY_VERSION) {
                 gitTag("v$baseVersion", "Create release $baseVersion for ${branch.tag}")
@@ -578,7 +575,7 @@ class NodeJSPipeline extends GenericPipeline {
                 // Remove dependencies from package.json files that would cause ELOCKVERIFY error
                 prunePackageJsonsBeforeAudit()
 
-                runForEachMonorepoPackage(false) {
+                runForEachMonorepoPackage(LernaFilter.ALL) {
                     steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
                 }
 
@@ -746,7 +743,7 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            runForEachMonorepoPackage(true) {
+            runForEachMonorepoPackage(LernaFilter.CHANGED) {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
@@ -924,6 +921,12 @@ class NodeJSPipeline extends GenericPipeline {
                 // For a Lerna monorepo, we skip the postinstall script "lerna bootstrap" here and run it later
                 def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
                 steps.sh "npm install ${npmArgs}"
+
+                if (isLernaMonorepo) {
+                    for (filter in LernaFilter.values()) {
+                        _lernaPkgInfo[filter] = _buildLernaPkgInfo(filter)
+                    }
+                }
 
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
@@ -1177,7 +1180,7 @@ expect {
      * @param args Object of type {@link org.zowe.pipelines.generic.arguments.ChangelogStageArguments}
      */
     void _updateChangelog(ChangelogStageArguments args) {
-        runForEachMonorepoPackage(true) {
+        runForEachMonorepoPackage(LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
             String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
             def packageJSON = steps.readJSON file: 'package.json'
             def packageJSONVersion = packageJSON.version
@@ -1195,22 +1198,21 @@ expect {
     /**
      * Retrieve information about Lerna packages in the Node.js repository.
      *
-     * @param onlyChanged Specify true to only list changed packages.
+     * @param filter Specify how package list should be filtered.
      * @returns List of JSON objects containing info for each package.
      *
      * @Note Each object contains these keys: name, version, private, location
      */
-    protected List<Map> _getLernaPkgInfo(Boolean onlyChanged = false) {
-        if (onlyChanged && _cachedLernaPkgInfo) {
-            return _cachedLernaPkgInfo
+    protected List<Map> _buildLernaPkgInfo(LernaFilter filter) {
+        def lernaCmd = "list"
+        if (filter != LernaFilter.ALL) {
+            lernaCmd += " --since origin/${steps.CHANGE_TARGET}"
         }
-        def lernaCmd = onlyChanged ? "changed" : "list"
+        if (filter == LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
+            lernaCmd += " --exclude-dependents"
+        }
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
-        def pkgInfo = steps.readJSON(text: cmdOutput)
-        if (onlyChanged) {
-            _cachedLernaPkgInfo = pkgInfo
-        }
-        return pkgInfo
+        return steps.readJSON(text: cmdOutput)
     }
 
     /**
@@ -1218,16 +1220,16 @@ expect {
      * the closure will run once in the root directory. In a monorepo, the
      * closure will run in each package directory.
      *
-     * @param onlyIfChanged Specify true to only run for changed packages.
+     * @param filter Specify how package list should be filtered.
      * @param body Closure to run for each package
      *
      * @Note The onlyIfChanged param has no effect for single package repos.
      */
-    protected void runForEachMonorepoPackage(Boolean onlyIfChanged, Closure body) {
+    protected void runForEachMonorepoPackage(LernaFilter filter, Closure body) {
         if (!isLernaMonorepo) {
             body()
         } else {
-            for (pkgInfo in _getLernaPkgInfo(onlyIfChanged)) {
+            for (pkgInfo in _lernaPkgInfo[filter]) {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
                 steps.dir(pkgInfo.location) {
                     body()
@@ -1242,7 +1244,7 @@ expect {
      * See https://github.com/lerna/lerna/issues/1663#issuecomment-559010254
      */
     protected void prunePackageJsonsBeforeAudit() {
-        def lernaPkgInfo = _getLernaPkgInfo(false)
+        def lernaPkgInfo = _lernaPkgInfo[LernaFilter.ALL]
         def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
 
         for (pkgInfo in lernaPkgInfo) {
@@ -1280,11 +1282,11 @@ expect {
      * If the list is empty, only the root directory is checked.
      * For a monorepo project, override this method to return a non-empty list.
      */
-    String[] getProjectDirs() {
+    String[] getChangedDirs() {
         if (isLernaMonorepo) {
-            return _getLernaPkgInfo(true).collect { it.location } as String[]
+            return _lernaPkgInfo[LernaFilter.CHANGED_EXCLUDE_DEPENDENTS].collect { it.location } as String[]
         }
 
-        return super.getProjectDirs()
+        return super.getChangedDirs()
     }
 }
