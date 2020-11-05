@@ -23,5 +23,5 @@ class NodeJSVersionStageArguments extends VersionStageArguments {
      *
      * @default {@code [:]}
      */
-    Map<String, String> updateChangelogArgs = [:]
+    Map updateChangelogArgs = [:]
 }
