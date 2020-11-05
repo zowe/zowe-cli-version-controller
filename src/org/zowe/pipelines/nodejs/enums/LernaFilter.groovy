@@ -20,12 +20,19 @@ enum LernaFilter {
     ALL,
 
     /**
-     * List only changed packages (may include transitive dependents).
+     * List only packages that have changed since the last Git tag.
+     * May include transitive dependents.
      */
     CHANGED,
 
     /**
-     * List only changed packages and exclude all transitive dependents.
+     * List only packages that have changed since the last Git tag.
+     * Excludes transitive dependents.
      */
-    CHANGED_EXCLUDE_DEPENDENTS
+    CHANGED_EXCLUDE_DEPENDENTS,
+
+    /**
+     * List only packages that have changed in this branch or PR.
+     */
+    CHANGED_IN_BRANCH
 }
