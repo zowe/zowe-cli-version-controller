@@ -15,6 +15,7 @@ import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
+import org.zowe.pipelines.generic.arguments.VersionStageArguments
 import org.zowe.pipelines.generic.arguments.ChangelogStageArguments
 import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
@@ -323,14 +324,16 @@ class NodeJSPipeline extends GenericPipeline {
      *                  define the stage.
      */
     void version(Map arguments = [:]) {
+        VersionStageArguments args = arguments as VersionStageArguments
+
         IllegalArgumentException versionException
 
-        if (arguments.operation) {
+        if (args.operation) {
             versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
         }
 
         // Set the version operation for an npm pipeline
-        arguments.operation = { String stageName ->
+        args.operation = { String stageName ->
             if (versionException) {
                 throw versionException
             }
@@ -509,11 +512,11 @@ class NodeJSPipeline extends GenericPipeline {
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
-                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+                gitPush(args.gitTag ? args.gitTag : true, true)
             }
         }
 
-        super.versionGeneric(arguments)
+        super.versionGeneric(args)
     }
 
     /**
