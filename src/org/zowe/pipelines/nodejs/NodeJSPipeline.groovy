@@ -324,16 +324,14 @@ class NodeJSPipeline extends GenericPipeline {
      *                  define the stage.
      */
     void version(Map arguments = [:]) {
-        VersionStageArguments args = arguments as VersionStageArguments
-
         IllegalArgumentException versionException
 
-        if (args.operation) {
+        if (arguments.operation) {
             versionException = new IllegalArgumentException("operation is an invalid map object for versionArguments")
         }
 
         // Set the version operation for an npm pipeline
-        args.operation = { String stageName ->
+        arguments.operation = { String stageName ->
             if (versionException) {
                 throw versionException
             }
@@ -377,6 +375,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
             } else {
+                steps.sh "echo 'my stage name do be ${stageName}'"
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
@@ -512,11 +511,11 @@ class NodeJSPipeline extends GenericPipeline {
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
-                gitPush(args.gitTag ? args.gitTag : true, true)
+                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
             }
         }
 
-        super.versionGeneric(args)
+        super.versionGeneric(arguments)
     }
 
     /**
