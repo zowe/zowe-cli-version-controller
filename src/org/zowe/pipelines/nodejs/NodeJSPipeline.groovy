@@ -332,6 +332,7 @@ class NodeJSPipeline extends GenericPipeline {
 
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
+            steps.sh "echo 'now my stage name is ${stageName}'"
             if (versionException) {
                 throw versionException
             }
@@ -375,7 +376,6 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
             } else {
-                steps.sh "echo 'now my stage name is ${stageName}'"
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
@@ -506,9 +506,9 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
-                if (arguments.updateChangelogArgs) {
-                    this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
-                }
+//                if (arguments.updateChangelogArgs) {
+//                    this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
+//                }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
                 gitPush(arguments.gitTag ? arguments.gitTag : true, true)
