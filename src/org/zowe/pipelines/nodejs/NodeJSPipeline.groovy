@@ -375,7 +375,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.echo "ERROR"
                 throw new VersionStageException("No approvers available! Please specify at least one NodeJSPipeline.admin before deploying.", stageName)
             } else {
-                steps.sh "echo 'my stage name do be ${stageName}'"
+                steps.sh "echo 'my stage name is ${stageName}'"
                 Stage currentStage = getStage(stageName)
 
                 // Add a timeout of one minute less than the available stage execution time
