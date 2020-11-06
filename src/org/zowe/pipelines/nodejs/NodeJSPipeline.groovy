@@ -333,9 +333,12 @@ class NodeJSPipeline extends GenericPipeline {
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
             // TAJ Sometimes stageName gets passed as Object[] rather than String, no idea why
-            if (stageName instanceof Collection) {
+            steps.sh "echo 'stage name is ${stageName}'"
+            if (stageName instanceof Object[]) {
+                steps.sh "echo 'it happened'"
                 stageName = stageName[0];
             }
+            steps.sh "echo 'now stage name is ${stageName}'"
 
             if (versionException) {
                 throw versionException
