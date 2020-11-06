@@ -861,4 +861,8 @@ class Pipeline {
             }
         }
     }
+
+    final String relPath(String absPath) {
+        return absPath.replaceFirst("^${steps.env.WORKSPACE}/", "")
+    }
 }

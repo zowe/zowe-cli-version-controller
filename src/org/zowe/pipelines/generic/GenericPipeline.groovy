@@ -576,12 +576,12 @@ class GenericPipeline extends Pipeline {
                             if (changedFiles.contains(args.file)) {
                                 def contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
                                 if (contents.contains(args.header)) {
-                                    steps.echo "[${dirname}] Header found"
+                                    steps.echo "[${relPath(dirname)}] Header found"
                                 } else {
-                                    steps.error "[${dirname}] Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
+                                    steps.error "[${relPath(dirname)}] Changelog missing valid header. Please see CONTRIBUTING.md for changelog format."
                                 }
                             } else {
-                                steps.error "[${dirname}] Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
+                                steps.error "[${relPath(dirname)}] Changelog has not been modified from origin/master. Please see CONTRIBUTING.md for changelog format."
                             }
                         }
                     }
