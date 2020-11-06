@@ -266,7 +266,6 @@ class GenericPipeline extends Pipeline {
         }
 
         args.stage = { String stageName ->
-            steps.sh "echo 'my stage name is ${stageName}'"
             // If there were any exceptions during the setup, throw them here so proper email notifications
             // can be sent.
             if (preSetupException) {

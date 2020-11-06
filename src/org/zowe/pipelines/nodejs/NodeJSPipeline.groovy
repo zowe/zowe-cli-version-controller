@@ -332,7 +332,11 @@ class NodeJSPipeline extends GenericPipeline {
 
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
-            steps.sh "echo 'now my stage name is ${stageName}'"
+            // TAJ Sometimes stageName gets passed as Object[] rather than String, no idea why
+            if (stageName instanceof Collection) {
+                stageName = stageName[0];
+            }
+
             if (versionException) {
                 throw versionException
             }
@@ -506,9 +510,9 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
-//                if (arguments.updateChangelogArgs) {
-//                    this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
-//                }
+                if (arguments.updateChangelogArgs) {
+                    this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
+                }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
                 gitPush(arguments.gitTag ? arguments.gitTag : true, true)

@@ -340,8 +340,6 @@ class Pipeline {
                             // Run the passed stage with the proper environment variables
                             steps.withEnv(environment) {
                                 _closureWrapper(stage) {
-                                    steps.sh "echo 'my args name is ${args.name}'"
-                                    steps.sh "echo 'stage name should be ${stage.name}'"
                                     args.stage(stage.name)
                                     stage.status = StageStatus.SUCCESS
                                 }
