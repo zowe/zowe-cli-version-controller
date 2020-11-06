@@ -333,12 +333,7 @@ class NodeJSPipeline extends GenericPipeline {
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
             // TAJ Sometimes stageName gets passed as Object[] rather than String, no idea why
-            steps.sh "echo 'stage name is ${stageName}'"
-            if (stageName instanceof Object[]) {
-                steps.sh "echo 'it happened'"
-                stageName = stageName[0];
-            }
-            steps.sh "echo 'now stage name is ${stageName}'"
+            stageName = (stageName instanceof Object[]) ? stageName[0] : stageName
 
             if (versionException) {
                 throw versionException
@@ -751,6 +746,10 @@ class NodeJSPipeline extends GenericPipeline {
             if (deployException) {
                 throw deployException
             }
+
+            steps.sh "echo '${_lernaPkgInfo[LernaFilter.CHANGED]}'"
+            steps.sh "git status"
+            steps.sh "git diff"
 
             runForEachMonorepoPackage(LernaFilter.CHANGED) {
                 // Login to the registry
