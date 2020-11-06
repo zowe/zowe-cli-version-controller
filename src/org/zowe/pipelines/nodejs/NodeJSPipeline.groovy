@@ -15,7 +15,6 @@ import org.zowe.pipelines.base.ProtectedBranches
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.base.models.StageTimeout
 import org.zowe.pipelines.generic.GenericPipeline
-import org.zowe.pipelines.generic.arguments.VersionStageArguments
 import org.zowe.pipelines.generic.arguments.ChangelogStageArguments
 import org.zowe.pipelines.generic.exceptions.*
 import org.zowe.pipelines.nodejs.arguments.*
