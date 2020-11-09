@@ -1148,6 +1148,9 @@ expect {
                 )
         ]) {
             steps.withEnv(["EXPECT_EMAIL=${registry.email}"]) {
+                steps.sh "pwd"
+                steps.sh "ls -al"
+                steps.sh "cat .npmrc || exit 0"
                 steps.sh expectCommand
             }
         }
