@@ -1151,6 +1151,8 @@ expect {
                 steps.sh "pwd"
                 steps.sh "ls -al"
                 steps.sh "cat .npmrc || exit 0"
+                steps.sh "git status || exit 0"
+                steps.sh "npm get || exit 0"
                 steps.sh expectCommand
             }
         }
