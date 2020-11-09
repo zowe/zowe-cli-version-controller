@@ -1202,7 +1202,7 @@ expect {
                 steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
                 steps.sh "git add ${args.file}"
             } else {
-                steps.error "${msgPrefix}Changelog version update could not be completed. Could not find specified header."
+                steps.echo "${msgPrefix}Changelog version update could not be completed. Could not find specified header."
             }
         }
     }
