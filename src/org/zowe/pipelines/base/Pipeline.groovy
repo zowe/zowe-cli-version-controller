@@ -861,4 +861,14 @@ class Pipeline {
             }
         }
     }
+
+    /**
+     * Converts an absolute path to a relative path.
+     *
+     * @param absPath An absolute path rooted in the workspace directory.
+     * @return A relative path with the workspace directory removed.
+     */
+    final String relPath(String absPath) {
+        return absPath.replaceFirst("^${steps.env.WORKSPACE}/", "")
+    }
 }

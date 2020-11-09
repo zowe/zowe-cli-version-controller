@@ -331,6 +331,10 @@ class NodeJSPipeline extends GenericPipeline {
 
         // Set the version operation for an npm pipeline
         arguments.operation = { String stageName ->
+            // TAJ Sometimes stageName gets passed as Object[] rather than String, no idea why.
+            // This is a terrible hack that I resorted to after spending hours trying other things.
+            stageName = (stageName instanceof Object[]) ? stageName[0] : stageName
+
             if (versionException) {
                 throw versionException
             }
@@ -949,6 +953,11 @@ class NodeJSPipeline extends GenericPipeline {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
+                        if (isLernaMonorepo) {
+                            runForEachMonorepoPackage(LernaFilter.ALL) {
+                                steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
+                            }
+                        }
                         gitCommit("Updating dependencies")
                     }
                 }
@@ -1186,13 +1195,14 @@ expect {
             String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
             def packageJSON = steps.readJSON file: 'package.json'
             def packageJSONVersion = packageJSON.version
+            def msgPrefix = isLernaMonorepo ? "[${relPath(steps.pwd())}] " : ""
             if (contents.contains("## `$packageJSONVersion`")) {
-                steps.echo "Version header already contained within changelog file. Update not required."
+                steps.echo "${msgPrefix}Version header already contained within changelog file. Update not required."
             } else if (contents.contains(args.header)) {
                 steps.sh "sed -i 's/${args.header}/## `${packageJSONVersion}`/' ${args.file}"
                 steps.sh "git add ${args.file}"
             } else {
-                steps.error "Changelog version update could not be completed. Could not find specified header."
+                steps.error "${msgPrefix}Changelog version update could not be completed. Could not find specified header."
             }
         }
     }
