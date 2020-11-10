@@ -571,21 +571,6 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
-
-            if (isLernaMonorepo) {
-                // Bootstrap again to unhoist any dependencies missing from package-lock files
-                steps.sh "npx lerna bootstrap --no-ci"
-
-                // Remove dependencies from package.json files that would cause ELOCKVERIFY error
-                prunePackageJsonsBeforeAudit()
-
-                runForEachMonorepoPackage(LernaFilter.ALL) {
-                    steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
-                }
-
-                // Revert package.json files to their old contents
-                steps.sh "git reset --hard"
-            }
         }
 
         // Create the stage and ensure that the first one is the stage of reference
@@ -922,9 +907,7 @@ class NodeJSPipeline extends GenericPipeline {
                     branch = changeInfo.branchName
                 }
 
-                // For a Lerna monorepo, we skip the postinstall script "lerna bootstrap" here and run it later
-                def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
-                steps.sh "npm install ${npmArgs}"
+                steps.sh "npm install"
 
                 if (isLernaMonorepo) {
                     for (filter in LernaFilter.values()) {
@@ -942,10 +925,10 @@ class NodeJSPipeline extends GenericPipeline {
                         def depList = branchProps.dependencies.keySet() + branchProps.devDependencies.keySet()
                         if (depList.size() > 0) {
                             steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
+                            steps.sh "npm install --package-lock-only"
+                            // Rebuild list of changed packages to be deployed
+                            _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                         }
-                        steps.sh "npm install"
-                        // Rebuild list of changed packages to be deployed
-                        _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                     }
 
                     // Commits will be avoided on PRs
@@ -955,7 +938,7 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
                         if (isLernaMonorepo) {
                             runForEachMonorepoPackage(LernaFilter.ALL) {
-                                steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
+                                steps.sh "git add package.json --ignore-errors || exit 0"
                             }
                         }
                         gitCommit("Updating dependencies")
@@ -1191,7 +1174,7 @@ expect {
      * @param args Object of type {@link org.zowe.pipelines.generic.arguments.ChangelogStageArguments}
      */
     void _updateChangelog(ChangelogStageArguments args) {
-        runForEachMonorepoPackage(LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
+        runForEachMonorepoPackage(LernaFilter.CHANGED) {
             String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
             def packageJSON = steps.readJSON file: 'package.json'
             def packageJSONVersion = packageJSON.version
@@ -1219,8 +1202,6 @@ expect {
         def lernaCmd = "list"
         if (filter == LernaFilter.CHANGED) {
             lernaCmd += " --since --include-merged-tags"
-        } else if (filter == LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
-            lernaCmd += " --since --exclude-dependents --include-merged-tags"
         } else if (filter == LernaFilter.CHANGED_IN_PR) {
             if (!steps.env.CHANGE_TARGET) {
                 return null;  // This filter isn't supported in branch builds
