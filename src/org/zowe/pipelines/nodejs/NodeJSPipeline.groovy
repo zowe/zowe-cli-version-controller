@@ -1191,7 +1191,7 @@ expect {
      * @param args Object of type {@link org.zowe.pipelines.generic.arguments.ChangelogStageArguments}
      */
     void _updateChangelog(ChangelogStageArguments args) {
-        runForEachMonorepoPackage(LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
+        runForEachMonorepoPackage(LernaFilter.CHANGED) {
             String contents = steps.sh(returnStdout: true, script: "cat ${args.file}").trim()
             def packageJSON = steps.readJSON file: 'package.json'
             def packageJSONVersion = packageJSON.version
@@ -1216,16 +1216,14 @@ expect {
      * @Note Each object contains these keys: name, version, private, location
      */
     protected List<Map> _buildLernaPkgInfo(LernaFilter filter) {
-        def lernaCmd = "list"
+        def lernaCmd
         if (filter == LernaFilter.CHANGED) {
-            lernaCmd += " --since --include-merged-tags"
-        } else if (filter == LernaFilter.CHANGED_EXCLUDE_DEPENDENTS) {
-            lernaCmd += " --since --exclude-dependents --include-merged-tags"
+            lernaCmd = "changed --include-merged-tags"
         } else if (filter == LernaFilter.CHANGED_IN_PR) {
             if (!steps.env.CHANGE_TARGET) {
                 return null;  // This filter isn't supported in branch builds
             }
-            lernaCmd += " --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
+            lernaCmd = "list --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
         }
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
