@@ -1217,13 +1217,21 @@ expect {
      */
     protected List<Map> _buildLernaPkgInfo(LernaFilter filter) {
         def lernaCmd
-        if (filter == LernaFilter.CHANGED) {
-            lernaCmd = "changed --include-merged-tags"
-        } else if (filter == LernaFilter.CHANGED_IN_PR) {
-            if (!steps.env.CHANGE_TARGET) {
-                return null;  // This filter isn't supported in branch builds
-            }
-            lernaCmd = "list --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
+        switch (filter) {
+            case LernaFilter.ALL:
+                lernaCmd = "list"
+                break
+            case LernaFilter.CHANGED:
+                lernaCmd = "changed --include-merged-tags"
+                break
+            case LernaFilter.CHANGED_IN_PR:
+                if (!steps.env.CHANGE_TARGET) {
+                    return null  // This filter isn't supported in branch builds
+                }
+                lernaCmd = "list --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
+                break
+            default:
+                steps.error "Invalid Lerna filter specified: ${filter}"
         }
         def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
         return steps.readJSON(text: cmdOutput)
