@@ -1219,21 +1219,21 @@ expect {
         def lernaCmd
         switch (filter) {
             case LernaFilter.ALL:
-                lernaCmd = "list"
+                lernaCmd = "list --json --toposort"
                 break
             case LernaFilter.CHANGED:
-                lernaCmd = "changed --include-merged-tags"
+                lernaCmd = "changed --include-merged-tags --json --toposort || exit 0"
                 break
             case LernaFilter.CHANGED_IN_PR:
                 if (!steps.env.CHANGE_TARGET) {
                     return null  // This filter isn't supported in branch builds
                 }
-                lernaCmd = "list --since origin/${steps.CHANGE_TARGET} --exclude-dependents"
+                lernaCmd = "list --since origin/${steps.CHANGE_TARGET} --exclude-dependents --json --toposort"
                 break
             default:
                 steps.error "Invalid Lerna filter specified: ${filter}"
         }
-        def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd} --json --toposort").trim()
+        def cmdOutput = steps.sh(returnStdout: true, script: "npx lerna ${lernaCmd}").trim()
         return steps.readJSON(text: cmdOutput)
     }
 
