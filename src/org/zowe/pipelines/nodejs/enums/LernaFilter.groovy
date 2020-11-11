@@ -21,15 +21,8 @@ enum LernaFilter {
 
     /**
      * List only packages that have changed since the last Git tag.
-     * May include transitive dependents.
      */
     CHANGED,
-
-    /**
-     * List only packages that have changed since the last Git tag.
-     * Excludes transitive dependents.
-     */
-    CHANGED_EXCLUDE_DEPENDENTS,
 
     /**
      * List only packages that have changed in this PR.
