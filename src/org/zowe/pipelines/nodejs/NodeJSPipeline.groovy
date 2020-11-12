@@ -732,6 +732,10 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
+            if (isLernaMonorepo) {
+                _unlinkLocalPackageVersions()
+            }
+
             runForEachMonorepoPackage(LernaFilter.CHANGED) {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
@@ -1243,39 +1247,38 @@ expect {
         }
     }
 
-    /**
-     * Remove dependencies from package.json files that point to other packages
-     * in the same monorepo. This prevents ELOCKVERIFY errors when audit is run.
-     * See https://github.com/lerna/lerna/issues/1663#issuecomment-559010254
+    /*
+     * Unlink local package versions before publish. Replaces symlinked
+     * dependency versions "file:../[sibling]" with "X.Y.Z" in package.json.
      */
-    protected void prunePackageJsonsBeforeAudit() {
-        def lernaPkgInfo = _lernaPkgInfo[LernaFilter.ALL]
-        def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
+    protected void _unlinkLocalPackageVersions() {
+        def lernaPkgInfo = _buildLernaPkgInfo(LernaFilter.ALL)
+        def lernaPkgVersions = lernaPkgInfo.collectEntries { [it.name, it.version] }
 
         for (pkgInfo in lernaPkgInfo) {
             steps.dir(pkgInfo.location) {
                 def packageJSON = steps.readJSON file: "package.json"
-                def numPruned = 0
+                def numVersioned = 0
 
                 if (packageJSON.dependencies != null) {
                     for (def pkgName in packageJSON.dependencies.keySet()) {
-                        if (lernaPkgNames.contains(pkgName)) {
-                            packageJSON.dependencies.remove(pkgName)
-                            numPruned++
+                        if (lernaPkgVersions.containsKey(pkgName) && packageJSON.dependencies[pkgName].startsWith("file:")) {
+                            packageJSON.dependencies[pkgName] = lernaPkgVersions[pkgName]
+                            numVersioned++
                         }
                     }
                 }
 
                 if (packageJSON.devDependencies != null) {
                     for (def pkgName in packageJSON.devDependencies.keySet()) {
-                        if (lernaPkgNames.contains(pkgName)) {
-                            packageJSON.devDependencies.remove(pkgName)
-                            numPruned++
+                        if (lernaPkgVersions.containsKey(pkgName) && packageJSON.devDependencies[pkgName].startsWith("file:")) {
+                            packageJSON.devDependencies[pkgName] = lernaPkgVersions[pkgName]
+                            numVersioned++
                         }
                     }
                 }
 
-                if (numPruned > 0) {
+                if (numVersioned > 0) {
                     steps.writeJSON file: "package.json", json: packageJSON, pretty: 2
                 }
             }
