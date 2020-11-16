@@ -469,7 +469,7 @@ class NodeJSPipeline extends GenericPipeline {
                      */
                     if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
                         steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                        steps.env.DEPLOY_VERSION = availableVersions[0]
+                        steps.env.DEPLOY_VERSION = availableVersions[0].split(" - ")[0]
                     } else {
                         throw exception
                     }
