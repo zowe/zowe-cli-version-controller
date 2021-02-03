@@ -1075,7 +1075,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                 def scannerHome = steps.tool 'sonar-scanner-4.0.0'
                 steps.withSonarQubeEnv('sonarcloud-server') {
-                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && ${scannerHome}/bin/sonar-scanner"
+                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
                 }
             }
         )
