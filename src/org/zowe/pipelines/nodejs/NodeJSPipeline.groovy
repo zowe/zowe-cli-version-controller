@@ -1058,8 +1058,7 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 // append sonar.projectVersion, sonar.links.ci, and sonar.branch.name or sonar.pullrequest to sonar-project.properties
-                def packageJson = steps.readJSON file: 'package.json'
-                steps.sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
+                steps.sh "echo sonar.projectVersion=${steps.env.DEPLOY_VERSION} >> ${sonarProjectFile}"
                 steps.sh "echo sonar.links.ci=${steps.BUILD_URL} >> ${sonarProjectFile}"
                 if (changeInfo.isPullRequest) {
                     steps.sh "echo sonar.pullrequest.key=${steps.CHANGE_ID} >> ${sonarProjectFile}"
