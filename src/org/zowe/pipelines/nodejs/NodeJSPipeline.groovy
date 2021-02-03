@@ -886,7 +886,7 @@ class NodeJSPipeline extends GenericPipeline {
         createStage(name: 'Install Node Package Dependencies', stage: {
             if (arguments.nodeJsVersion && arguments.nvmDir) {
                 // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
-                steps.sh "source ${arguments.nvmDir}/nvm.sh && nvm install ${arguments.nodeJsVersion} && nvm use ${arguments.nodeJsVersion}"
+                steps.sh ". ${arguments.nvmDir}/nvm.sh && nvm install ${arguments.nodeJsVersion} && nvm use ${arguments.nodeJsVersion}"
                 steps.env.NODE_PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/lib/node_modules"
                 steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
             }
