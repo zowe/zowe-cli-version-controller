@@ -880,10 +880,17 @@ class NodeJSPipeline extends GenericPipeline {
      *     </dd>
      * </dl>
      */
-    void setup(NodeJSSetupArguments timeouts) {
-        super.setupGeneric(timeouts)
+    void setup(NodeJSSetupArguments arguments) {
+        super.setupGeneric(arguments)
 
         createStage(name: 'Install Node Package Dependencies', stage: {
+            if (arguments.nodeJsVersion && arguments.nvmDir) {
+                // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
+                steps.sh ". ${arguments.nvmDir}/nvm.sh && nvm install ${arguments.nodeJsVersion} && nvm use ${arguments.nodeJsVersion}"
+                steps.env.NODE_PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/lib/node_modules"
+                steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
+            }
+
             try {
                 // Keep track of when the default registry is used since it is only allowed to be used once
                 def didUseDefaultRegistry = false
@@ -973,7 +980,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkippable: false, timeout: timeouts.installDependencies)
+        }, isSkippable: false, timeout: arguments.installDependencies)
     }
 
     /**
@@ -1068,7 +1075,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                 def scannerHome = steps.tool 'sonar-scanner-4.0.0'
                 steps.withSonarQubeEnv('sonarcloud-server') {
-                    steps.sh "${scannerHome}/bin/sonar-scanner"
+                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
                 }
             }
         )

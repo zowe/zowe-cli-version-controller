@@ -27,4 +27,16 @@ class NodeJSSetupArguments extends GenericSetupArguments {
      * @default 5 Minutes
      */
     StageTimeout installDependencies = [time: 5, unit: TimeUnit.MINUTES]
+
+    /**
+     * Node.js version to install using NVM.
+     */
+    String nodeJsVersion
+
+    /**
+     * Path to NVM directory.
+     *
+     * @default {@code "/home/jenkins/.nvm"}
+     */
+    String nvmDir = "/home/jenkins/.nvm"
 }
