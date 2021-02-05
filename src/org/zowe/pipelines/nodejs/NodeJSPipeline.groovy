@@ -469,7 +469,7 @@ class NodeJSPipeline extends GenericPipeline {
                      */
                     if (System.currentTimeMillis() - startTime >= timeout.unit.toMillis(timeout.time)) {
                         steps.env.DEPLOY_APPROVER = TIMEOUT_APPROVE_ID
-                        steps.env.DEPLOY_VERSION = availableVersions[0]
+                        steps.env.DEPLOY_VERSION = availableVersions[0].split(" - ")[0]
                     } else {
                         throw exception
                     }
@@ -869,10 +869,17 @@ class NodeJSPipeline extends GenericPipeline {
      *     </dd>
      * </dl>
      */
-    void setup(NodeJSSetupArguments timeouts) {
-        super.setupGeneric(timeouts)
+    void setup(NodeJSSetupArguments arguments) {
+        super.setupGeneric(arguments)
 
         createStage(name: 'Install Node Package Dependencies', stage: {
+            if (arguments.nodeJsVersion && arguments.nvmDir) {
+                // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
+                steps.sh ". ${arguments.nvmDir}/nvm.sh && nvm install ${arguments.nodeJsVersion} && nvm use ${arguments.nodeJsVersion}"
+                steps.env.NODE_PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/lib/node_modules"
+                steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
+            }
+
             try {
                 // Keep track of when the default registry is used since it is only allowed to be used once
                 def didUseDefaultRegistry = false
@@ -960,7 +967,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 }
             }
-        }, isSkippable: false, timeout: timeouts.installDependencies)
+        }, isSkippable: false, timeout: arguments.installDependencies)
     }
 
     /**
@@ -1038,8 +1045,7 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 // append sonar.projectVersion, sonar.links.ci, and sonar.branch.name or sonar.pullrequest to sonar-project.properties
-                def packageJson = steps.readJSON file: 'package.json'
-                steps.sh "echo sonar.projectVersion=${packageJson.version} >> ${sonarProjectFile}"
+                steps.sh "echo sonar.projectVersion=${steps.env.DEPLOY_VERSION} >> ${sonarProjectFile}"
                 steps.sh "echo sonar.links.ci=${steps.BUILD_URL} >> ${sonarProjectFile}"
                 if (changeInfo.isPullRequest) {
                     steps.sh "echo sonar.pullrequest.key=${steps.CHANGE_ID} >> ${sonarProjectFile}"
@@ -1055,7 +1061,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                 def scannerHome = steps.tool 'sonar-scanner-4.0.0'
                 steps.withSonarQubeEnv('sonarcloud-server') {
-                    steps.sh "${scannerHome}/bin/sonar-scanner"
+                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
                 }
             }
         )
