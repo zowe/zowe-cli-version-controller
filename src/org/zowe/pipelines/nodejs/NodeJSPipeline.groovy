@@ -732,10 +732,6 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            if (isLernaMonorepo) {
-                _unlinkLocalPackageVersions()
-            }
-
             runForEachMonorepoPackage(LernaFilter.CHANGED) {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
@@ -1248,44 +1244,6 @@ expect {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
                 steps.dir(pkgInfo.location) {
                     body()
-                }
-            }
-        }
-    }
-
-    /*
-     * Unlink local package versions before publish. Replaces symlinked
-     * dependency versions "file:../[sibling]" with "X.Y.Z" in package.json.
-     */
-    protected void _unlinkLocalPackageVersions() {
-        def lernaPkgInfo = _buildLernaPkgInfo(LernaFilter.ALL)
-        def lernaPkgVersions = lernaPkgInfo.collectEntries { [it.name, it.version] }
-
-        for (pkgInfo in lernaPkgInfo) {
-            steps.dir(pkgInfo.location) {
-                def packageJSON = steps.readJSON file: "package.json"
-                def numVersioned = 0
-
-                if (packageJSON.dependencies != null) {
-                    for (def pkgName in packageJSON.dependencies.keySet()) {
-                        if (lernaPkgVersions.containsKey(pkgName) && packageJSON.dependencies[pkgName].startsWith("file:")) {
-                            packageJSON.dependencies[pkgName] = lernaPkgVersions[pkgName]
-                            numVersioned++
-                        }
-                    }
-                }
-
-                if (packageJSON.devDependencies != null) {
-                    for (def pkgName in packageJSON.devDependencies.keySet()) {
-                        if (lernaPkgVersions.containsKey(pkgName) && packageJSON.devDependencies[pkgName].startsWith("file:")) {
-                            packageJSON.devDependencies[pkgName] = lernaPkgVersions[pkgName]
-                            numVersioned++
-                        }
-                    }
-                }
-
-                if (numVersioned > 0) {
-                    steps.writeJSON file: "package.json", json: packageJSON, pretty: 2
                 }
             }
         }
