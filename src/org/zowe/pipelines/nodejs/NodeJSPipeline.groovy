@@ -1047,7 +1047,8 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * @return void
      */
-    void sonarScan() {
+    void sonarScan(Map arguments = [:]) {
+        NodeJSSonarScanArguments args = arguments
         createStage(
             name: "SonarCloud Scan",
             stage: {
@@ -1073,8 +1074,14 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 def scannerHome = steps.tool 'sonar-scanner-4.0.0'
-                steps.withSonarQubeEnv('sonarcloud-server') {
-                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
+                if (!args.credId) {
+                    steps.withSonarQubeEnv('sonarcloud-server') {
+                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
+                    }
+                } else {
+                    steps.withCredentials([steps.string(credentialsId: args.credId, variable: "SONAR_LOGIN")]) {
+                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner -Dsonar.login=\${SONAR_LOGIN}"
+                    }
                 }
             }
         )
