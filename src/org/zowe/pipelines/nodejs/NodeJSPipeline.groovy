@@ -1080,7 +1080,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } else {
                     steps.withCredentials([steps.string(credentialsId: args.credId, variable: "SONAR_LOGIN")]) {
-                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONAR_LOGIN}"
+                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner -Dsonar.login=\${SONAR_LOGIN}"
                     }
                 }
             }
