@@ -10,7 +10,7 @@
 
 package org.zowe.pipelines.nodejs.arguments
 
-import org.zowe.pipelines.generic.arguments.VersionStageArguments
+import org.zowe.pipelines.generic.arguments.GenericStageArguments
 
 /**
  * Represents the arguments available to the
