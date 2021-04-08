@@ -931,7 +931,7 @@ class NodeJSPipeline extends GenericPipeline {
                         // Update dependencies to have matching versions across all packages
                         def depList = branchProps.dependencies.keySet() + branchProps.devDependencies.keySet()
                         if (depList.size() > 0) {
-                            steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
+                            steps.sh "npx -y -- syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
                             steps.sh "npm install --package-lock-only"
                             // Rebuild list of changed packages to be deployed
                             _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
