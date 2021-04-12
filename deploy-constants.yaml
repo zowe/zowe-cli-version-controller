@@ -17,6 +17,9 @@ tags:
   lts: &ltsTags
     - "latest"
     - "zowe-v1-lts"
+  # next only
+  next: &next
+    - "next"
   # latest, LTS, and next
   npmTags: &npmTags
     - "latest"
@@ -51,6 +54,8 @@ packages:
     tags: *npmTags
   "zosmf-for-zowe-sdk":
     tags: *npmTags
+  "cli-test-utils":
+    tags: *next
   "cics-for-zowe-cli":
     tags: *ltsTags
   "db2-for-zowe-cli":
