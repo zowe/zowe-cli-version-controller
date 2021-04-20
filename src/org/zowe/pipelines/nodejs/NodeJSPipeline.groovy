@@ -505,7 +505,7 @@ class NodeJSPipeline extends GenericPipeline {
                     // the tag to point to an invalid commit hash.
                     steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --no-git-tag-version"
                 } else {
-                    steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
+                    steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
                 if (arguments.updateChangelogArgs) {
