@@ -58,13 +58,13 @@ packages:
   "cli-test-utils":
     tags: *nextTags
   "cics-for-zowe-cli":
-    tags: *ltsTags
+    tags: *npmTags
   "db2-for-zowe-cli":
-    tags: *ltsTags
+    tags: *npmTags
   "ims-for-zowe-cli":
-    tags: *ltsTags
+    tags: *npmTags
   "mq-for-zowe-cli":
-    tags: *ltsTags
+    tags: *npmTags
   "secure-credential-store-for-zowe-cli":
     tags: *ltsTags
   "tasks-for-zowe-cli":
