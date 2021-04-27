@@ -876,6 +876,10 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
             }
 
+            if (arguments.npmVersion) {
+                steps.sh "npm install -g npm@${arguments.npmVersion}"
+            }
+
             try {
                 // Keep track of when the default registry is used since it is only allowed to be used once
                 def didUseDefaultRegistry = false
