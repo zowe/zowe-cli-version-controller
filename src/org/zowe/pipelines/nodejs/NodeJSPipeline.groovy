@@ -505,7 +505,7 @@ class NodeJSPipeline extends GenericPipeline {
                     // the tag to point to an invalid commit hash.
                     steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --no-git-tag-version"
                 } else {
-                    steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --no-git-tag-version --yes"
+                    steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
                 if (arguments.updateChangelogArgs) {
@@ -1030,7 +1030,8 @@ class NodeJSPipeline extends GenericPipeline {
      *
      * @return void
      */
-    void sonarScan() {
+    void sonarScan(Map arguments = [:]) {
+        NodeJSSonarScanArguments args = arguments
         createStage(
             name: "SonarCloud Scan",
             stage: {
@@ -1056,8 +1057,14 @@ class NodeJSPipeline extends GenericPipeline {
                 }
 
                 def scannerHome = steps.tool 'sonar-scanner-4.0.0'
-                steps.withSonarQubeEnv('sonarcloud-server') {
-                    steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
+                if (!args.credId) {
+                    steps.withSonarQubeEnv('sonarcloud-server') {
+                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
+                    }
+                } else {
+                    steps.withCredentials([steps.string(credentialsId: args.credId, variable: "SONAR_LOGIN")]) {
+                        steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner -Dsonar.login=\${SONAR_LOGIN}"
+                    }
                 }
             }
         )
