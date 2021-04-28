@@ -39,4 +39,9 @@ class NodeJSSetupArguments extends GenericSetupArguments {
      * @default {@code "/home/jenkins/.nvm"}
      */
     String nvmDir = "/home/jenkins/.nvm"
+
+    /**
+     * NPM version to install (e.g., "^7")
+     */
+    String npmVersion
 }

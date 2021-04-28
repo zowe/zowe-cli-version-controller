@@ -571,21 +571,6 @@ class NodeJSPipeline extends GenericPipeline {
             }
 
             steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
-
-            if (isLernaMonorepo) {
-                // Bootstrap again to unhoist any dependencies missing from package-lock files
-                steps.sh "npx lerna bootstrap --no-ci"
-
-                // Remove dependencies from package.json files that would cause ELOCKVERIFY error
-                prunePackageJsonsBeforeAudit()
-
-                runForEachMonorepoPackage(LernaFilter.ALL) {
-                    steps.sh "npm audit ${arguments.dev ? "" : "--production"} --audit-level=${arguments.auditLevel} ${arguments.registry != "" ? "--registry ${arguments.registry}" : ""}"
-                }
-
-                // Revert package.json files to their old contents
-                steps.sh "git reset --hard"
-            }
         }
 
         // Create the stage and ensure that the first one is the stage of reference
@@ -891,6 +876,10 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
             }
 
+            if (arguments.npmVersion) {
+                steps.sh "npm install -g npm@${arguments.npmVersion}"
+            }
+
             try {
                 // Keep track of when the default registry is used since it is only allowed to be used once
                 def didUseDefaultRegistry = false
@@ -929,9 +918,7 @@ class NodeJSPipeline extends GenericPipeline {
                     branch = changeInfo.branchName
                 }
 
-                // For a Lerna monorepo, we skip the postinstall script "lerna bootstrap" here and run it later
-                def npmArgs = (isLernaMonorepo && protectedBranches.isProtected(branch)) ? "--ignore-scripts" : ""
-                steps.sh "npm install ${npmArgs}"
+                steps.sh "npm install"
 
                 if (isLernaMonorepo) {
                     for (filter in LernaFilter.values()) {
@@ -948,11 +935,11 @@ class NodeJSPipeline extends GenericPipeline {
                         // Update dependencies to have matching versions across all packages
                         def depList = branchProps.dependencies.keySet() + branchProps.devDependencies.keySet()
                         if (depList.size() > 0) {
-                            steps.sh "npx syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
+                            steps.sh "npx -y -- syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
+                            steps.sh "npm install --package-lock-only"
+                            // Rebuild list of changed packages to be deployed
+                            _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                         }
-                        steps.sh "npm install"
-                        // Rebuild list of changed packages to be deployed
-                        _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                     }
 
                     // Commits will be avoided on PRs
@@ -962,7 +949,7 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
                         if (isLernaMonorepo) {
                             runForEachMonorepoPackage(LernaFilter.ALL) {
-                                steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
+                                steps.sh "git add package.json --ignore-errors || exit 0"
                             }
                         }
                         gitCommit("Updating dependencies")
@@ -1268,45 +1255,6 @@ expect {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
                 steps.dir(pkgInfo.location) {
                     body()
-                }
-            }
-        }
-    }
-
-    /**
-     * Remove dependencies from package.json files that point to other packages
-     * in the same monorepo. This prevents ELOCKVERIFY errors when audit is run.
-     * See https://github.com/lerna/lerna/issues/1663#issuecomment-559010254
-     */
-    protected void prunePackageJsonsBeforeAudit() {
-        def lernaPkgInfo = _lernaPkgInfo[LernaFilter.ALL]
-        def lernaPkgNames = lernaPkgInfo.collect { it.name } as String[]
-
-        for (pkgInfo in lernaPkgInfo) {
-            steps.dir(pkgInfo.location) {
-                def packageJSON = steps.readJSON file: "package.json"
-                def numPruned = 0
-
-                if (packageJSON.dependencies != null) {
-                    for (def pkgName in packageJSON.dependencies.keySet()) {
-                        if (lernaPkgNames.contains(pkgName)) {
-                            packageJSON.dependencies.remove(pkgName)
-                            numPruned++
-                        }
-                    }
-                }
-
-                if (packageJSON.devDependencies != null) {
-                    for (def pkgName in packageJSON.devDependencies.keySet()) {
-                        if (lernaPkgNames.contains(pkgName)) {
-                            packageJSON.devDependencies.remove(pkgName)
-                            numPruned++
-                        }
-                    }
-                }
-
-                if (numPruned > 0) {
-                    steps.writeJSON file: "package.json", json: packageJSON, pretty: 2
                 }
             }
         }
