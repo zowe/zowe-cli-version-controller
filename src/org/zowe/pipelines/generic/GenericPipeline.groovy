@@ -218,12 +218,12 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
-            def jobOptions = [:]
+            def jobOptions = []
             args.jobParms.each { key, val ->
-                jobOptions.plus([name: key, value: val])
+                jobOptions.push(steps.string(name: key, value: val))
             }
 
-            def built = steps.build(job: args.jobName, parameters: [jobOptions])
+            def built = steps.build(job: args.jobName, parameters: jobOptions)
             steps.sh "mkdir .___temp___"
             steps.dir(".___temp___") {
                 steps.copyArtifacts(projectName: args.jobName, selector: specific(built.number))
