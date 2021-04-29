@@ -228,9 +228,9 @@ class GenericPipeline extends Pipeline {
         }
 
         // Create the stage and ensure that the first one is the stage of reference
-        Stage buildJobAndArchiveStage = createStage(args)
-        if (!_control.buildJobAndArchiveStage) {
-            _control.buildJobAndArchiveStage = buildJobAndArchiveStage
+        Stage buildJobAndArchive = createStage(args)
+        if (!_control.buildJobAndArchive) {
+            _control.buildJobAndArchive = buildJobAndArchive
         }
     }
 
