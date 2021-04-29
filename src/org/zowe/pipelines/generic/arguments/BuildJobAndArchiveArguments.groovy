@@ -10,8 +10,6 @@
 
 package org.zowe.pipelines.generic.arguments
 
-import org.zowe.pipelines.generic.arguments.GenericStageArguments
-
 /**
  * Represents the arguments available to the
  * {@link org.zowe.pipelines.generic.GenericPipeline#buildJobAndArchive(java.util.Map)} method.

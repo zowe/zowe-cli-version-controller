@@ -215,18 +215,6 @@ class GenericPipeline extends Pipeline {
 
         args.name = "Run: ${args.name}"
 
-        if (args.protectedOnly) {
-            args.shouldExecute = {
-                boolean shouldExecute = true
-
-                if (arguments.shouldExecute) {
-                    shouldExecute = arguments.shouldExecute()
-                }
-
-                return shouldExecute && _isProtectedBranch
-            }
-        }
-
         args.stage = { String stageName ->
             if (preSetupException) {
                 throw preSetupException
