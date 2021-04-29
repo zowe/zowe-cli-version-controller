@@ -218,7 +218,7 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
-            def jobOptions = []
+            def jobOptions = [:]
             args.jobParms.each { key, val ->
                 jobOptions.push([name: key, value: val])
             }
