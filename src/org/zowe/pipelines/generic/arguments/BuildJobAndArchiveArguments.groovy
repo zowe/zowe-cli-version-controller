@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-package org.zowe.pipelines.nodejs.arguments
+package org.zowe.pipelines.generic.arguments
 
 import org.zowe.pipelines.generic.arguments.GenericStageArguments
 
