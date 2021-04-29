@@ -14,7 +14,6 @@ import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.enums.StageStatus
-import org.zowe.pipelines.base.exceptions.PipelineException
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.generic.arguments.*
 import org.zowe.pipelines.generic.enums.BuildType
@@ -197,24 +196,45 @@ class GenericPipeline extends Pipeline {
     }
 
     void buildJobAndArchive(Map arguments = [:]) {
+        BuildJobAndArchiveStageException preSetupException
+
+        // Force build to only happen on success, this cannot be overridden
+        arguments.resultThreshold = ResultEnum.SUCCESS
+
         BuildJobAndArchiveArguments args = arguments
 
+        if (args.stage) {
+            preSetupException = new BuildJobAndArchiveStageException("arguments.stage is an invalid option for buildJobAndArchive", args.name)
+        }
+
         if (!args.jobName) {
-            throw new PipelineException("Job Name is a required parameter")
+            throw new BuildJobAndArchiveStageException("Job Name is a required parameter")
         }
 
         steps.echo "args.jobName = ${args.jobName}"
 
-        def built = steps.build(job: args.jobName, parameters: args.jobParms)
-        steps.sh "mkdir .___temp___"
-        steps.dir(".___temp___") {
-            steps.copyArtifacts(projectName: args.jobName, selector: specific(built.number))
-            steps.archiveArtifacts artifacts: "*"
+        args.name = "Run: ${args.name}"
+        args.stage = { String stageName ->
+            if (preSetupException) {
+                throw preSetupException
+            }
+
+            def built = steps.build(job: args.jobName, parameters: args.jobParms)
+            steps.sh "mkdir .___temp___"
+            steps.dir(".___temp___") {
+                steps.copyArtifacts(projectName: args.jobName, selector: specific(built.number))
+                steps.archiveArtifacts artifacts: "*"
+            }
+            steps.sh "rm -rf .___temp___"
         }
-        steps.sh "rm -rf .___temp___"
 
+
+        // Create the stage and ensure that the first one is the stage of reference
+        Stage buildJobAndArchive = createStage(args)
+        if (!_control.buildJobAndArchive) {
+            _control.buildJobAndArchive = buildJobAndArchive
+        }
         /*
-
             def built = build(job: 'Blackduck/Blackduck_MSD_Brightside_Common', parameters: [
                 [$class: 'StringParameterValue', name: 'ORG', value: 'MFD'],
                 [$class: 'StringParameterValue', name: 'REPO', value: 'endevor-brightside'],
