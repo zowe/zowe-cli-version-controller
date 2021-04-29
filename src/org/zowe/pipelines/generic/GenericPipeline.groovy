@@ -195,6 +195,17 @@ class GenericPipeline extends Pipeline {
         }
     }
 
+    void buildJobAndArchive(Map arguments = [:]) {
+        BuildJobAndArchiveArguments args = arguments
+
+        if (!args.jobName) {
+            throw new PipelineException("Job Name is a required parameter")
+        }
+
+        steps.echo "args.jobName = ${args.jobName}"
+
+    }
+
     /**
      * Creates a stage that will execute a version bump
      *
