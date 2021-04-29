@@ -220,7 +220,7 @@ class GenericPipeline extends Pipeline {
 
             def jobOptions = []
             args.jobParms.each { key, val ->
-                jobOptions.push([name: $key, value: $val])
+                jobOptions.push([name: key, value: val])
             }
 
             def built = steps.build(job: args.jobName, parameters: [jobOptions])
