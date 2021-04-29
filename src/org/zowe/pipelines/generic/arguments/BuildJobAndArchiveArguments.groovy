@@ -25,7 +25,7 @@ class BuildJobAndArchiveArguments extends GenericStageArguments {
     /**
      * The parameters to be sent to the job being triggered
      */
-    Map<String, Object> jobParms = [:]
+    Object jobParms = [:]
 
     /**
      * Specifies if the results of the remote job should be propagated
