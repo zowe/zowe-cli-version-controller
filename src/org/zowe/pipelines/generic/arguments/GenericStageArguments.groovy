@@ -24,4 +24,9 @@ class GenericStageArguments extends StageArguments {
      * for this argument will be provided in each command.</p>
      */
     Closure operation
+
+    /**
+     * Specifies if the stage should be executed only for protected branches
+     */
+    Boolean propectedOnly = false
 }
