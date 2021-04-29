@@ -211,8 +211,6 @@ class GenericPipeline extends Pipeline {
             throw new BuildJobAndArchiveStageException("Job Name is a required parameter")
         }
 
-        steps.echo "args.jobName = ${args.jobName}"
-
         args.name = "Run: ${args.name}"
 
         args.stage = { String stageName ->
@@ -229,29 +227,11 @@ class GenericPipeline extends Pipeline {
             steps.sh "rm -rf .___temp___"
         }
 
-
         // Create the stage and ensure that the first one is the stage of reference
-        Stage buildJobAndArchive = createStage(args)
-        if (!_control.buildJobAndArchive) {
-            _control.buildJobAndArchive = buildJobAndArchive
+        Stage buildJobAndArchiveStage = createStage(args)
+        if (!_control.buildJobAndArchiveStage) {
+            _control.buildJobAndArchiveStage = buildJobAndArchiveStage
         }
-        /*
-            def built = build(job: 'Blackduck/Blackduck_MSD_Brightside_Common', parameters: [
-                [$class: 'StringParameterValue', name: 'ORG', value: 'MFD'],
-                [$class: 'StringParameterValue', name: 'REPO', value: 'endevor-brightside'],
-                [$class: 'StringParameterValue', name: 'BRANCH', value: BRANCH_NAME],
-                [$class: 'StringParameterValue', name: 'PROJECT_NAME', value: 'MSD-Brightside-BroadcomPlugin-Endevor'],
-                [$class: 'StringParameterValue', name: 'PROJECT_VERSION_PREFIX', value: 'Endevor'],
-                [$class: 'BooleanParameterValue', name: 'REPORTS', value: true]
-            ]);
-            sh "mkdir ._temp"
-            dir("._temp") {
-                copyArtifacts(projectName: 'Blackduck/Blackduck_MSD_Brightside_Common', selector: specific("${built.number}"));
-                archiveArtifacts artifacts: 'MSD_Brightside*'
-            }
-            sh "rm -rf ._temp"
-        */
-
     }
 
     /**
