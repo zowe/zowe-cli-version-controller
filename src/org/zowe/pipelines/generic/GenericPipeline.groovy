@@ -14,6 +14,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import org.zowe.pipelines.base.Pipeline
 import org.zowe.pipelines.base.enums.ResultEnum
 import org.zowe.pipelines.base.enums.StageStatus
+import org.zowe.pipelines.base.exceptions.PipelineException
 import org.zowe.pipelines.base.models.Stage
 import org.zowe.pipelines.generic.arguments.*
 import org.zowe.pipelines.generic.enums.BuildType
@@ -203,6 +204,32 @@ class GenericPipeline extends Pipeline {
         }
 
         steps.echo "args.jobName = ${args.jobName}"
+
+        def built = steps.build(job: args.jobName, parameters: args.jobParms)
+        steps.sh "mkdir .___temp___"
+        steps.dir(".___temp___") {
+            steps.copyArtifacts(projectName: args.jobName, selector: specific(built.number))
+            steps.archiveArtifacts artifacts: "*"
+        }
+        steps.sh "rm -rf .___temp___"
+
+        /*
+
+            def built = build(job: 'Blackduck/Blackduck_MSD_Brightside_Common', parameters: [
+                [$class: 'StringParameterValue', name: 'ORG', value: 'MFD'],
+                [$class: 'StringParameterValue', name: 'REPO', value: 'endevor-brightside'],
+                [$class: 'StringParameterValue', name: 'BRANCH', value: BRANCH_NAME],
+                [$class: 'StringParameterValue', name: 'PROJECT_NAME', value: 'MSD-Brightside-BroadcomPlugin-Endevor'],
+                [$class: 'StringParameterValue', name: 'PROJECT_VERSION_PREFIX', value: 'Endevor'],
+                [$class: 'BooleanParameterValue', name: 'REPORTS', value: true]
+            ]);
+            sh "mkdir ._temp"
+            dir("._temp") {
+                copyArtifacts(projectName: 'Blackduck/Blackduck_MSD_Brightside_Common', selector: specific("${built.number}"));
+                archiveArtifacts artifacts: 'MSD_Brightside*'
+            }
+            sh "rm -rf ._temp"
+        */
 
     }
 
