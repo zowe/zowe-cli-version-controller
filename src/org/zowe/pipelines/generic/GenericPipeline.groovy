@@ -195,6 +195,38 @@ class GenericPipeline extends Pipeline {
         }
     }
 
+
+    /**
+     * Creates a stage that will trigger a generic job and archive any produced artifacts.
+     *
+     * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
+     * to this function will map to the {@link BuildJobAndArchiveArguments} class. </p>
+     *
+     * @Stages
+     * This method adds the following stage to your build:
+     * <dl>
+     *     <dt><b>Run: {@link BuildJobAndArchiveArguments#name}</b></dt>
+     *     <dd>
+     *         <p>Triggers the given job based on existing ID. The stage requires the copyrtifact plugin to be installed.
+     *         For more information on the plugin, visit https://plugins.jenkins.io/copyartifact/. The stage also ignores any
+     *         {@link BuildJobAndArchiveArguments#resultThreshold} provided and only runs on {@link ResultEnum#SUCCESS}.</p>
+     *     </dd>
+     * </dl>
+     *
+     * @Exceptions
+     *
+     * <p>
+     *     The following exceptions can be thrown by the stage:
+     *
+     *     <dl>
+     *         <dt><b>{@link BuildJobAndArchiveStageException}</b></dt>
+     *         <dd>When arguments.stage is provided. This is an invalid argument field for the operation.</dd>
+     *         <dd>When arguments.jobName is not provided. This is a required argument for triggering a remote job</dd>
+     *     </dl>
+     * </p>
+     *
+     * @param arguments A map of arguments to be applied to the {@link BuildJobAndArchiveArguments} used to define the stage.
+     */
     void buildJobAndArchive(Map arguments = [:]) {
         BuildJobAndArchiveStageException preSetupException
 
@@ -208,7 +240,7 @@ class GenericPipeline extends Pipeline {
         }
 
         if (!args.jobName) {
-            throw new BuildJobAndArchiveStageException("Job Name is a required parameter")
+            throw new BuildJobAndArchiveStageException("Job Name is a required parameter for buildJobAndArchive", args.name)
         }
 
         args.name = "Run: ${args.name}"
@@ -233,11 +265,7 @@ class GenericPipeline extends Pipeline {
             steps.sh "rm -rf .___temp___"
         }
 
-        // Create the stage and ensure that the first one is the stage of reference
-        Stage buildJobAndArchive = createStage(args)
-        if (!_control.buildJobAndArchive) {
-            _control.buildJobAndArchive = buildJobAndArchive
-        }
+        createStage(args)
     }
 
     /**

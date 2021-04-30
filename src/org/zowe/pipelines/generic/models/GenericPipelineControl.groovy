@@ -56,11 +56,4 @@ class GenericPipelineControl extends PipelineControl {
      * <p>This stage requires the build to be successful and for tests to be stable (if they were executed)</p>
      */
     Stage deploy
-
-    /**
-     * buildJobAndArchive stage.
-     *
-     * <p>This stage requires the build to be successful and for tests to be stable (if they were executed)</p>
-     */
-    Stage buildJobAndArchive
 }
