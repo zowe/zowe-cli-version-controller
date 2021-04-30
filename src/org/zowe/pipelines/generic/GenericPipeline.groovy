@@ -207,9 +207,13 @@ class GenericPipeline extends Pipeline {
      * <dl>
      *     <dt><b>Run: {@link BuildJobAndArchiveArguments#name}</b></dt>
      *     <dd>
-     *         <p>Triggers the given job based on existing ID. The stage requires the copyrtifact plugin to be installed.
-     *         For more information on the plugin, visit https://plugins.jenkins.io/copyartifact/. The stage also ignores any
-     *         {@link BuildJobAndArchiveArguments#resultThreshold} provided and only runs on {@link ResultEnum#SUCCESS}.</p>
+     *         <p>Triggers the given job based on existing ID.
+     *         The stage requires the <code>pipeline-build-step</code> plugin to be installed.
+     *         For more information on the plugins, visit https://www.jenkins.io/doc/pipeline/steps/pipeline-build-step/.
+     *         The stage requires the <code>copyartifact</code> plugin to be installed.
+     *         For more information on the plugins, visit https://plugins.jenkins.io/copyartifact/.
+     *         The stage also ignores any {@link BuildJobAndArchiveArguments#resultThreshold} provided and only runs on
+     *         {@link ResultEnum#SUCCESS}.</p>
      *     </dd>
      * </dl>
      *
@@ -256,7 +260,7 @@ class GenericPipeline extends Pipeline {
                 else jobOptions.push(steps.string(name: key, value: val))
             }
 
-            def built = steps.build(job: args.jobName, parameters: jobOptions)
+            def built = steps.build(job: args.jobName, parameters: jobOptions, propagate: args.propagate, wait:args.wait)
             steps.sh "mkdir .___temp___"
             steps.dir(".___temp___") {
                 steps.copyArtifacts(projectName: args.jobName, selector: steps.specific("${built.number}"))
