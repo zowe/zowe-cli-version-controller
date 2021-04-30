@@ -12,9 +12,9 @@ package org.zowe.pipelines.generic.arguments
 
 /**
  * Represents the arguments available to the
- * {@link org.zowe.pipelines.generic.GenericPipeline#buildJobAndArchive(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#buildJobAndArchiveArtifacts(java.util.Map)} method.
  */
-class BuildJobAndArchiveArguments extends GenericStageArguments {
+class BuildJobAndArchiveArtifactsArguments extends GenericStageArguments {
     /**
      * The name of the Stage
      */

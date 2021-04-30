@@ -14,15 +14,15 @@ import org.zowe.pipelines.base.exceptions.StageException
 
 /**
  * A generic exception that is thrown from within the
- * {@link org.zowe.pipelines.generic.GenericPipeline#buildGeneric(java.util.Map)} method.
+ * {@link org.zowe.pipelines.generic.GenericPipeline#buildJobAndArchiveArtifacts(java.util.Map)} method.
  */
-class BuildJobAndArchiveStageException extends StageException {
+class BuildJobAndArchiveArtifactsStageException extends StageException {
     /**
      * Create the exception.
      * @param message The exception message
      * @param stageName The name of the stage throwing the exception
      */
-    BuildJobAndArchiveStageException(String message, String stageName) {
+    BuildJobAndArchiveArtifactsStageException(String message, String stageName) {
         super(message, stageName)
     }
 }
