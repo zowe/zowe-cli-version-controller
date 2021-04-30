@@ -200,19 +200,19 @@ class GenericPipeline extends Pipeline {
      * Creates a stage that will trigger a generic job and archive any produced artifacts.
      *
      * <p>Calling this function will add the following stage to your Jenkins pipeline. Arguments passed
-     * to this function will map to the {@link BuildJobAndArchiveArguments} class. </p>
+     * to this function will map to the {@link BuildJobAndArchiveArtifactsArguments} class. </p>
      *
      * @Stages
      * This method adds the following stage to your build:
      * <dl>
-     *     <dt><b>Run: {@link BuildJobAndArchiveArguments#name}</b></dt>
+     *     <dt><b>Run: {@link BuildJobAndArchiveArtifactsArguments#name}</b></dt>
      *     <dd>
      *         <p>Triggers the given job based on existing ID.
      *         The stage requires the <code>pipeline-build-step</code> plugin to be installed.
      *         For more information on the plugins, visit https://www.jenkins.io/doc/pipeline/steps/pipeline-build-step/.
      *         The stage requires the <code>copyartifact</code> plugin to be installed.
      *         For more information on the plugins, visit https://plugins.jenkins.io/copyartifact/.
-     *         The stage also ignores any {@link BuildJobAndArchiveArguments#resultThreshold} provided and only runs on
+     *         The stage also ignores any {@link BuildJobAndArchiveArtifactsArguments#resultThreshold} provided and only runs on
      *         {@link ResultEnum#SUCCESS}.</p>
      *     </dd>
      * </dl>
@@ -223,28 +223,28 @@ class GenericPipeline extends Pipeline {
      *     The following exceptions can be thrown by the stage:
      *
      *     <dl>
-     *         <dt><b>{@link BuildJobAndArchiveStageException}</b></dt>
+     *         <dt><b>{@link BuildJobAndArchiveArtifactsStageException}</b></dt>
      *         <dd>When arguments.stage is provided. This is an invalid argument field for the operation.</dd>
      *         <dd>When arguments.jobName is not provided. This is a required argument for triggering a remote job</dd>
      *     </dl>
      * </p>
      *
-     * @param arguments A map of arguments to be applied to the {@link BuildJobAndArchiveArguments} used to define the stage.
+     * @param arguments A map of arguments to be applied to the {@link BuildJobAndArchiveArtifactsArguments} used to define the stage.
      */
-    void buildJobAndArchive(Map arguments = [:]) {
-        BuildJobAndArchiveStageException preSetupException
+    void buildJobAndArchiveArtifacts(Map arguments = [:]) {
+        BuildJobAndArchiveArtifactsStageException preSetupException
 
         // Force build to only happen on success, this cannot be overridden
         arguments.resultThreshold = ResultEnum.SUCCESS
 
-        BuildJobAndArchiveArguments args = arguments
+        BuildJobAndArchiveArtifactsArguments args = arguments
 
         if (args.stage) {
-            preSetupException = new BuildJobAndArchiveStageException("arguments.stage is an invalid option for buildJobAndArchive", args.name)
+            preSetupException = new BuildJobAndArchiveArtifactsStageException("arguments.stage is an invalid option for buildJobAndArchiveArtifacts", args.name)
         }
 
         if (!args.jobName) {
-            throw new BuildJobAndArchiveStageException("Job Name is a required parameter for buildJobAndArchive", args.name)
+            throw new BuildJobAndArchiveArtifactsStageException("Job Name is a required parameter for buildJobAndArchiveArtifacts", args.name)
         }
 
         args.name = "Run: ${args.name}"
@@ -264,7 +264,7 @@ class GenericPipeline extends Pipeline {
             steps.sh "mkdir .___temp___"
             steps.dir(".___temp___") {
                 steps.copyArtifacts(projectName: args.jobName, selector: steps.specific("${built.number}"))
-                steps.archiveArtifacts artifacts: "*"
+                steps.archiveArtifacts artifacts: "*", allowEmptyArchive: true
             }
             steps.sh "rm -rf .___temp___"
         }
