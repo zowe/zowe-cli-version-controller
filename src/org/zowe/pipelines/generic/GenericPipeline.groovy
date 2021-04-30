@@ -254,6 +254,24 @@ class GenericPipeline extends Pipeline {
                 throw preSetupException
             }
 
+            def jobOptions
+            switch(args.jobParms.getClass()) {
+                case java.util.LinkedHashMap:
+                    jobOptions = []
+                    args.jobParms.each { key, val ->
+                        if (val == true || val == false) jobOptions.push(steps.booleanParam(name: key, value: val))
+                        else jobOptions.push(steps.string(name: key, value: val))
+                    }
+                break
+                case java.util.ArrayList:
+                    jobOptions = args.jobParms
+                break
+                default:
+                    throw new BuildJobAndArchiveArtifactsStageException(
+                        "Job Parameters of type ${args.jobParms.getClass()} not recognized by buildJobAndArchiveArtifacts", args.name)
+                break
+            }
+
             def jobOptions = []
             args.jobParms.each { key, val ->
                 if (val == true || val == false) jobOptions.push(steps.booleanParam(name: key, value: val))
