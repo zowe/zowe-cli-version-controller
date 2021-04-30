@@ -272,12 +272,6 @@ class GenericPipeline extends Pipeline {
                 break
             }
 
-            def jobOptions = []
-            args.jobParms.each { key, val ->
-                if (val == true || val == false) jobOptions.push(steps.booleanParam(name: key, value: val))
-                else jobOptions.push(steps.string(name: key, value: val))
-            }
-
             def built = steps.build(job: args.jobName, parameters: jobOptions, propagate: args.propagate, wait:args.wait)
             steps.dir(steps.pwd(tmp: true)) {
                 steps.sh "mkdir .___temp___"
