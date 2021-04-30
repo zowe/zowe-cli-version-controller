@@ -33,7 +33,7 @@ class BuildJobAndArchiveArtifactsArguments extends GenericStageArguments {
     /**
      * Specifies if the results of the remote job should be propagated
      */
-    Boolean propagate = false
+    Boolean propagate = true
 
     /**
      * Specifies if we should wait for the downstream job to finish
