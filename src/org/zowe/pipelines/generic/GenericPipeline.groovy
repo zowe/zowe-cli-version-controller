@@ -227,7 +227,7 @@ class GenericPipeline extends Pipeline {
             def built = steps.build(job: args.jobName, parameters: jobOptions)
             steps.sh "mkdir .___temp___"
             steps.dir(".___temp___") {
-                steps.copyArtifacts(projectName: args.jobName, selector: specific("${built.number}"))
+                steps.copyArtifacts(projectName: args.jobName, selector: steps.specific(built.number))
                 steps.archiveArtifacts artifacts: "*"
             }
             steps.sh "rm -rf .___temp___"
