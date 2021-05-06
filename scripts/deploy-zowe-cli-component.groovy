@@ -153,7 +153,7 @@ node('ca-jenkins-agent') {
       details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
 
       if (params.RECIPIENTS_LIST != "") {
-        recipients = "${params.RECIPIENTS_LIST}, cc:fernando.rijocedeno@broadcom.com"
+        recipients = "${params.RECIPIENTS_LIST}, cc:andrew.harn@broadcom.com, cc:timothy.johnson@broadcom.com, cc:fernando.rijocedeno@broadcom.com"
       }
 
       if (recipients != "") {
