@@ -11,7 +11,7 @@
 /**
  * List of people who will get all emails for master builds
  */
-def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
+def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom.com, fernando.rijocedeno@broadcom.com"
 
 /**
  * Options for the pipeline
@@ -43,7 +43,7 @@ def getFileName(isRepo, name, tempEnv, pkgTag, format = 'json') {
     return "repo.$name.$tempEnv.$pkgTag.$format"
   } else {
     return "pkg.$name.$tempEnv.$pkgTag.$format"
-  } 
+  }
 }
 
 def _reportHelper(isRepo, name, pkgJson, pkgTag) {

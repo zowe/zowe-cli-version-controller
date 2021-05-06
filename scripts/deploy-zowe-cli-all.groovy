@@ -11,7 +11,7 @@
 /**
  * List of people who will get all emails for master builds
  */
-def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
+def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom.com, fernando.rijocedeno@broadcom.com"
 
 def deployTags(pkgName, props) {
   return {
