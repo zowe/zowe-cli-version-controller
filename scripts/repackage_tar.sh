@@ -10,8 +10,6 @@
 #
 ###
 
-set -ex
-
 die () {
     echo "$@"
     exit 1
@@ -39,8 +37,6 @@ node -e "package = require('./package.json');
 mv package.json ../../$tarfile_package.json
 # Replace package json with our new one
 mv package_new.json package.json
-
-ls -la
 
 # Update npm-shrinkwrap.json if necessary
 if [ -e "npm-shrinkwrap.json" ]; then
