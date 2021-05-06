@@ -34,7 +34,7 @@ node -e "package = require('./package.json');
     package.publishConfig.registry='$registry';
     package.version='$newversion';
     delete package.scripts.prepare;
-    require('fs').writeFile('package_new.json', JSON.stringify(package, null, 4), 'utf8')"
+    require('fs').writeFileSync('package_new.json', JSON.stringify(package, null, 2), 'utf8')"
 # Move the old package JSON to build dir so we can publish as a Jenkins artifact?
 mv package.json ../../$tarfile_package.json
 # Replace package json with our new one
