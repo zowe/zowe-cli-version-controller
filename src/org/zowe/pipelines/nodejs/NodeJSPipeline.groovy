@@ -790,7 +790,7 @@ class NodeJSPipeline extends GenericPipeline {
                         dir("smoke-test") {
                             steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag}"
                             def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
-                            if (packageJSON.version !== steps.env.DEPLOY_VERSION) {
+                            if (packageJSON.version != steps.env.DEPLOY_VERSION) {
                                 steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
                             }
                             deleteDir()
