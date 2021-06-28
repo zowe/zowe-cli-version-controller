@@ -72,6 +72,10 @@ class NodeJSProtectedBranch extends ProtectedBranch {
 
     /**
      * A list of additional tags that will be applied when the branch is published.
+     *
+     * <p>Specify tags without the "@" in front. Examples: "zowe-v1-lts", "next". For a monorepo,
+     * you can also specify tags for a specific package name (e.g., "@zowe/cli-test-utils@next").
+     * </p>
      */
     String[] aliasTags = []
 }

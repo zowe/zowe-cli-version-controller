@@ -784,6 +784,14 @@ class NodeJSPipeline extends GenericPipeline {
                     // Apply alias tags, even if no new version was published
                     try {
                         for (String tag in branch.aliasTags) {
+                            if (tag.contains("@")) {
+                                def splitIndex = tag.lastIndexOf("@")
+                                if (tag.substring(0, splitIndex) == steps.env.DEPLOY_PACKAGE) {
+                                    tag = tag.substring(splitIndex + 1)
+                                } else {
+                                    continue
+                                }
+                            }
                             steps.sh "npm dist-tag add ${steps.env.DEPLOY_PACKAGE}@${steps.env.DEPLOY_VERSION} ${tag}"
                         }
                     } catch (Exception e) {
