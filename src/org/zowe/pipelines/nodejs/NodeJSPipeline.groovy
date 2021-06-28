@@ -780,6 +780,22 @@ class NodeJSPipeline extends GenericPipeline {
                         to: admins.emailList,
                         addProviders: false
                     )
+
+                    if (deployArguments.smokeTest) {
+                        steps.echo "Performing smoke test to verify that deployed package can be installed"
+
+                        // Wait for a second to give NPM registry time to update package metadata
+                        steps.sleep time: 1000, unit: TimeUnit.MILLISECONDS
+
+                        dir("smoke-test") {
+                            steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag}"
+                            def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
+                            if (packageJSON.version !== steps.env.DEPLOY_VERSION) {
+                                steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
+                            }
+                            deleteDir()
+                        }
+                    }
                 } finally {
                     // Apply alias tags, even if no new version was published
                     try {

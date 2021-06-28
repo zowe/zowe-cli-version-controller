@@ -25,6 +25,13 @@ class DeployStageArguments extends GenericStageArguments {
     String name = "Package"
 
     /**
+     * If true, an automatic install test will be performed after deploying a new package.
+     *
+     * @default {@code true}
+     */
+    Boolean smokeTest = true
+
+    /**
      * The custom login operation.
      *
      * <p>This closure is used by the deploy stage method to perform any required login operations.
