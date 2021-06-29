@@ -787,13 +787,13 @@ class NodeJSPipeline extends GenericPipeline {
                         // Wait for a second to give NPM registry time to update package metadata
                         steps.sleep time: 1000, unit: TimeUnit.MILLISECONDS
 
-                        dir("smoke-test") {
+                        steps.dir("smoke-test") {
                             steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag}"
                             def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
                             if (packageJSON.version != steps.env.DEPLOY_VERSION) {
                                 steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
                             }
-                            deleteDir()
+                            steps.deleteDir()
                         }
                     }
                 } finally {
