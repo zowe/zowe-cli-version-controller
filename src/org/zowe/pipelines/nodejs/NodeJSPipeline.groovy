@@ -781,7 +781,7 @@ class NodeJSPipeline extends GenericPipeline {
                         addProviders: false
                     )
 
-                    if (deployArguments.smokeTest) {
+                    if (deployArguments.smokeTest != false) {
                         steps.echo "Performing smoke test to verify that deployed package can be installed"
 
                         // Wait for a second to give NPM registry time to update package metadata
