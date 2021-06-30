@@ -70,6 +70,7 @@ def OLD_PKG_VER = ""
 def VERSIONS_MATCH = true
 
 import java.text.SimpleDateFormat;
+import java.util.concurrent.TimeUnit
 
 node('ca-jenkins-agent') {
   try {
@@ -138,7 +139,7 @@ node('ca-jenkins-agent') {
           def installError
           dir(pwd(tmp: true)) {
             try {
-              sh "npm install ${CONST.scope}/${params.PKG_NAME}@${PKG_TAG} --registry ${CONST.distRegistry}"
+              sh "npm install ${CONST.scope}/${params.PKG_NAME}@${PKG_TAG} --${CONST.scope}:registry=${CONST.distRegistry}"
             } catch (error) {
               installError = error
             }
