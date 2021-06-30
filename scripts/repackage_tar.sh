@@ -43,7 +43,7 @@ npmDeps=`node -e "package = require('./package.json');
     Object.entries(package.dependencies).forEach(([name, version]) => console.log(name + '@' + version));"`
 for pkgSpec in $npmDeps; do
     echo "Validating dependency $pkgSpec..."
-    npm view $pkgSpec --registry $registry || exit 1
+    npm view $pkgSpec || exit 1
 done
 
 # Update npm-shrinkwrap.json if necessary
