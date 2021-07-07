@@ -928,7 +928,11 @@ class NodeJSPipeline extends GenericPipeline {
                     branch = changeInfo.branchName
                 }
 
-                steps.sh "npm install"
+                if (arguments.customInstallScript) {
+                    steps.sh "npm run ${arguments.customInstallScript}"
+                } else {
+                    steps.sh "npm install"
+                }
 
                 if (isLernaMonorepo) {
                     for (filter in LernaFilter.values()) {
