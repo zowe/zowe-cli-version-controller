@@ -734,7 +734,7 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            (isLernaMonorepo ? runForEachMonorepoPackage(LernaFilter.CHANGED) : wrapInDir(deployArguments.inDir)) {
+            def innerOperation = {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
@@ -804,6 +804,12 @@ class NodeJSPipeline extends GenericPipeline {
                     _logoutOfRegistry(publishConfig)
                     steps.echo "Deploy Complete, please check this step for errors"
                 }
+            }
+
+            if (isLernaMonorepo) {
+                runForEachMonorepoPackage(LernaFilter.CHANGED, innerOperation)
+            } else {
+                wrapInDir(deployArguments.inDir, innerOperation)
             }
         }
 
