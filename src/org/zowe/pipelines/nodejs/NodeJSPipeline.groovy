@@ -505,7 +505,9 @@ class NodeJSPipeline extends GenericPipeline {
                     // the tag to point to an invalid commit hash.
                     steps.sh "npm version ${steps.env.DEPLOY_VERSION} --allow-same-version --no-git-tag-version"
                 } else {
-                    steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
+                    wrapInDir(arguments.inDir) {
+                        steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
+                    }
                 }
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
                 if (arguments.updateChangelogArgs) {
@@ -732,7 +734,7 @@ class NodeJSPipeline extends GenericPipeline {
                 throw deployException
             }
 
-            runForEachMonorepoPackage(LernaFilter.CHANGED) {
+            (isLernaMonorepo ? runForEachMonorepoPackage(LernaFilter.CHANGED) : wrapInDir(deployArguments.inDir)) {
                 // Login to the registry
                 def npmRegistry = steps.sh returnStdout: true,
                         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
@@ -1253,8 +1255,6 @@ expect {
      *
      * @param filter Specify how package list should be filtered.
      * @param body Closure to run for each package
-     *
-     * @Note The onlyIfChanged param has no effect for single package repos.
      */
     protected void runForEachMonorepoPackage(LernaFilter filter, Closure body) {
         if (!isLernaMonorepo) {
@@ -1265,6 +1265,22 @@ expect {
                 steps.dir(pkgInfo.location) {
                     body()
                 }
+            }
+        }
+    }
+
+    /**
+     * Run a closure inside a specific directory, if one is specified.
+     *
+     * @param inDir The directory to enter
+     * @param body Closure to run
+     */
+    protected void wrapInDir(String inDir, Closure body) {
+        if (!inDir) {
+            body()
+        } else {
+            steps.dir(inDir) {
+                body()
             }
         }
     }

@@ -25,6 +25,11 @@ class DeployStageArguments extends GenericStageArguments {
     String name = "Package"
 
     /**
+     * If specified, the deploy stage will run in this project subdirectory.
+     */
+    String inDir
+
+    /**
      * The custom login operation.
      *
      * <p>This closure is used by the deploy stage method to perform any required login operations.
