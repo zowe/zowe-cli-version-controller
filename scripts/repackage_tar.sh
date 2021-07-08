@@ -38,6 +38,14 @@ mv package.json ../../$tarfile_package.json
 # Replace package json with our new one
 mv package_new.json package.json
 
+# Check that all dependencies are valid
+npmDeps=`node -e "package = require('./package.json');
+    Object.entries(package.dependencies).forEach(([name, version]) => console.log(name + '@' + version));"`
+for pkgSpec in $npmDeps; do
+    echo "Validating dependency $pkgSpec..."
+    npm view $pkgSpec || exit 1
+done
+
 # Update npm-shrinkwrap.json if necessary
 if [ -e "npm-shrinkwrap.json" ]; then
     # Create a production environment (taking in consideration the npm-shrinkwrap)
