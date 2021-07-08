@@ -38,4 +38,10 @@ class DeployStageArguments extends GenericStageArguments {
      * Additional documentation for this argument will be provided in each command.</p>
      */
     Closure customLogin
+
+    /**
+     * The custom smoke test operation. If specified, this will override the
+     * default smoke test that runs when `smokeTest = true`.
+     */
+    Closure customSmokeTest
 }

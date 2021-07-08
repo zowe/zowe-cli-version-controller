@@ -781,25 +781,23 @@ class NodeJSPipeline extends GenericPipeline {
                         addProviders: false
                     )
 
-                    if (deployArguments.smokeTest != false) {
+                    if (deployArguments.smokeTest != false || deployArguments.customSmokeTest) {
                         steps.echo "Performing smoke test to verify that deployed package can be installed"
 
                         // Wait for a second to give NPM registry time to update package metadata
                         steps.sleep time: 1000, unit: TimeUnit.MILLISECONDS
 
-                        // Temporarily disable global .npmrc
-                        steps.sh "mv ~/.npmrc ~/.npmrc.bak"
-
                         steps.dir(steps.pwd(tmp: true)) {
-                            steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --registry ${publishConfig.url}"
-                            def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
-                            if (packageJSON.version != steps.env.DEPLOY_VERSION) {
-                                steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
+                            if (deployArguments.customSmokeTest) {
+                                deployArguments.customSmokeTest()
+                            } else {
+                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --registry ${publishConfig.url}"
+                                def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
+                                if (packageJSON.version != steps.env.DEPLOY_VERSION) {
+                                    steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
+                                }
                             }
                         }
-
-                        // Restore global .npmrc
-                        steps.sh "mv ~/.npmrc.bak ~/.npmrc"
                     }
                 } finally {
                     // Apply alias tags, even if no new version was published
