@@ -22,4 +22,9 @@ class NodeJSVersionStageArguments extends VersionStageArguments {
      * with them.
      */
     Map<String, String> updateChangelogArgs
+
+    /**
+     * If specified, the version stage will run in this project subdirectory.
+     */
+    String inDir
 }

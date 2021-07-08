@@ -32,6 +32,11 @@ class DeployStageArguments extends GenericStageArguments {
     Boolean smokeTest = true
 
     /**
+     * If specified, the deploy stage will run in this project subdirectory.
+     */
+    String inDir
+
+    /**
      * The custom login operation.
      *
      * <p>This closure is used by the deploy stage method to perform any required login operations.

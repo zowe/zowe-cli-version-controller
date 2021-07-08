@@ -44,4 +44,10 @@ class NodeJSSetupArguments extends GenericSetupArguments {
      * NPM version to install (e.g., "^7")
      */
     String npmVersion
+
+    /**
+     * NPM script to use for installing dependencies (e.g., "install:all").
+     * If undefined, the default behavior is to run "npm install".
+     */
+    String customInstallScript
 }
