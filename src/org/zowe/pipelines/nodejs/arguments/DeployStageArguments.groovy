@@ -25,6 +25,13 @@ class DeployStageArguments extends GenericStageArguments {
     String name = "Package"
 
     /**
+     * If true, an automatic install test will be performed after deploying a new package.
+     *
+     * @default {@code true}
+     */
+    Boolean smokeTest = true
+
+    /**
      * If specified, the deploy stage will run in this project subdirectory.
      */
     String inDir
@@ -36,4 +43,10 @@ class DeployStageArguments extends GenericStageArguments {
      * Additional documentation for this argument will be provided in each command.</p>
      */
     Closure customLogin
+
+    /**
+     * The custom smoke test operation. If specified, this will override the
+     * default smoke test that runs when `smokeTest = true`.
+     */
+    Closure customSmokeTest
 }
