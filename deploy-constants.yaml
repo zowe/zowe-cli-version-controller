@@ -68,8 +68,8 @@ packages:
   "secure-credential-store-for-zowe-cli":
     tags: *ltsTags
   "tasks-for-zowe-cli":
-    tags: *latest
+    tags: *nextTags
   "zos-ftp-for-zowe-cli":
     tags: *ltsTags
   "zos-make-for-zowe-cli":
-    tags: *latest
+    tags: *nextTags
