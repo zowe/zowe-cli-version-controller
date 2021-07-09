@@ -789,7 +789,7 @@ class NodeJSPipeline extends GenericPipeline {
                         // Wait for a second to give NPM registry time to update package metadata
                         steps.sleep time: 1000, unit: TimeUnit.MILLISECONDS
 
-                        steps.dir(steps.pwd(tmp: true)) {
+                        steps.dir("/tmp/${steps.env.BUILD_TAG}") {
                             if (deployArguments.customSmokeTest) {
                                 deployArguments.customSmokeTest()
                             } else {
@@ -799,6 +799,8 @@ class NodeJSPipeline extends GenericPipeline {
                                     steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
                                 }
                             }
+
+                            steps.deleteDir()
                         }
                     }
                 } finally {
