@@ -789,7 +789,7 @@ class NodeJSPipeline extends GenericPipeline {
                         // Wait for a second to give NPM registry time to update package metadata
                         steps.sleep time: 1000, unit: TimeUnit.MILLISECONDS
 
-                        steps.dir("/tmp/${BUILD_TAG}") {
+                        steps.dir("/tmp/${steps.env.BUILD_TAG}") {
                             if (deployArguments.customSmokeTest) {
                                 deployArguments.customSmokeTest()
                             } else {
