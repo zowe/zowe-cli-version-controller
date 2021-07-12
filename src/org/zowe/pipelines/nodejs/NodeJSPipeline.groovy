@@ -805,6 +805,8 @@ class NodeJSPipeline extends GenericPipeline {
                             steps.deleteDir()
                         }
                     }
+                } catch (Exception e) {
+                    // Do nothing
                 } finally {
                     // Apply alias tags, even if no new version was published
                     try {
