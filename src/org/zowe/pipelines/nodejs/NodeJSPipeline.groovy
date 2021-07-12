@@ -794,7 +794,7 @@ class NodeJSPipeline extends GenericPipeline {
                                 deployArguments.customSmokeTest()
                             } else {
                                 def pScope = steps.env.DEPLOY_PACKAGE.startsWith("@") ? "${steps.env.DEPLOY_PACKAGE.split("/")[0]}:" : ""
-                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --${dScope}registry ${publishConfig.url}"
+                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --${pScope}registry ${publishConfig.url}"
                                 def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
                                 if (packageJSON.version != steps.env.DEPLOY_VERSION) {
                                     steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
@@ -831,7 +831,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (!isLernaMonorepo) {
                 wrapInDir(deployArguments.inDir, innerOperation)
             } else {
-                runForEachMonorepoPackage(LernaFilter.CHANGED, innerOperation)
+                runForEachMonorepoPackage(LernaFilter.ALL, innerOperation)
             }
         }
 
@@ -1294,6 +1294,7 @@ expect {
         } else {
             for (pkgInfo in _lernaPkgInfo[filter]) {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
+                steps.env.DEPLOY_VERSION = pkgInfo.version
                 steps.dir(pkgInfo.location) {
                     body()
                 }
