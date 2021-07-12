@@ -793,7 +793,8 @@ class NodeJSPipeline extends GenericPipeline {
                             if (deployArguments.customSmokeTest) {
                                 deployArguments.customSmokeTest()
                             } else {
-                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --registry ${publishConfig.url}"
+                                def pScope = steps.env.DEPLOY_PACKAGE.startsWith("@") ? "${steps.env.DEPLOY_PACKAGE.split("/")[0]}:" : ""
+                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --${dScope}registry ${publishConfig.url}"
                                 def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
                                 if (packageJSON.version != steps.env.DEPLOY_VERSION) {
                                     steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
