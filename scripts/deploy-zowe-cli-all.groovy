@@ -47,7 +47,7 @@ node('ca-jenkins-agent') {
       }
     }
     parallel(
-      "a": { parallel(buildStages) }
+      "a": { parallel(buildStages) },
       "b": { buildGroupStages.each { parallel(it) } }
     )
   } catch (e) {
