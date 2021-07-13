@@ -70,7 +70,6 @@ def OLD_PKG_VER = ""
 def VERSIONS_MATCH = true
 
 import java.text.SimpleDateFormat;
-import java.util.concurrent.TimeUnit
 
 node('ca-jenkins-agent') {
   try {
@@ -131,7 +130,7 @@ node('ca-jenkins-agent') {
           echo "Waiting for published version to appear on NPM registry"
           def taggedVersion
           while (taggedVersion != PKG_VERSION) {
-            sleep time: 1000, unit: TimeUnit.MILLISECONDS
+            sleep time: 1000, unit: 'MILLISECONDS'
             taggedVersion = sh(returnStdout: true, script: "npm view ${CONST.scope}/${params.PKG_NAME}@${PKG_TAG} version").trim()
           }
 
