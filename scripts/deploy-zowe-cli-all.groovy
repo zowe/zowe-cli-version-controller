@@ -46,10 +46,10 @@ node('ca-jenkins-agent') {
         }
       }
     }
-    parallel {
-      parallel(buildStages)
-      buildGroupStages.each { parallel(it) }
-    }
+    parallel(
+      "a": { parallel(buildStages) }
+      "b": { buildGroupStages.each { parallel(it) } }
+    )
   } catch (e) {
     currentBuild.result = "FAILURE"
     error "${e.getMessage()}"
