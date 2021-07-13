@@ -37,7 +37,7 @@ node('ca-jenkins-agent') {
         buildStages[0].put("@zowe/${pkgName}", deployTags(pkgName, props))
       } else {
         props.eachWithIndex { packages, idx ->
-          if (buildStages.size <= idx) {
+          if (buildStages.size() <= idx) {
             buildStages.add([:])
           }
           packages.each { subPkgName, subProps ->
