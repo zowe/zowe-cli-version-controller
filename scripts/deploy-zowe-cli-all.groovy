@@ -27,6 +27,7 @@ def deployTags(pkgName, props) {
       }
     }
   } else {
+    echo packages.toString()
     return {
       props.each { packages ->
         def buildStages = [:]
