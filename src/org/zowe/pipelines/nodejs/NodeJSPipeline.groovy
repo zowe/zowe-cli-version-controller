@@ -225,7 +225,7 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.archiveArtifacts archiveName
                         steps.sh "rm -f $archiveName"
                     } else {
-                        for (pkgInfo in _lernaPkgInfo[LernaFilter.ALL]) {
+                        for (pkgInfo in _buildLernaPkgInfo(LernaFilter.ALL)) {
                             // Replace special file character names
                             def name = pkgInfo.name.replaceAll("@", "").replaceAll("/", "-")
 
@@ -509,6 +509,7 @@ class NodeJSPipeline extends GenericPipeline {
                 } else {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
                 }
+
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
                 if (arguments.updateChangelogArgs) {
                     this._updateChangelog(arguments.updateChangelogArgs as ChangelogStageArguments)
@@ -793,7 +794,8 @@ class NodeJSPipeline extends GenericPipeline {
                             if (deployArguments.customSmokeTest) {
                                 deployArguments.customSmokeTest()
                             } else {
-                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} --registry ${publishConfig.url}"
+                                def pScope = steps.env.DEPLOY_PACKAGE.startsWith("@") ? "--${steps.env.DEPLOY_PACKAGE.split("/")[0]}:registry=" : "--registry "
+                                steps.sh "npm install ${steps.env.DEPLOY_PACKAGE}@${branch.tag} ${pScope}${publishConfig.url}"
                                 def packageJSON = steps.readJSON file: "node_modules/${steps.env.DEPLOY_PACKAGE}/package.json"
                                 if (packageJSON.version != steps.env.DEPLOY_VERSION) {
                                     steps.error "Version ${packageJSON.version} was installed instead of the deployed version"
@@ -803,6 +805,8 @@ class NodeJSPipeline extends GenericPipeline {
                             steps.deleteDir()
                         }
                     }
+                } catch (Exception e) {
+                    // Do nothing
                 } finally {
                     // Apply alias tags, even if no new version was published
                     try {
@@ -830,7 +834,7 @@ class NodeJSPipeline extends GenericPipeline {
             if (!isLernaMonorepo) {
                 wrapInDir(deployArguments.inDir, innerOperation)
             } else {
-                runForEachMonorepoPackage(LernaFilter.CHANGED, innerOperation)
+                runForEachMonorepoPackage(LernaFilter.ALL, innerOperation)
             }
         }
 
@@ -961,12 +965,6 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npm install"
                 }
 
-                if (isLernaMonorepo) {
-                    for (filter in LernaFilter.values()) {
-                        _lernaPkgInfo[filter] = _buildLernaPkgInfo(filter)
-                    }
-                }
-
                 if (protectedBranches.isProtected(branch)) {
                     def branchProps = protectedBranches.get(branch)
                     _processDeps(branchProps.dependencies, false)
@@ -979,8 +977,6 @@ class NodeJSPipeline extends GenericPipeline {
                             steps.sh "npx -y -- syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
                             // Force NPM to recognize package-lock is outdated
                             steps.sh "git checkout package-lock.json && npm install"
-                            // Rebuild list of changed packages to be deployed
-                            _lernaPkgInfo[LernaFilter.CHANGED] = _buildLernaPkgInfo(LernaFilter.CHANGED)
                         }
                     }
 
@@ -1291,8 +1287,9 @@ expect {
         if (!isLernaMonorepo) {
             body()
         } else {
-            for (pkgInfo in _lernaPkgInfo[filter]) {
+            for (pkgInfo in _buildLernaPkgInfo(filter)) {
                 steps.env.DEPLOY_PACKAGE = pkgInfo.name
+                steps.env.DEPLOY_VERSION = pkgInfo.version
                 steps.dir(pkgInfo.location) {
                     body()
                 }
@@ -1323,7 +1320,7 @@ expect {
      */
     String[] getChangedDirs() {
         if (isLernaMonorepo) {
-            return _lernaPkgInfo[LernaFilter.CHANGED_IN_PR].collect { it.location } as String[]
+            return _buildLernaPkgInfo(LernaFilter.CHANGED_IN_PR).collect { it.location } as String[]
         }
 
         return super.getChangedDirs()
