@@ -14,27 +14,14 @@
 def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom.com, fernando.rijocedeno@broadcom.com"
 
 def deployTags(pkgName, props) {
-  if (props instanceof Map) {
-    return {
-      stage("Deploy: @zowe/${pkgName}") {
-        props.tags.each { tagName ->
-          echo "Deploy @zowe/${pkgName}@${tagName}"
-          build job: 'zowe-cli-deploy-component', parameters: [
-            [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
-            [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
-          ]
-        }
-      }
-    }
-  } else {
-    echo packages.toString()
-    return {
-      props.each { packages ->
-        def buildStages = [:]
-        packages.each { subPkgName, subProps ->
-          buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
-        }
-        parallel(buildStages)
+  return {
+    stage("Deploy: @zowe/${pkgName}") {
+      props.tags.each { tagName ->
+        echo "Deploy @zowe/${pkgName}@${tagName}"
+        build job: 'zowe-cli-deploy-component', parameters: [
+          [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
+          [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
+        ]
       }
     }
   }
@@ -45,10 +32,23 @@ node('ca-jenkins-agent') {
     checkout scm
     def constObj = readYaml file: "deploy-constants.yaml"
     def buildStages = [:]
+    def buildGroupStages = []
     constObj.packages.each { pkgName, props ->
-      buildStages.put(props instanceof Map ? "@zowe/${pkgName}" : pkgName, deployTags(pkgName, props))
+      if (props instanceof Map) {
+        buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
+      } else {
+        props.eachWithIndex { packages, idx ->
+          buildStages.add([:])
+          packages.each { subPkgName, subProps ->
+            buildStages[idx].put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
+          }
+        }
+      }
     }
-    parallel(buildStages)
+    parallel {
+      parallel(buildStages)
+      buildGroupStages.each { parallel(it) }
+    }
   } catch (e) {
     currentBuild.result = "FAILURE"
     error "${e.getMessage()}"
