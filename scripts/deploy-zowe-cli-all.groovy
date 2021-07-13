@@ -19,7 +19,7 @@ def deployTags(pkgName, props) {
     props.packages.each { subPkgName, subProps ->
       buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
     }
-    return stages(buildStages)
+    return { stages(buildStages) }
   } else {
     return {
       stage("Deploy: @zowe/${pkgName}") {
