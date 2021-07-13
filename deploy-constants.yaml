@@ -35,28 +35,31 @@ packages:
     tags: *ltsTags
   "imperative":
     tags: *npmTags
-  "cli":
-    tags: *npmTags
-  "core-for-zowe-sdk":
-    tags: *npmTags
-  "provisioning-for-zowe-sdk":
-    tags: *npmTags
-  "zos-console-for-zowe-sdk":
-    tags: *npmTags
-  "zos-files-for-zowe-sdk":
-    tags: *npmTags
-  "zos-jobs-for-zowe-sdk":
-    tags: *npmTags
-  "zos-tso-for-zowe-sdk":
-    tags: *npmTags
-  "zos-uss-for-zowe-sdk":
-    tags: *npmTags
-  "zos-workflows-for-zowe-sdk":
-    tags: *npmTags
-  "zosmf-for-zowe-sdk":
-    tags: *npmTags
-  "cli-test-utils":
-    tags: *nextTags
+  "zowe-cli":
+    packages:
+      # Don't change order of monorepo packages
+      "cli-test-utils":
+        tags: *nextTags
+      "core-for-zowe-sdk":
+        tags: *npmTags
+      "zos-uss-for-zowe-sdk":
+        tags: *npmTags
+      "provisioning-for-zowe-sdk":
+        tags: *npmTags
+      "zos-console-for-zowe-sdk":
+        tags: *npmTags
+      "zos-files-for-zowe-sdk":
+        tags: *npmTags
+      "zosmf-for-zowe-sdk":
+        tags: *npmTags
+      "zos-workflows-for-zowe-sdk":
+        tags: *npmTags
+      "zos-jobs-for-zowe-sdk":
+        tags: *npmTags
+      "zos-tso-for-zowe-sdk":
+        tags: *npmTags
+      "cli":
+        tags: *npmTags
   "cics-for-zowe-cli":
     tags: *npmTags
   "db2-for-zowe-cli":

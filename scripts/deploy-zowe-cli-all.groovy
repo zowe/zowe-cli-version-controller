@@ -14,14 +14,22 @@
 def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom.com, fernando.rijocedeno@broadcom.com"
 
 def deployTags(pkgName, props) {
-  return {
-    stage("Deploy: @zowe/${pkgName}") {
-      props.tags.each { tagName ->
-        echo "Deploy @zowe/${pkgName}@${tagName}"
-        build job: 'zowe-cli-deploy-component', parameters: [
-          [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
-          [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
-        ]
+  if (props.packages) {
+    def buildStages = [:]
+    props.packages.each { pkgName, props ->
+      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
+    }
+    return stages(buildStages)
+  } else {
+    return {
+      stage("Deploy: @zowe/${pkgName}") {
+        props.tags.each { tagName ->
+          echo "Deploy @zowe/${pkgName}@${tagName}"
+          build job: 'zowe-cli-deploy-component', parameters: [
+            [$class: 'StringParameterValue', name: 'PKG_NAME', value: pkgName],
+            [$class: 'StringParameterValue', name: 'PKG_TAG', value: tagName]
+          ]
+        }
       }
     }
   }
