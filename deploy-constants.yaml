@@ -36,15 +36,13 @@ packages:
   "imperative":
     tags: *npmTags
   "zowe-cli":
-    packages:
-      # Don't change order of monorepo packages
-      "cli-test-utils":
+    - "cli-test-utils":
         tags: *nextTags
-      "core-for-zowe-sdk":
+    - "core-for-zowe-sdk":
         tags: *npmTags
       "zos-uss-for-zowe-sdk":
         tags: *npmTags
-      "provisioning-for-zowe-sdk":
+    - "provisioning-for-zowe-sdk":
         tags: *npmTags
       "zos-console-for-zowe-sdk":
         tags: *npmTags
@@ -52,13 +50,13 @@ packages:
         tags: *npmTags
       "zosmf-for-zowe-sdk":
         tags: *npmTags
-      "zos-workflows-for-zowe-sdk":
+    - "zos-workflows-for-zowe-sdk":
         tags: *npmTags
       "zos-jobs-for-zowe-sdk":
         tags: *npmTags
       "zos-tso-for-zowe-sdk":
         tags: *npmTags
-      "cli":
+    - "cli":
         tags: *npmTags
   "cics-for-zowe-cli":
     tags: *npmTags
