@@ -37,11 +37,12 @@ node('ca-jenkins-agent') {
       if (props instanceof Map) {
         buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
       } else {
-        props.eachWithIndex { packages, idx ->
-          buildStages.add([:])
+        props.each { packages ->
+          def subBuildStages = [:]
           packages.each { subPkgName, subProps ->
-            buildStages[idx].put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
+            subBuildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
           }
+          buildGroupStages.add(subBuildStages)
         }
       }
     }
