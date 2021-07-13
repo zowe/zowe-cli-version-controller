@@ -71,11 +71,14 @@ def VERSIONS_MATCH = true
 
 import java.text.SimpleDateFormat;
 
-node('ca-jenkins-agent') {
+node('zowe-jenkins-agent') {
   try {
     checkout scm
     stage('Deploy package') {
       timeout(time: 10, unit: 'MINUTES') {
+        def nvmInstall = load 'scripts/nvmInstall.groovy'
+        nvmInstall()
+
         PKG_TAG = params.PKG_TAG
         def getPkgInfo = load 'scripts/getPackageInfo.groovy'
         sh "rm -f .npmrc || exit 0"
