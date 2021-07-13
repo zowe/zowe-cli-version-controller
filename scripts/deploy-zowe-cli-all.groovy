@@ -14,17 +14,7 @@
 def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom.com, fernando.rijocedeno@broadcom.com"
 
 def deployTags(pkgName, props) {
-  if (props instanceof Object[]) {
-    return {
-      props.each { packages ->
-        def buildStages = [:]
-        packages.each { subPkgName, subProps ->
-          buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
-        }
-        parallel(buildStages)
-      }
-    }
-  } else {
+  if (props instanceof Map) {
     return {
       stage("Deploy: @zowe/${pkgName}") {
         props.tags.each { tagName ->
@@ -36,6 +26,16 @@ def deployTags(pkgName, props) {
         }
       }
     }
+  } else {
+    return {
+      props.each { packages ->
+        def buildStages = [:]
+        packages.each { subPkgName, subProps ->
+          buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
+        }
+        parallel(buildStages)
+      }
+    }
   }
 }
 
@@ -45,7 +45,7 @@ node('ca-jenkins-agent') {
     def constObj = readYaml file: "deploy-constants.yaml"
     def buildStages = [:]
     constObj.packages.each { pkgName, props ->
-      buildStages.put(props instanceof Object[] ? pkgName : "@zowe/${pkgName}", deployTags(pkgName, props))
+      buildStages.put(props instanceof Map ? "@zowe/${pkgName}" : pkgName, deployTags(pkgName, props))
     }
     parallel(buildStages)
   } catch (e) {
