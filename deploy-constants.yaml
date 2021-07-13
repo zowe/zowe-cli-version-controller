@@ -36,12 +36,15 @@ packages:
   "imperative":
     tags: *npmTags
   "zowe-cli":
+    # Packages with no monorepo dependencies
     - "cli-test-utils":
         tags: *nextTags
+    # Packages that depend on cli-test-utils
     - "core-for-zowe-sdk":
         tags: *npmTags
       "zos-uss-for-zowe-sdk":
         tags: *npmTags
+    # Packages that depend on core or uss SDK
     - "provisioning-for-zowe-sdk":
         tags: *npmTags
       "zos-console-for-zowe-sdk":
@@ -50,12 +53,14 @@ packages:
         tags: *npmTags
       "zosmf-for-zowe-sdk":
         tags: *npmTags
+    # Packages that depend on files or zosmf SDK
     - "zos-workflows-for-zowe-sdk":
         tags: *npmTags
       "zos-jobs-for-zowe-sdk":
         tags: *npmTags
       "zos-tso-for-zowe-sdk":
         tags: *npmTags
+    # Packages that depend on all the SDKs
     - "cli":
         tags: *npmTags
   "cics-for-zowe-cli":
