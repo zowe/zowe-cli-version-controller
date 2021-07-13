@@ -15,12 +15,10 @@ def MASTER_RECIPIENTS_LIST = "andrew.harn@broadcom.com, timothy.johnson@broadcom
 
 def deployTags(pkgName, props) {
   if (props.packages) {
-    def buildStages = [:]
-    props.packages.each { subPkgName, subProps ->
-      buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
-    }
     return {
-      buildStages.each { it.value.execute() }
+      props.packages.each { subPkgName, subProps ->
+        deployTags(subPkgName, subProps)()
+      }
     }
   } else {
     return {
