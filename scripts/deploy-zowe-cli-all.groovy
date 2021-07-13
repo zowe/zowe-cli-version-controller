@@ -19,7 +19,9 @@ def deployTags(pkgName, props) {
     props.packages.each { subPkgName, subProps ->
       buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
     }
-    return { stages(buildStages) }
+    return {
+      buildStages.each { it.execute() }
+    }
   } else {
     return {
       stage("Deploy: @zowe/${pkgName}") {
@@ -41,7 +43,7 @@ node('ca-jenkins-agent') {
     def constObj = readYaml file: "deploy-constants.yaml"
     def buildStages = [:]
     constObj.packages.each { pkgName, props ->
-      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
+      buildStages.put(props.packages ? pkgName : "@zowe/${pkgName}", deployTags(pkgName, props))
     }
     parallel(buildStages)
   } catch (e) {
