@@ -1307,7 +1307,7 @@ expect {
         if (!inDir) {
             body()
         } else {
-            def packageJson = readJSON file: "${inDir}/package.json"
+            def packageJson = steps.readJSON file: "${inDir}/package.json"
             steps.env.DEPLOY_PACKAGE = packageJson.name
             steps.env.DEPLOY_VERSION = packageJson.version
             steps.dir(inDir) {
