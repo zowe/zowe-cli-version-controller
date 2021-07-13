@@ -20,7 +20,7 @@ def deployTags(pkgName, props) {
       buildStages.put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
     }
     return {
-      buildStages.each { it.execute() }
+      buildStages.each { it.value.execute() }
     }
   } else {
     return {
