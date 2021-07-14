@@ -20,7 +20,7 @@ def call(String nodeJsVersion = '--lts', String npmVersion = '') {
     // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
     echo "Updating Node to '${nodeJsVersion == "--lts" ? "lts" : nodeJsVersion}'"
     sh ". ${NVM_DIR}/nvm.sh && nvm install ${nodeJsVersion} && nvm use ${nodeJsVersion} && node -v > .nvmrc"
-    nodeJsVersion = readText(file: ".nvmrc").trim()
+    nodeJsVersion = readFile(file: ".nvmrc").trim()
     env.NODE_PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/lib/node_modules"
     env.PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/bin:${env.PATH}"
 
