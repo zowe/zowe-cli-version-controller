@@ -32,25 +32,16 @@ node('ca-jenkins-agent') {
     checkout scm
     def constObj = readYaml file: "deploy-constants.yaml"
     def buildStages = [[:]]
-    echo "a"
     constObj.packages.each { pkgName, props ->
-      echo "b"
       if (props instanceof Map) {
-        echo "c"
         buildStages[0].put("@zowe/${pkgName}", deployTags(pkgName, props))
       } else {
-        echo "d"
         props.eachWithIndex { packages, idx ->
-          echo "e"
           if (buildStages.size() <= idx) {
-            echo "f"
             buildStages.add([:])
           }
-          echo "g"
           packages.each { subPkgName, subProps ->
-            echo "h"
             buildStages[idx].put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
-            echo "i"
           }
         }
       }
