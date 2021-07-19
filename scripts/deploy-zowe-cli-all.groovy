@@ -31,11 +31,22 @@ node('ca-jenkins-agent') {
   try {
     checkout scm
     def constObj = readYaml file: "deploy-constants.yaml"
-    def buildStages = [:]
+    def buildStages = [[:]]
     constObj.packages.each { pkgName, props ->
-      buildStages.put("@zowe/${pkgName}", deployTags(pkgName, props))
+      if (props instanceof Map) {
+        buildStages[0].put("@zowe/${pkgName}", deployTags(pkgName, props))
+      } else {
+        props.eachWithIndex { packages, idx ->
+          if (buildStages.size() <= idx) {
+            buildStages.add([:])
+          }
+          packages.each { subPkgName, subProps ->
+            buildStages[idx].put("@zowe/${subPkgName}", deployTags(subPkgName, subProps))
+          }
+        }
+      }
     }
-    parallel(buildStages)
+    buildStages.each { parallel(it) }
   } catch (e) {
     currentBuild.result = "FAILURE"
     error "${e.getMessage()}"
