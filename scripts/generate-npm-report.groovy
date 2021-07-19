@@ -129,6 +129,15 @@ node('zowe-jenkins-agent') {
       sh "tar -czvf $reportName *.json"
       // archiveArtifacts artifacts: reportName
 
+      dir("temp") {
+        sh "npm i npm-audit-html"
+        sh 'for tf in ../*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "../${tf%.json}.html"; done'
+        deleteDir()
+      }
+      def htmlReportName = "zowe-cli-html-reports.${dateTag}.tgz"
+      sh "tar -czvf $htmlReportName *.html"
+      archiveArtifacts artifacts: htmlReportName
+
       def repoName = "security-reports"
       def reportBranch = "master"
       def dirName = "NpmAuditReports/zowe-cli"
@@ -142,22 +151,13 @@ node('zowe-jenkins-agent') {
           sh "mkdir -p $dirName/json || exit 0"
           sh "cp ../$reportName $dirName/"
           sh "cp ../*.json $dirName/json/"
-
-          dir(dirName) {
-            sh "mkdir -p html || exit 0"
-            sh "mkdir -p temp || exit 0"
-            dir ("temp") {
-              sh "npm i npm-audit-html"
-              sh 'for tf in ../json/*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "${tf%.json}.html"; done'
-            }
-            sh "rm -rf temp"
-            sh "mv json/*.html html/"
-          }
+          sh "cp ../*.html $dirName/html/"
 
           // Publish reports
-          sh "git add ."
-          sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
-          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
+          sh "ls -R $dirName"
+          // sh "git add ."
+          // sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
+          // sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
     }
