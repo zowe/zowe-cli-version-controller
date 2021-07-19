@@ -107,6 +107,7 @@ def generateReport(name, isRepo = false) {
 node('zowe-jenkins-agent') {
   def buildStages = [:]
   try {
+    checkout scm
     stage("Setup") {
       def nvmInstall = load 'scripts/nvmInstall.groovy'
       nvmInstall()
