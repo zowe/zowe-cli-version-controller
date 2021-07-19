@@ -156,10 +156,9 @@ node('zowe-jenkins-agent') {
           sh "cp ../reports/*.html $dirName/html/"
 
           // Publish reports
-          sh "ls -R $dirName"
-          // sh "git add ."
-          // sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
-          // sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
+          sh "git add ."
+          sh "git commit -m \"Add ${reportName.split('.tgz')[0]}\""
+          sh "git push https://$USERNAME:$PASSWORD@github.com/zowe/$repoName $reportBranch"
         }
       }
     }
