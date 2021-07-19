@@ -53,7 +53,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
   sh "mkdir $name"
   dir(name) {
     writeJSON json: pkgJson, file: "package.json"
-    sh "npm install --package-lock-only"
+    sh "npm install --ignore-scripts --package-lock-only"
     sh "npm audit --json > ../${getFileName(isRepo, name, 'all', pkgTag)} || exit 0"
     sh "mkdir dev prod"
 
@@ -61,7 +61,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
     pkgJson.devDependencies = devDeps
     dir("dev") {
       writeJSON json: pkgJson, file: "package.json"
-      sh "npm install --package-lock-only"
+      sh "npm install --ignore-scripts --package-lock-only"
       sh "npm audit --json > ../../${getFileName(isRepo, name, 'dev', pkgTag)} || exit 0"
     }
 
@@ -69,7 +69,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
     pkgJson.devDependencies = [:]
     dir("prod") {
       writeJSON json: pkgJson, file: "package.json"
-      sh "npm install --package-lock-only"
+      sh "npm install --ignore-scripts --package-lock-only"
       sh "npm audit --json > ../../${getFileName(isRepo, name, 'prod', pkgTag)} || exit 0"
     }
   }
