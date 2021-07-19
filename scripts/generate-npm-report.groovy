@@ -104,10 +104,12 @@ def generateReport(name, isRepo = false) {
   }
 }
 
-node('ca-jenkins-agent') {
+node('zowe-jenkins-agent') {
   def buildStages = [:]
   try {
     stage("Setup") {
+      def nvmInstall = load 'scripts/nvmInstall.groovy'
+      nvmInstall()
       def orgPkgs = expectJSON("npm access ls-packages @${params.ORG} --json")
       orgPkgs.each{ pkgName, perm ->
         buildStages.put(pkgName, generateReport(pkgName))
