@@ -40,9 +40,9 @@ def expectJSON(shellScript) {
 
 def getFileName(isRepo, name, tempEnv, pkgTag, format = 'json') {
   if (isRepo) {
-    return "repo.$name.$tempEnv.$pkgTag.$format"
+    return "reports/repo.$name.$tempEnv.$pkgTag.$format"
   } else {
-    return "pkg.$name.$tempEnv.$pkgTag.$format"
+    return "reports/pkg.$name.$tempEnv.$pkgTag.$format"
   }
 }
 
@@ -119,6 +119,7 @@ node('zowe-jenkins-agent') {
         buildStages.put(repoName, generateReport(repoName, true))
       }
       sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
+      sh "mkdir -p reports"
     }
     stage("Generate reports") {
       parallel(buildStages)
@@ -126,16 +127,16 @@ node('zowe-jenkins-agent') {
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
       def reportName = "zowe-cli-json-reports.${dateTag}.tgz"
-      sh "tar -czvf $reportName *.json"
+      sh "tar -czvf $reportName reports/*.json"
       // archiveArtifacts artifacts: reportName
 
       dir("temp") {
         sh "npm i npm-audit-html"
-        sh 'for tf in ../*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "../${tf%.json}.html"; done'
+        sh 'for tf in ../reports/*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "../reports/${tf%.json}.html"; done'
         deleteDir()
       }
       def htmlReportName = "zowe-cli-html-reports.${dateTag}.tgz"
-      sh "tar -czvf $htmlReportName *.html"
+      sh "tar -czvf $htmlReportName reports/*.html"
       archiveArtifacts artifacts: htmlReportName
 
       def repoName = "security-reports"
@@ -148,10 +149,11 @@ node('zowe-jenkins-agent') {
           sh "git checkout $reportBranch"
           sh "git config --global user.email \"zowe.robot@gmail.com\""
           sh "git config --global user.name \"zowe-robot\""
-          sh "mkdir -p $dirName/json || exit 0"
+          sh "mkdir -p $dirName/json"
+          sh "mkdir -p $dirName/html"
           sh "cp ../$reportName $dirName/"
-          sh "cp ../*.json $dirName/json/"
-          sh "cp ../*.html $dirName/html/"
+          sh "cp ../reports/*.json $dirName/json/"
+          sh "cp ../reports/*.html $dirName/html/"
 
           // Publish reports
           sh "ls -R $dirName"
