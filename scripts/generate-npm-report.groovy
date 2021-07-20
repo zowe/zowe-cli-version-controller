@@ -40,9 +40,9 @@ def expectJSON(shellScript) {
 
 def getFileName(isRepo, name, tempEnv, pkgTag, format = 'json') {
   if (isRepo) {
-    return "repo.$name.$tempEnv.$pkgTag.$format"
+    return "reports/repo.$name.$tempEnv.$pkgTag.$format"
   } else {
-    return "pkg.$name.$tempEnv.$pkgTag.$format"
+    return "reports/pkg.$name.$tempEnv.$pkgTag.$format"
   }
 }
 
@@ -53,7 +53,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
   sh "mkdir $name"
   dir(name) {
     writeJSON json: pkgJson, file: "package.json"
-    sh "npm install --package-lock-only"
+    sh "npm install --ignore-scripts --package-lock-only"
     sh "npm audit --json > ../${getFileName(isRepo, name, 'all', pkgTag)} || exit 0"
     sh "mkdir dev prod"
 
@@ -61,7 +61,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
     pkgJson.devDependencies = devDeps
     dir("dev") {
       writeJSON json: pkgJson, file: "package.json"
-      sh "npm install --package-lock-only"
+      sh "npm install --ignore-scripts --package-lock-only"
       sh "npm audit --json > ../../${getFileName(isRepo, name, 'dev', pkgTag)} || exit 0"
     }
 
@@ -69,7 +69,7 @@ def _reportHelper(isRepo, name, pkgJson, pkgTag) {
     pkgJson.devDependencies = [:]
     dir("prod") {
       writeJSON json: pkgJson, file: "package.json"
-      sh "npm install --package-lock-only"
+      sh "npm install --ignore-scripts --package-lock-only"
       sh "npm audit --json > ../../${getFileName(isRepo, name, 'prod', pkgTag)} || exit 0"
     }
   }
@@ -104,10 +104,13 @@ def generateReport(name, isRepo = false) {
   }
 }
 
-node('ca-jenkins-agent') {
+node('zowe-jenkins-agent') {
   def buildStages = [:]
   try {
+    checkout scm
     stage("Setup") {
+      def nvmInstall = load 'scripts/nvmInstall.groovy'
+      nvmInstall()
       def orgPkgs = expectJSON("npm access ls-packages @${params.ORG} --json")
       orgPkgs.each{ pkgName, perm ->
         buildStages.put(pkgName, generateReport(pkgName))
@@ -116,6 +119,7 @@ node('ca-jenkins-agent') {
         buildStages.put(repoName, generateReport(repoName, true))
       }
       sh "npm config set @brightside:registry https://api.bintray.com/npm/ca/brightside"
+      sh "mkdir -p reports"
     }
     stage("Generate reports") {
       parallel(buildStages)
@@ -123,8 +127,17 @@ node('ca-jenkins-agent') {
     stage("Publish reports") {
       def dateTag = sh(returnStdout: true, script: "node -e \"console.log(new Date().toDateString().toLowerCase().split(/ (.+)/)[1].replace(/ /g, '-'))\"").trim()
       def reportName = "zowe-cli-json-reports.${dateTag}.tgz"
-      sh "tar -czvf $reportName *.json"
+      sh "tar -czvf $reportName reports/*.json"
       // archiveArtifacts artifacts: reportName
+
+      dir("temp") {
+        sh "npm i npm-audit-html"
+        sh 'for tf in ../reports/*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "../reports/${tf%.json}.html"; done'
+        deleteDir()
+      }
+      def htmlReportName = "zowe-cli-html-reports.${dateTag}.tgz"
+      sh "tar -czvf $htmlReportName reports/*.html"
+      archiveArtifacts artifacts: htmlReportName
 
       def repoName = "security-reports"
       def reportBranch = "master"
@@ -136,20 +149,11 @@ node('ca-jenkins-agent') {
           sh "git checkout $reportBranch"
           sh "git config --global user.email \"zowe.robot@gmail.com\""
           sh "git config --global user.name \"zowe-robot\""
-          sh "mkdir -p $dirName/json || exit 0"
+          sh "mkdir -p $dirName/json"
+          sh "mkdir -p $dirName/html"
           sh "cp ../$reportName $dirName/"
-          sh "cp ../*.json $dirName/json/"
-
-          dir(dirName) {
-            sh "mkdir -p html || exit 0"
-            sh "mkdir -p temp || exit 0"
-            dir ("temp") {
-              sh "npm i npm-audit-html"
-              sh 'for tf in ../json/*.json; do echo "Generate: ${tf%.json}" && cat "$tf" | npx npm-audit-html -o "${tf%.json}.html"; done'
-            }
-            sh "rm -rf temp"
-            sh "mv json/*.html html/"
-          }
+          sh "cp ../reports/*.json $dirName/json/"
+          sh "cp ../reports/*.html $dirName/html/"
 
           // Publish reports
           sh "git add ."
