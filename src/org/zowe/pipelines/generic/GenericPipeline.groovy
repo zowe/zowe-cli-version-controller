@@ -990,4 +990,31 @@ class GenericPipeline extends Pipeline {
     String[] getChangedDirs() {
         return []
     }
+
+    /**
+     * Waits for a GitHub workflow to complete in the project repository.
+     * The environment variables GH_USER and GH_TOKEN are required, which can be defined by withCredentials.
+     * It is recommended to call this method inside a timeout step in case a workflow hangs.
+     *
+     * @param name Name of the GitHub workflow
+     */
+    void waitForWorkflow(String name) {
+        def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
+        while (true) {
+            def curlOutput = steps.sh(returnStdout: true,
+                script: "curl ${getApiEndpoint()}/repos/${scmHead.getSourceOwner()}/${scmHead.getSourceRepo()}/actions/runs --user \"${GH_USER}:${GH_TOKEN}\"")
+            def apiResponse = steps.readJSON(text: curlOutput)
+            def numBuilds = 0
+            apiResponse.workflow_runs.each {
+                if (it.name == name && it.status != 'completed') {
+                    numBuilds++
+                }
+            }
+            if (numBuilds > 0) {
+                steps.sleep(time: 15, unit: 'SECONDS')
+            } else {
+                break
+            }
+        }
+    }
 }
