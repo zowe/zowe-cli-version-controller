@@ -999,18 +999,19 @@ class GenericPipeline extends Pipeline {
      * @param name Name of the GitHub workflow
      */
     void waitForWorkflow(String name) {
-        def scmHead = jenkins.scm.api.SCMHead.HeadByItem.findHead(steps.currentBuild.rawBuild.getParent())
+        def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
+        def gitSlug = scmUrl.minus(".git").split('/')[-2..-1].join('/')
         while (true) {
             def curlOutput = steps.sh(returnStdout: true,
-                script: "curl ${getApiEndpoint()}/repos/${scmHead.getSourceOwner()}/${scmHead.getSourceRepo()}/actions/runs --user \"${GH_USER}:${GH_TOKEN}\"")
+                script: "curl ${getApiEndpoint()}/repos/${gitSlug}/actions/runs --user \"${GH_USER}:${GH_TOKEN}\"")
             def apiResponse = steps.readJSON(text: curlOutput)
-            def numBuilds = 0
+            def numPendingBuilds = 0
             apiResponse.workflow_runs.each {
                 if (it.name == name && it.status != 'completed') {
-                    numBuilds++
+                    numPendingBuilds++
                 }
             }
-            if (numBuilds > 0) {
+            if (numPendingBuilds > 0) {
                 steps.sleep(time: 15, unit: 'SECONDS')
             } else {
                 break
