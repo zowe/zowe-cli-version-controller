@@ -1015,7 +1015,7 @@ class GenericPipeline extends Pipeline {
                 }
             }
             if (numPendingBuilds > 0) {
-                steps.echo "${numPendingBuilds} workflow${(numPendingBuilds > 1) ? 's are' ? ' is'} in progress or queued"
+                steps.echo "${numPendingBuilds} workflow${(numPendingBuilds > 1) ? 's are' : ' is'} in progress or queued"
                 steps.sleep(time: pollTime, unit: 'SECONDS')
             } else {
                 break
