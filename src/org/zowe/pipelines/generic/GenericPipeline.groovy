@@ -1003,7 +1003,7 @@ class GenericPipeline extends Pipeline {
         def gitSlug = scmUrl.minus(".git").split('/')[-2..-1].join('/')
         while (true) {
             def curlOutput = steps.sh(returnStdout: true,
-                script: "curl ${getApiEndpoint()}/repos/${gitSlug}/actions/runs --user \"${GH_USER}:${GH_TOKEN}\"")
+                script: "curl ${getApiEndpoint()}/repos/${gitSlug}/actions/runs --user \"${steps.env.GH_USER}:${steps.env.GH_TOKEN}\"")
             def apiResponse = steps.readJSON(text: curlOutput)
             def numPendingBuilds = 0
             apiResponse.workflow_runs.each {
