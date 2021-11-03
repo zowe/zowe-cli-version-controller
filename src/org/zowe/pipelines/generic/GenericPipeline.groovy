@@ -1002,11 +1002,11 @@ class GenericPipeline extends Pipeline {
      */
     void waitForWorkflow(String name, Integer pollTime = 30) {
         def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
-        def gitSlug = scmUrl.minus(".git").split('/')[-2..-1].join('/')
+        def repoSlug = scmUrl.minus(".git").split('/')[-2..-1].join('/')
         steps.echo "Waiting for GitHub workflow to complete: ${name}"
         while (true) {
             def curlOutput = steps.sh(returnStdout: true,
-                script: "curl ${getApiEndpoint()}/repos/${gitSlug}/actions/runs --user \"${steps.env.GH_USER}:${steps.env.GH_TOKEN}\"")
+                script: "curl ${getApiEndpoint()}/repos/${repoSlug}/actions/runs --user \"${steps.env.GH_USER}:${steps.env.GH_TOKEN}\"")
             def apiResponse = steps.readJSON(text: curlOutput)
             def numPendingBuilds = 0
             apiResponse.workflow_runs.each {
