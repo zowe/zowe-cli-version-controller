@@ -995,12 +995,15 @@ class GenericPipeline extends Pipeline {
      * Waits for a GitHub workflow to complete in the project repository.
      * The environment variables GH_USER and GH_TOKEN are required, which can be defined by withCredentials.
      * It is recommended to call this method inside a timeout step in case a workflow hangs.
+     * Warning: This method may make a lot of calls to the GitHub API which is rate limited.
      *
      * @param name Name of the GitHub workflow
+     * @param pollTime Duration in seconds to wait between polls (default = 30)
      */
-    void waitForWorkflow(String name) {
+    void waitForWorkflow(String name, Integer pollTime = 30) {
         def scmUrl = steps.scm.getUserRemoteConfigs()[0].getUrl()
         def gitSlug = scmUrl.minus(".git").split('/')[-2..-1].join('/')
+        steps.echo "Waiting for workflow to complete: ${name}"
         while (true) {
             def curlOutput = steps.sh(returnStdout: true,
                 script: "curl ${getApiEndpoint()}/repos/${gitSlug}/actions/runs --user \"${steps.env.GH_USER}:${steps.env.GH_TOKEN}\"")
@@ -1012,7 +1015,8 @@ class GenericPipeline extends Pipeline {
                 }
             }
             if (numPendingBuilds > 0) {
-                steps.sleep(time: 15, unit: 'SECONDS')
+                steps.echo "${numPendingBuilds} workflow${(numPendingBuilds > 1) ? 's are' ? ' is'} in progress or queued"
+                steps.sleep(time: pollTime, unit: 'SECONDS')
             } else {
                 break
             }
