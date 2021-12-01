@@ -51,6 +51,8 @@ packages:
         tags: *npmTags
       "zos-files-for-zowe-sdk":
         tags: *npmTags
+      "zos-logs-for-zowe-sdk":
+        tags: *npmTags
       "zosmf-for-zowe-sdk":
         tags: *npmTags
     # Packages that depend on files or zosmf SDK
