@@ -976,7 +976,8 @@ class NodeJSPipeline extends GenericPipeline {
                         if (depList.size() > 0) {
                             steps.sh "npx -y -- syncpack fix-mismatches --dev --prod --filter \"${depList.join('|')}\""
                             // Force NPM to recognize package-lock is outdated
-                            steps.sh "git checkout package-lock.json && npm install"
+                            steps.sh "git checkout package-lock.json || git checkout npm-shrinkwrap.json"
+                            steps.sh "npm install"
                         }
                     }
 
