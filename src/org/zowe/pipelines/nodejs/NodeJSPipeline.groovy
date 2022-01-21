@@ -509,7 +509,7 @@ class NodeJSPipeline extends GenericPipeline {
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
-                // gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
             }
         }
 
@@ -730,9 +730,9 @@ class NodeJSPipeline extends GenericPipeline {
 
             def innerOperation = {
                 // Login to the registry
-                // def npmRegistry = steps.sh returnStdout: true,
-                //         script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
-                // publishConfig.url = npmRegistry.trim()
+                def npmRegistry = steps.sh returnStdout: true,
+                        script: "node -e \"process.stdout.write(require('./package.json').publishConfig.registry)\""
+                publishConfig.url = npmRegistry.trim()
 
                 if (deployArguments.customLogin) {
                     deployArguments.customLogin()
@@ -748,15 +748,6 @@ class NodeJSPipeline extends GenericPipeline {
                     // Prevent npm publish from being affected by the local npmrc file
                     steps.sh "rm -f .npmrc || exit 0"
 
-                    // Clean the work space && Create a production ready environment
-                    // steps.sh "rm npm-shrinkwrap.json || exit 0"
-                    // steps.sh "rm package-lock.json || exit 0"
-                    // steps.sh "npm prune --production --no-package-lock"
-                    // steps.sh "npm prune --production"
-
-                    // // Install devDependencies to prevent any prepublishOnly from failing
-                    // _processDeps(branch.devDependencies, true)
-                    // steps.sh "npm install --only=dev"
                     steps.sh "npm publish --tag ${branch.tag}"
 
                     sendHtmlEmail(
@@ -1039,7 +1030,7 @@ class NodeJSPipeline extends GenericPipeline {
             createStage(name: "Update Changelog", stage: {
                 this._updateChangelog(args)
                 gitCommit("Update Changelog")  // Only commits if there are changes
-                // gitPush()
+                gitPush()
             })
         }
     }
