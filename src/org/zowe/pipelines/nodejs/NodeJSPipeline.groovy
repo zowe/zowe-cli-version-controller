@@ -516,7 +516,7 @@ class NodeJSPipeline extends GenericPipeline {
                 }
                 gitCommit("Bump version to ${steps.env.DEPLOY_VERSION}")
                 gitTag("v${steps.env.DEPLOY_VERSION}", "Release ${steps.env.DEPLOY_VERSION} to ${branch.tag}")
-                gitPush(arguments.gitTag ? arguments.gitTag : true, true)
+                // gitPush(arguments.gitTag ? arguments.gitTag : true, true)
             }
         }
 
@@ -763,14 +763,15 @@ class NodeJSPipeline extends GenericPipeline {
                     // Prevent npm publish from being affected by the local npmrc file
                     steps.sh "rm -f .npmrc || exit 0"
 
-                    // Clean the work space && Create an production ready environment
-                    steps.sh "rm npm-shrinkwrap.json || exit 0"
-                    steps.sh "rm package-lock.json || exit 0"
-                    steps.sh "npm prune --production --no-package-lock"
+                    // Clean the work space && Create a production ready environment
+                    // steps.sh "rm npm-shrinkwrap.json || exit 0"
+                    // steps.sh "rm package-lock.json || exit 0"
+                    // steps.sh "npm prune --production --no-package-lock"
+                    // steps.sh "npm prune --production"
 
-                    // Install devDependencies to prevent any prepublishOnly from failing
-                    _processDeps(branch.devDependencies, true, true)
-                    steps.sh "npm install --only=dev --no-shrinkwrap"
+                    // // Install devDependencies to prevent any prepublishOnly from failing
+                    // _processDeps(branch.devDependencies, true)
+                    // steps.sh "npm install --only=dev"
                     steps.sh "npm publish --tag ${branch.tag}"
 
                     sendHtmlEmail(
@@ -1128,17 +1129,17 @@ class NodeJSPipeline extends GenericPipeline {
      *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
      * </ul>
      */
-    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep, Boolean noShrinkwrap = false) {
+    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep) {
         deps.each { depName, depInfo ->
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depName@$depInfo"
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
     }
