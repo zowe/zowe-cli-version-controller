@@ -747,9 +747,9 @@ class NodeJSPipeline extends GenericPipeline {
                     def tempRegistry = publishConfig
                     // Use releaseRegistryConfig IFF this is not a PR, the branch is protected AND there is no prerelease set for it
                     // releaseRegistryConfig hass to be set for us to use it
-                    // if (releaseRegistryConfig && !changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?.trim()) {
+                    if (releaseRegistryConfig && !changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?.trim()) {
                         tempRegistry = releaseRegistryConfig
-                    // }
+                    }
 
                     steps.sh "npm config set ${tempRegistry.scope ? "${tempRegistry.scope}:" : ""}registry ${tempRegistry.url}"
 
@@ -1064,7 +1064,7 @@ class NodeJSPipeline extends GenericPipeline {
             createStage(name: "Update Changelog", stage: {
                 this._updateChangelog(args)
                 gitCommit("Update Changelog")  // Only commits if there are changes
-                gitPush()
+                // gitPush()
             })
         }
     }

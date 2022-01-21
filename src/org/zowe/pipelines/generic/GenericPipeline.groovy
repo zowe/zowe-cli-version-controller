@@ -586,7 +586,7 @@ class GenericPipeline extends Pipeline {
 
         try {
             steps.sh "git tag $label -m \"$description\""
-            steps.sh "git push --tags"
+            // steps.sh "git push --tags"
             return true
         } catch (Exception e) {
             // Do nothing
