@@ -136,13 +136,6 @@ class NodeJSPipeline extends GenericPipeline {
     RegistryConfig[] registryConfig
 
     /**
-     * A registry connection information object used by default on protected branches if specified.
-     *
-     * <p>The login operation will happen before the npm install in setup.</p>
-     */
-    RegistryConfig releaseRegistryConfig
-
-    /**
      * Specify true if the repository is a monorepo managed by Lerna.
      */
     Boolean isLernaMonorepo = false
@@ -744,17 +737,9 @@ class NodeJSPipeline extends GenericPipeline {
                 if (deployArguments.customLogin) {
                     deployArguments.customLogin()
                 } else {
-                    def tempRegistry = publishConfig
-                    // Use releaseRegistryConfig IFF this is not a PR, the branch is protected AND there is no prerelease set for it
-                    // releaseRegistryConfig hass to be set for us to use it
-                    if (releaseRegistryConfig && !changeInfo.isPullRequest && protectedBranches.isProtected(changeInfo.branchName) && !protectedBranches.get(changeInfo.branchName).prerelease?.trim()) {
-                        tempRegistry = releaseRegistryConfig
-                    }
-
-                    steps.sh "npm config set ${tempRegistry.scope ? "${tempRegistry.scope}:" : ""}registry ${tempRegistry.url}"
-
+                    steps.sh "npm config set ${publishConfig.scope ? "${publishConfig.scope}:" : ""}registry ${publishConfig.url}"
                     // Login to the publish registry
-                    _loginToRegistry(tempRegistry)
+                    _loginToRegistry(publishConfig)
                 }
 
                 NodeJSProtectedBranch branch = protectedBranches.get(changeInfo.branchName)
@@ -763,14 +748,6 @@ class NodeJSPipeline extends GenericPipeline {
                     // Prevent npm publish from being affected by the local npmrc file
                     steps.sh "rm -f .npmrc || exit 0"
 
-                    // Clean the work space && Create an production ready environment
-                    steps.sh "rm npm-shrinkwrap.json || exit 0"
-                    steps.sh "rm package-lock.json || exit 0"
-                    steps.sh "npm prune --production --no-package-lock"
-
-                    // Install devDependencies to prevent any prepublishOnly from failing
-                    _processDeps(branch.devDependencies, true, true)
-                    steps.sh "npm install --only=dev --no-shrinkwrap"
                     steps.sh "npm publish --tag ${branch.tag}"
 
                     sendHtmlEmail(
@@ -927,13 +904,6 @@ class NodeJSPipeline extends GenericPipeline {
 
                 steps.echo "Login to registries"
 
-                if (releaseRegistryConfig) {
-                    if (!releaseRegistryConfig.url) {
-                        didUseDefaultRegistry = true
-                    }
-                    _loginToRegistry(releaseRegistryConfig)
-                }
-
                 if (registryConfig) {
                     for (int i = 0; i < registryConfig.length; i++) {
                         def registry = registryConfig[i]
@@ -997,9 +967,6 @@ class NodeJSPipeline extends GenericPipeline {
             } finally {
                 // Always try to logout regardless of errors
                 steps.echo "Logout of registries"
-                if (releaseRegistryConfig) {
-                    _logoutOfRegistry(releaseRegistryConfig)
-                }
                 if (registryConfig) {
                     for (int i = 0; i < registryConfig.length; i++) {
                         _logoutOfRegistry(registryConfig[i])
@@ -1128,17 +1095,17 @@ class NodeJSPipeline extends GenericPipeline {
      *     <li>Structured format: <code>["my-pkg-description": ["name":"@my-org/my-pkg", "version": "<version-number-OR-pkg-tag>", "registry?":"https://my-registry-URL"]]</code></li>
      * </ul>
      */
-    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep, Boolean noShrinkwrap = false) {
+    protected void _processDeps(Map<String, Object> deps, Boolean isDevDep) {
         deps.each { depName, depInfo ->
             steps.echo "Installing: ${depName}"
             if (depInfo instanceof CharSequence) {
                 // Since this is a string, we just need to do what we did before
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depName@$depInfo"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depName@$depInfo"
             } else {
                 // Let's parse the object we got
                 def depScope = "${depInfo.name.indexOf('/') >= 0 ? depInfo.name.substring(0, depInfo.name.indexOf('/')) : ''}"
                 def depReg = depScope ? "--$depScope:registry=$depInfo.registry" : "--registry=$depInfo.registry"
-                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} ${noShrinkwrap ? '--no-shrinkwrap' : ''} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
+                steps.sh "npm install --save${isDevDep ? '-dev' : ' --save-exact'} $depInfo.name@$depInfo.version ${depInfo.registry ? depReg : ''}"
             }
         }
     }
