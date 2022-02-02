@@ -1098,9 +1098,10 @@ class NodeJSPipeline extends GenericPipeline {
     protected void rewriteShrinkwrap(Closure body) {
         def swJSON = "MISSING"
         try {
+            steps.sh "pwd;ls -al"
             swJson = steps.readJSON file: 'npm-shrinkwrap.json'
         } catch (err) {
-            steps.sh "echo Shrinkwrap file missing; Resuming operations..."
+            steps.sh "echo Shrinkwrap file missing\nResuming operations..."
             body()
             return;
         }
