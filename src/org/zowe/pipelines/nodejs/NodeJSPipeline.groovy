@@ -1101,7 +1101,7 @@ class NodeJSPipeline extends GenericPipeline {
         def swJSON = "MISSING"
         try {
             steps.sh "pwd;ls -al"
-            swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parseText(steps.readFile "npm-shrinkwrap.json")
+            swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parseText(steps.readFile("npm-shrinkwrap.json"))
         } catch (err) {
             steps.sh "echo ${err}"
             steps.sh "echo Error reading Shrinkwrap file - Resuming operations..."
