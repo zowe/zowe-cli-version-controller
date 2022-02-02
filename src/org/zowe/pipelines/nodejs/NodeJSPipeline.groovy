@@ -1098,7 +1098,7 @@ class NodeJSPipeline extends GenericPipeline {
      * @param body The closure to execute in when temporarily rewriting the shrinkwrap
      */
     protected void rewriteShrinkwrap(Closure body) {
-        def swJSON = "MISSING"
+        def swJson = "MISSING"
         try {
             steps.sh "pwd;ls -al"
             // swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parse(new File("npm-shrinkwrap.json"))
