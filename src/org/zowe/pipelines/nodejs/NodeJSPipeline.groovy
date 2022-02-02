@@ -759,7 +759,7 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
                     rewriteShrinkwrap({
-                        steps.sh "npm publish --tag ${branch.tag} --dry-run"
+                        steps.sh "npm publish --tag ${branch.tag}"
                     })
 
                     sendHtmlEmail(
