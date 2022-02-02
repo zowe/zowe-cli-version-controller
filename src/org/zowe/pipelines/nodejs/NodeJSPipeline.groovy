@@ -759,7 +759,7 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
                     rewriteShrinkwrap({
-                        steps.sh "npm publish --tag ${branch.tag}"
+                        steps.sh "npm publish --tag ${branch.tag} --dry-run"
                     })
 
                     sendHtmlEmail(
@@ -1132,6 +1132,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
+        steps.archiveArtifacts "npm-shrinkwrap.json"
         body()
         steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
     }
