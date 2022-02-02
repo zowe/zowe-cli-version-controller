@@ -753,8 +753,7 @@ class NodeJSPipeline extends GenericPipeline {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
                         _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
                     }
-
-                    steps.sh "${prepublishOnly}"
+                    steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
                     rewriteShrinkwrap({
                         steps.sh "npm publish --tag ${branch.tag} --dry-run"
@@ -1101,7 +1100,7 @@ class NodeJSPipeline extends GenericPipeline {
             steps.sh "pwd;ls -al"
             swJson = steps.readJSON file: 'npm-shrinkwrap.json'
         } catch (err) {
-            steps.sh "echo Shrinkwrap file missing\nResuming operations..."
+            steps.sh "echo Shrinkwrap file missing - Resuming operations..."
             body()
             return;
         }
