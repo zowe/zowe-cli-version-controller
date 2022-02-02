@@ -754,6 +754,7 @@ class NodeJSPipeline extends GenericPipeline {
                     if (_pkgJson["scripts"]["prepublishOnly"]) {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
                         _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
+                        steps.writeJSON json: swJson, file: "package.json"
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
@@ -1100,7 +1101,7 @@ class NodeJSPipeline extends GenericPipeline {
         def swJSON = "MISSING"
         try {
             steps.sh "pwd;ls -al"
-            swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parse(new File('./npm-shrinkwrap.json'))
+            swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parseText(steps.readJSON file: "npm-shrinkwrap.json")
         } catch (err) {
             steps.sh "echo ${err}"
             steps.sh "echo Error reading Shrinkwrap file - Resuming operations..."
