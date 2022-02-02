@@ -754,7 +754,7 @@ class NodeJSPipeline extends GenericPipeline {
                     if (_pkgJson["scripts"]["prepublishOnly"]) {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
                         _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
-                        steps.writeJSON json: swJson, file: "package.json"
+                        steps.writeJSON json: _pkgJson, file: "package.json"
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
