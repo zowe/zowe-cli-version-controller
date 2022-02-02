@@ -1117,7 +1117,7 @@ class NodeJSPipeline extends GenericPipeline {
 
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
 
-        steps.sh "npm publish --tag ${branchTag}"
+        steps.sh "npm publish --tag ${branchTag} --dry-run"
 
         steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
     }
