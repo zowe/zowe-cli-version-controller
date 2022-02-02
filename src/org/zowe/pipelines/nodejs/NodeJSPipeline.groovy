@@ -1101,7 +1101,6 @@ class NodeJSPipeline extends GenericPipeline {
         def swJson = "MISSING"
         try {
             steps.sh "pwd;ls -al"
-            // swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parse(new File("npm-shrinkwrap.json"))
             swJson = steps.readJSON file: "npm-shrinkwrap.json"
         } catch (err) {
             steps.sh "echo ${err}"
@@ -1122,14 +1121,8 @@ class NodeJSPipeline extends GenericPipeline {
 
         def swOld = swJson
 
-        steps.sh "echo BEFORE\n--sw--\n${steps.writeJSON(json: swJson, returnText: true)}"
-        steps.sh "echo BEFORE\n--old--\n${steps.writeJSON(json: swOld, returnText: true)}"
-
         filterPkgs(swJson, "packages")
         filterPkgs(swJson, "dependencies")
-
-        steps.sh "echo AFTER\n--sw--\n${steps.writeJSON(json: swJson, returnText: true)}"
-        steps.sh "echo AFTER\n--old--\n${steps.writeJSON(json: swOld, returnText: true)}"
 
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
 
