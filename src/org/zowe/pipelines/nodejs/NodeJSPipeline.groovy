@@ -214,9 +214,12 @@ class NodeJSPipeline extends GenericPipeline {
 
                         def archiveName = "${name}.revision.${revision}.tgz"
 
-                        steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName"
-                        steps.archiveArtifacts archiveName
-                        steps.sh "rm -f $archiveName"
+                        rewriteShrinkwrap({
+                            steps.sh "PACK_NAME=\$(npm pack ../ | tail -1) && mv \$PACK_NAME $archiveName"
+                            steps.archiveArtifacts archiveName
+                            steps.sh "rm -f $archiveName"
+                        })
+
                     } else {
                         for (pkgInfo in _buildLernaPkgInfo(LernaFilter.ALL)) {
                             // Replace special file character names
@@ -224,9 +227,12 @@ class NodeJSPipeline extends GenericPipeline {
 
                             def archiveName = "${name}.revision.${revision}.tgz"
 
-                            steps.sh "PACK_NAME=\$(npm pack ${pkgInfo.location} | tail -1) && mv \$PACK_NAME $archiveName"
-                            steps.archiveArtifacts archiveName
-                            steps.sh "rm -f $archiveName"
+                            rewriteShrinkwrap({
+                                steps.sh "PACK_NAME=\$(npm pack ${pkgInfo.location} | tail -1) && mv \$PACK_NAME $archiveName"
+                                steps.archiveArtifacts archiveName
+                                steps.sh "rm -f $archiveName"
+                            })
+
                         }
                     }
                 }
@@ -748,7 +754,7 @@ class NodeJSPipeline extends GenericPipeline {
                     // Prevent npm publish from being affected by the local npmrc file
                     steps.sh "rm -f .npmrc || exit 0"
 
-                    rewriteShrinkwrapAndPublish(branch.tag)
+                    steps.sh "npm publish --tag ${branch.tag}"
 
                     sendHtmlEmail(
                         subjectTag: "DEPLOYED",
@@ -1083,14 +1089,14 @@ class NodeJSPipeline extends GenericPipeline {
     /**
      * Remove all dev dependencies from the shrinkwrap file before publishing.
      *
-     * @param branchTag The tag to be used for publishing purposes
+     * @param body The closure to execute in when temporarily rewriting the shrinkwrap
      */
-    protected void rewriteShrinkwrapAndPublish(String branchTag) {
+    protected void rewriteShrinkwrap(Closure body) {
         def swJSON = "MISSING"
         try {
             swJson = steps.readJSON file: 'npm-shrinkwrap.json'
         } catch (err) {
-            steps.sh "npm publish --tag ${branchTag}"
+            body()
             return;
         }
 
@@ -1117,7 +1123,7 @@ class NodeJSPipeline extends GenericPipeline {
 
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
 
-        steps.sh "npm publish --tag ${branchTag} --dry-run"
+        body()
 
         steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
     }
