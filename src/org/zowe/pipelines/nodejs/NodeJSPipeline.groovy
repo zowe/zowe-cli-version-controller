@@ -23,6 +23,7 @@ import org.zowe.pipelines.nodejs.exceptions.*
 import org.zowe.pipelines.nodejs.enums.LernaFilter
 
 import java.util.concurrent.TimeUnit
+import groovy.json.JsonSlurper
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.generic.GenericPipeline} class.
@@ -1098,9 +1099,10 @@ class NodeJSPipeline extends GenericPipeline {
         def swJSON = "MISSING"
         try {
             steps.sh "pwd;ls -al"
-            swJson = steps.readJSON file: 'npm-shrinkwrap.json'
+            swJson = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY).parse(new File('./npm-shrinkwrap.json'))
         } catch (err) {
-            steps.sh "echo Shrinkwrap file missing - Resuming operations..."
+            steps.sh "echo ${err}"
+            steps.sh "echo Error reading Shrinkwrap file - Resuming operations..."
             body()
             return;
         }
