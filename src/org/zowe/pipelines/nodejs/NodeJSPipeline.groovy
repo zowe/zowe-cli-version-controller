@@ -1106,14 +1106,20 @@ class NodeJSPipeline extends GenericPipeline {
 
         def swOld = swJson
 
+        steps.sh "echo BEFORE\n--sw--\n${steps.writeJSON json: swJson, returnText: true}"
+        steps.sh "echo BEFORE\n--old--\n${steps.writeJSON json: swOld, returnText: true}"
+
         filterPkgs(swJson, "packages")
         filterPkgs(swJson, "dependencies")
 
-        writeJSON json: swJson, file: "npm-shrinkwrap.json"
+        steps.sh "echo AFTER\n--sw--\n${steps.writeJSON json: swJson, returnText: true}"
+        steps.sh "echo AFTER\n--old--\n${steps.writeJSON json: swOld, returnText: true}"
+
+        steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
 
         steps.sh "npm publish --tag ${branchTag}"
 
-        writeJSON json: swOld, file: "npm-shrinkwrap.json"
+        steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
     }
 
     /**
