@@ -507,7 +507,7 @@ class Pipeline {
      * @see #sendHtmlEmail(EmailArguments)
      */
     final void sendHtmlEmail(Map args) {
-        sendHtmlEmail(args as EmailArguments)
+        // sendHtmlEmail(args as EmailArguments)
     }
 
     /**
