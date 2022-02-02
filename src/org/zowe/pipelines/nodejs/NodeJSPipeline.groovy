@@ -1121,13 +1121,18 @@ class NodeJSPipeline extends GenericPipeline {
 
         def swOld = swJson
 
-        filterPkgs(swJson, "packages")
-        filterPkgs(swJson, "dependencies")
+        try {
+            filterPkgs(swJson, "packages")
+            filterPkgs(swJson, "dependencies")
+        } catch (err) {
+            steps.sh "echo ${err}"
+            steps.sh "echo Error processing Shrinkwrap file - Resuming operations..."
+            body()
+            return
+        }
 
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
-
         body()
-
         steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
     }
 
