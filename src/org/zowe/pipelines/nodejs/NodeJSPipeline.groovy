@@ -1110,7 +1110,7 @@ class NodeJSPipeline extends GenericPipeline {
         }
 
         def filterPkgs = { obj, key ->
-            def _obj = []
+            def _obj = [:]
             obj[key].each { pkg, _val ->
                 if (!pkg.startsWith("__tests__") && !_val["dev"]) {
                     _obj[pkg] = _val
