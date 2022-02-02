@@ -1131,10 +1131,10 @@ class NodeJSPipeline extends GenericPipeline {
             return
         }
 
-        steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
+        steps.writeJSON json: swJson, file: "npm-shrinkwrap.json", pretty: 2
         steps.archiveArtifacts "npm-shrinkwrap.json"
         body()
-        steps.writeJSON json: swOld, file: "npm-shrinkwrap.json"
+        steps.writeJSON json: swOld, file: "npm-shrinkwrap.json", pretty: 2
     }
 
     /**
