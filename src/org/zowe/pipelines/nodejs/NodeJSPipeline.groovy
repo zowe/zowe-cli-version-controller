@@ -968,7 +968,7 @@ class NodeJSPipeline extends GenericPipeline {
                         steps.sh "git add package.json package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
                         if (isLernaMonorepo) {
                             runForEachMonorepoPackage(LernaFilter.ALL) {
-                                steps.sh "git add package.json npm-shrinkwrap.json --ignore-errors || exit 0"
+                                steps.sh "git add package.json --ignore-errors || exit 0"
                             }
                         }
                         gitCommit("Updating dependencies")
