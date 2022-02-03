@@ -1132,7 +1132,7 @@ class NodeJSPipeline extends GenericPipeline {
         steps.writeJSON json: swJson, file: "npm-shrinkwrap.json"
 
         // reformat it
-        steps.sh "jq . npm-shrinkwrap.json > npm-shrinkwrap.json"
+        steps.sh "sh -c \"jq . npm-shrinkwrap.json > npm-shrinkwrap.json\""
 
         // steps.sh "node -e \"const fs = require('fs'); fs.readFileSync('npm-shrinkwrap.json')\""
         steps.archiveArtifacts "npm-shrinkwrap.json"
