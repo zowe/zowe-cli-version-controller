@@ -23,8 +23,6 @@ import org.zowe.pipelines.nodejs.exceptions.*
 import org.zowe.pipelines.nodejs.enums.LernaFilter
 
 import java.util.concurrent.TimeUnit
-import groovy.json.JsonSlurper
-import groovy.json.JsonParserType
 
 /**
  * Extends the functionality available in the {@link org.zowe.pipelines.generic.GenericPipeline} class.
