@@ -209,8 +209,7 @@ class NodeJSPipeline extends GenericPipeline {
 
                     if (!isLernaMonorepo) {
                         // Replace special file character names
-                        def name = packageJSON.name.replaceAll("@", "")
-                            .replaceAll("/", "-")
+                        def name = packageJSON.name.replaceAll("@", "").replaceAll("/", "-")
 
                         def archiveName = "${name}.revision.${revision}.tgz"
 
@@ -748,7 +747,18 @@ class NodeJSPipeline extends GenericPipeline {
                     // Prevent npm publish from being affected by the local npmrc file
                     steps.sh "rm -f .npmrc || exit 0"
 
-                    steps.sh "npm publish --tag ${branch.tag}"
+                    def _pkgJson = steps.readJSON file: "package.json"
+                    def prepublishOnly = "echo No prepublishOnly script"
+                    if (_pkgJson["scripts"]["prepublishOnly"]) {
+                        prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
+                        _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
+                        steps.writeJSON json: _pkgJson, file: "package.json"
+                    }
+                    steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
+
+                    rewriteShrinkwrap({
+                        steps.sh "npm publish --tag ${branch.tag}"
+                    })
 
                     sendHtmlEmail(
                         subjectTag: "DEPLOYED",
@@ -955,7 +965,7 @@ class NodeJSPipeline extends GenericPipeline {
                     if (!changeInfo.isPullRequest) {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
-                        steps.sh "git add package.json package-lock.json --ignore-errors || exit 0"
+                        steps.sh "git add package.json package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
                         if (isLernaMonorepo) {
                             runForEachMonorepoPackage(LernaFilter.ALL) {
                                 steps.sh "git add package.json --ignore-errors || exit 0"
@@ -1078,6 +1088,58 @@ class NodeJSPipeline extends GenericPipeline {
                 }
             }
         )
+    }
+
+    /**
+     * Remove all dev dependencies from the shrinkwrap file before publishing.
+     *
+     * @param body The closure to execute in when temporarily rewriting the shrinkwrap
+     */
+    protected void rewriteShrinkwrap(Closure body) {
+        def swJson = "MISSING"
+        try {
+            swJson = steps.readJSON file: "npm-shrinkwrap.json"
+        } catch (err) {
+            steps.sh "echo ${err}"
+            steps.sh "echo Error reading Shrinkwrap file - Resuming operations..."
+            body()
+            return;
+        }
+
+        def filterPkgs = { obj, key ->
+            def _obj = [:]
+            obj[key].each { pkg, _val ->
+                // Exclude dev, extraneous and devOptional dependencies from the list
+                if (!_val["dev"] && !_val["extraneous"] && !_val["devOptional"]) {
+                    _obj[pkg] = _val
+                }
+            }
+            obj[key] = _obj
+        }
+
+        try {
+            filterPkgs(swJson, "packages")
+            filterPkgs(swJson, "dependencies")
+        } catch (err) {
+            steps.sh "echo ${err}"
+            steps.sh "echo Error processing Shrinkwrap file - Resuming operations..."
+            body()
+            return
+        }
+
+        // Move existing SW
+        steps.sh "mv npm-shrinkwrap.json npm-shrinkwrap.old.json"
+
+        // Write new SW file
+        steps.writeJSON json: swJson, file: "npm-shrinkwrap.new.json"
+
+        // Reformat new SW file
+        steps.sh "jq . npm-shrinkwrap.new.json > npm-shrinkwrap.json"
+
+        body()
+
+        // Rever back to the old SW
+        steps.sh "mv npm-shrinkwrap.old.json npm-shrinkwrap.json"
     }
 
     /**
