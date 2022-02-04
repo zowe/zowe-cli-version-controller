@@ -1110,7 +1110,7 @@ class NodeJSPipeline extends GenericPipeline {
             def _obj = [:]
             obj[key].each { pkg, _val ->
                 // Exclude dev, extraneous and devOptional dependencies from the list
-                if (!_val["dev"] && !_val["extraneous"] && !_val["devOptional"]) {
+                if (!_val["dev"] && !_val["peer"] && !_val["extraneous"] && !_val["devOptional"]) {
                     _obj[pkg] = _val
                 }
             }
