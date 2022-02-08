@@ -751,7 +751,7 @@ class NodeJSPipeline extends GenericPipeline {
                     def prepublishOnly = "echo No prepublishOnly script"
                     if (_pkgJson["scripts"]["prepublishOnly"]) {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
-                        sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
+                        steps.sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
