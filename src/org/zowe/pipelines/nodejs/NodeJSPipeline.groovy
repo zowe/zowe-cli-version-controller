@@ -751,10 +751,7 @@ class NodeJSPipeline extends GenericPipeline {
                     def prepublishOnly = "echo No prepublishOnly script"
                     if (_pkgJson["scripts"]["prepublishOnly"]) {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
-                        _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
-
-                        steps.writeJSON json: _pkgJson, file: "package.new.json"
-                        steps.sh "jq . package.new.json > package.json"
+                        sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
@@ -1111,8 +1108,8 @@ class NodeJSPipeline extends GenericPipeline {
         def filterPkgs = { obj, key ->
             def _obj = [:]
             obj[key].each { pkg, _val ->
-                // Exclude dev, extraneous and devOptional dependencies from the list
-                if (!_val["dev"] && !_val["peer"] && !_val["extraneous"] && !_val["devOptional"]) {
+                // Exclude dev, peer, and extraneous dependencies from the list
+                if (!_val["dev"] && !_val["peer"] && !_val["extraneous"]) {
                     _obj[pkg] = _val
                 }
             }
