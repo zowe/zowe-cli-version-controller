@@ -500,7 +500,6 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } else {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
-                    steps.sh "npm install --package-lock-only"  // Update subpackage versions in lockfile
                 }
 
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
@@ -822,6 +821,15 @@ class NodeJSPipeline extends GenericPipeline {
                 wrapInDir(deployArguments.inDir, innerOperation)
             } else {
                 runForEachMonorepoPackage(LernaFilter.ALL, innerOperation)
+                // Update subpackage versions in lockfile
+                // TODO Eliminate this extra commit after publish
+                // It would be preferrable to update the lockfile before Git
+                // tag is created at end of version stage, but the packages
+                // must be published first for NPM install to succeed.
+                steps.sh "npm install --package-lock-only --ignore-scripts --no-audit"
+                steps.sh "git add package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
+                gitCommit("Update lockfile for ${steps.env.DEPLOY_VERSION}")
+                gitPush()
             }
         }
 
