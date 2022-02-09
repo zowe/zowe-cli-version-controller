@@ -500,6 +500,7 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } else {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
+                    steps.sh "npm install --package-lock-only"  // Update subpackage versions in lockfile
                 }
 
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
