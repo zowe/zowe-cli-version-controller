@@ -751,7 +751,12 @@ class NodeJSPipeline extends GenericPipeline {
                     def prepublishOnly = "echo No prepublishOnly script"
                     if (_pkgJson["scripts"]["prepublishOnly"]) {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
-                        steps.sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
+
+                        // `npm set-script` only works on npm >= 7 which not all build agents have
+                        // steps.sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
+                        _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
+                        steps.writeJSON json: _pkgJson, file: "package.new.json"
+                        steps.sh "jq . package.new.json > package.json"
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
 
