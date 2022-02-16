@@ -503,7 +503,6 @@ class NodeJSPipeline extends GenericPipeline {
                     // Update package-lock and/or npm-shrinkwrap
                     // Required: npm@>=8.5.0
                     steps.sh "npm install --package-lock-only --ignore-scripts --no-audit"
-                    steps.sh "git add package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
                 }
 
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
