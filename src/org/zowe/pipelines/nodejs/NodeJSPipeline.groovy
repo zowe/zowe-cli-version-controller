@@ -500,6 +500,9 @@ class NodeJSPipeline extends GenericPipeline {
                     }
                 } else {
                     steps.sh "npx lerna version ${steps.env.DEPLOY_VERSION} --exact --include-merged-tags --no-git-tag-version --yes"
+                    // Update package-lock and/or npm-shrinkwrap
+                    // Required: npm@>=8.5.0
+                    steps.sh "npm install --package-lock-only --ignore-scripts --no-audit"
                 }
 
                 steps.sh "git add -u"  // Safe because we ran "git reset" above
@@ -753,10 +756,6 @@ class NodeJSPipeline extends GenericPipeline {
                         prepublishOnly = _pkgJson["scripts"]["prepublishOnly"]
                         // `npm set-script` only works on npm >= 7 which not all build agents have
                         // steps.sh "npm set-script prepublishOnly \"echo Look up for the output of prepublishOnly\""
-                        // Not all agent have jq available
-                        // _pkgJson["scripts"]["prepublishOnly"] = "echo Look up for the output of prepublishOnly"
-                        // steps.writeJSON json: _pkgJson, file: "package.new.json"
-                        // steps.sh "jq . package.new.json > package.json"
                         steps.sh "node -e \"package = require('./package.json');package.scripts.prepublishOnly='echo Look up for the output of prepublishOnly';require('fs').writeFileSync('package.json', JSON.stringify(package, null, 2), 'utf8')\""
                     }
                     steps.sh "echo Running prepublishOnly script;${prepublishOnly}"
@@ -827,15 +826,6 @@ class NodeJSPipeline extends GenericPipeline {
                 wrapInDir(deployArguments.inDir, innerOperation)
             } else {
                 runForEachMonorepoPackage(LernaFilter.ALL, innerOperation)
-                // Update subpackage versions in lockfile
-                // TODO Eliminate this extra commit after publish
-                // It would be preferrable to update the lockfile before Git
-                // tag is created at end of version stage, but the packages
-                // must be published first for NPM install to succeed.
-                steps.sh "npm install --package-lock-only --ignore-scripts --no-audit"
-                steps.sh "git add package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
-                gitCommit("Update lockfile for ${steps.env.DEPLOY_VERSION}")
-                gitPush()
             }
         }
 
