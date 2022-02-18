@@ -742,8 +742,10 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "npm config set ${publishConfig.scope ? "${publishConfig.scope}:" : ""}registry ${publishConfig.url}"
                     // This is a temporary fix for https://github.com/npm/cli/issues/4404
                     if (isLernaMonorepo) {
-                        // Downgrade version of npm to avoid an `npm login` issue on `npm @8.5.0`
-                        steps.sh "npm i -g npm@8.4.1"
+                        steps.dir("..") {
+                            // Downgrade version of npm to avoid an `npm login` issue on `npm @8.5.0`
+                            steps.sh "npm i -g npm@8.4.1"
+                        }
                     }
                     // Login to the publish registry
                     _loginToRegistry(publishConfig)
