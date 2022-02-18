@@ -825,6 +825,11 @@ class NodeJSPipeline extends GenericPipeline {
             if (!isLernaMonorepo) {
                 wrapInDir(deployArguments.inDir, innerOperation)
             } else {
+                steps.dir(steps.pwd(tmp: true)) {
+                    // This is a temporary fix for https://github.com/npm/cli/issues/4404
+                    // Downgrade version of npm to avoid an `npm login` issue on `npm @8.5.0`
+                    steps.sh "npm i -g npm@8.4.1"
+                }
                 runForEachMonorepoPackage(LernaFilter.ALL, innerOperation)
             }
         }
