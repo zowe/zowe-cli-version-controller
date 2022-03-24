@@ -974,10 +974,10 @@ class NodeJSPipeline extends GenericPipeline {
                     if (!changeInfo.isPullRequest) {
                         // Add package and package lock to the commit tree. This will not fail if
                         // unable to add an item for any reasons.
-                        steps.sh "git add package.json package-lock.json npm-shrinkwrap.json --ignore-errors || exit 0"
+                        steps.sh "git add package.json; git add package-lock.json; git add npm-shrinkwrap.json || exit 0"
                         if (isLernaMonorepo) {
                             runForEachMonorepoPackage(LernaFilter.ALL) {
-                                steps.sh "git add package.json --ignore-errors || exit 0"
+                                steps.sh "git add package.json || exit 0"
                             }
                         }
                         gitCommit("Updating dependencies")
