@@ -333,7 +333,7 @@ class NodeJSPipeline extends GenericPipeline {
 
             // Extract the base and raw versions
             def rawPkgVersion = steps.env.DEPLOY_VERSION
-            def baseVersion = rawVersion.split("-")[0]
+            def baseVersion = rawPkgVersion.split("-")[0]
 
             // Extract the raw version
             def rawVersion = baseVersion.split("\\.")
