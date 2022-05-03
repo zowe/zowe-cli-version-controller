@@ -644,13 +644,13 @@ class Pipeline {
 
                         // It is an absolute path so try to copy everything into our work directory
                         // always exit with 0 return code so the ui doesn't look broken
-                        steps.sh "cp -r $directory ./${archiveLocation}${directory} || exit 0"
+                        steps.sh "cp -dr $directory ./${archiveLocation}${directory} || exit 0"
                     } else if (directory.contains("..")) {
                         throw new PipelineException("Relative archives are not supported")
                     } else {
                         // We must be in an internal directory right now so archive it immediately
                         steps.echo "Archiving folder: ${directory}"
-                        steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$directory/*" + "*/*.*"// The weird concat because groovydoc blew up here
+                        steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$directory/*" + "*/*.*"// The weird concat because groovydoc blew up here
                     }
                 } catch (e) {
                     steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
@@ -658,7 +658,7 @@ class Pipeline {
             }
 
             steps.echo "Archiving absolute paths"
-            steps.archiveArtifacts allowEmptyArchive: true, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
+            steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
         }
     }
 
