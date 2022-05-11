@@ -634,40 +634,40 @@ class Pipeline {
             steps.echo "NOTE: For example: if a log directory is only generated when there is an error but the build succeeds, the archive will fail."
             steps.echo "NOTE: It doesn't make sense for the build to fail in this scenario since the error archive failed because the build was a success."
             steps.sh "mkdir -p $archiveLocation"
-            steps.echo "abc"
+            // steps.echo "abc"
 
-            for (int i = 0; i < archiveFolders.length; i++) {
-                def directory = archiveFolders[i]
-                steps.echo "def"
+            // for (int i = 0; i < archiveFolders.length; i++) {
+            //     def directory = archiveFolders[i]
+            //     steps.echo "def"
 
-                try {
-                    if (directory.startsWith("/")) {
-                        steps.echo "ghi"
-                        steps.sh "mkdir -p ./${archiveLocation}${directory}"
-                        steps.echo "jkl"
+            //     try {
+            //         if (directory.startsWith("/")) {
+            //             steps.echo "ghi"
+            //             steps.sh "mkdir -p ./${archiveLocation}${directory}"
+            //             steps.echo "jkl"
 
-                        // It is an absolute path so try to copy everything into our work directory
-                        // always exit with 0 return code so the ui doesn't look broken
-                        steps.sh "cp -dr $directory ./${archiveLocation}${directory} || exit 0"
-                        steps.echo "mno"
-                    } else if (directory.contains("..")) {
-                        throw new PipelineException("Relative archives are not supported")
-                    } else {
-                        // We must be in an internal directory right now so archive it immediately
-                        steps.echo "pqr"
-                        steps.echo "Archiving folder: ${directory}"
-                        steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$directory/*" + "*/*.*"// The weird concat because groovydoc blew up here
-                        steps.echo "stu"
-                    }
-                } catch (e) {
-                    steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
-                }
-            }
+            //             // It is an absolute path so try to copy everything into our work directory
+            //             // always exit with 0 return code so the ui doesn't look broken
+            //             steps.sh "cp -dr $directory ./${archiveLocation}${directory} || exit 0"
+            //             steps.echo "mno"
+            //         } else if (directory.contains("..")) {
+            //             throw new PipelineException("Relative archives are not supported")
+            //         } else {
+            //             // We must be in an internal directory right now so archive it immediately
+            //             steps.echo "pqr"
+            //             steps.echo "Archiving folder: ${directory}"
+            //             steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$directory/*" + "*/*.*"// The weird concat because groovydoc blew up here
+            //             steps.echo "stu"
+            //         }
+            //     } catch (e) {
+            //         steps.echo "Unable to archive $directory, reason: ${e.message}\n\n...Ignoring"
+            //     }
+            // }
 
-            steps.echo "vwx"
-            steps.echo "Archiving absolute paths"
-            steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
-            steps.echo "yz"
+            // steps.echo "vwx"
+            // steps.echo "Archiving absolute paths"
+            // steps.archiveArtifacts allowEmptyArchive: true, followSymlinks: false, artifacts: "$archiveLocation/*" + "*/*.*"// The weird concat because groovydoc blew up here
+            // steps.echo "yz"
         }
     }
 
