@@ -1088,7 +1088,7 @@ class NodeJSPipeline extends GenericPipeline {
                     steps.sh "echo sonar.branch.name=${changeInfo.branchName} >> ${sonarProjectFile}"
                 }
 
-                def scannerHome = steps.tool 'sonar-scanner-4.0.0'
+                def scannerHome = steps.tool args.toolName
                 if (!args.credId) {
                     steps.withSonarQubeEnv('sonarcloud-server') {
                         steps.sh "JAVA_HOME=/usr/java/openjdk-11 && PATH=\${JAVA_HOME}/bin:\$PATH && ${scannerHome}/bin/sonar-scanner"
