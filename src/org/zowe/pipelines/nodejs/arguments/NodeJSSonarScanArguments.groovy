@@ -22,4 +22,9 @@ class NodeJSSonarScanArguments extends GenericStageArguments {
      */
 
     String credId = ""
+
+    /**
+     * The name of the Sonar scanner tool
+     */
+    String toolName = "sonar-scanner-4.0.0"
 }
