@@ -7,7 +7,8 @@
     "build": "npm run license && tsc --pretty -p mock_project/tsconfig.json",
     "lint": "tslint --format stylish -c mock_project/tslint-packages.json \"mock_project/packages/**/*.ts\"",
     "test:unit": "jest \".*__tests__.*\\.unit\\.(spec|test)\\.ts\" --coverage",
-    "license": "node scripts/updateLicense.js"
+    "license": "node scripts/updateLicense.js",
+    "groovydoc": "./gradlew groovydoc && npm run license"
   },
   "author": "Broadcom",
   "license": "EPL-2.0",

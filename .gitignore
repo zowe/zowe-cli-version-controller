@@ -15,6 +15,7 @@ target
 .project
 *.iml
 package-lock.json
+.DS_Store
 
 # ignored files for the inner mocked project used for testing the shared pipeline
 mock_project

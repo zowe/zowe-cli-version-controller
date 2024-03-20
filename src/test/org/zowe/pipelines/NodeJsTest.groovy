@@ -10,21 +10,28 @@
 
 package org.zowe.pipelines
 
-import org.zowe.pipelines.NodeJS
+import org.zowe.pipelines.nodejs.NodeJSPipeline
 import hudson.model.Result
+import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Unit tests for the NodeJSPipeline class
  */
 class NodeJsTest {
+    @BeforeClass
+    static void setUpClass() {
+        // Workaround for error "No suitable ClassLoader found for grab"
+        System.setProperty("groovy.grape.enable", "false")
+    }
+
     /**
      * Test instantiating a NodeJSPipeline object
      */
     @Test
     void instantiationTest() {
         def steps = new MockSteps()
-        def myNode = new NodeJS(steps)
+        def myNode = new NodeJSPipeline(steps)
         myNode.setup();
     }
 
@@ -34,7 +41,7 @@ class NodeJsTest {
     @Test
     void createStageTest() {
         def steps = new MockSteps()
-        def myNode = new NodeJS(steps)
+        def myNode = new NodeJSPipeline(steps)
         myNode.setup()
 
         myNode.createStage(name: "lint", stage: {
@@ -66,7 +73,7 @@ class MockSteps {
 
     }
 
-    public sh() {
+    public sh(String command) {
 
     }
 
@@ -102,9 +109,15 @@ class MockSteps {
 
     }
 
+    public archiveArtifacts(LinkedHashMap artifacts) {
+
+    }
+
     public String FAILED_TESTS = "These are the failed tests"
     public Map params = ["Skip Stage: lint": "hello"]
-    public Map currentBuild = [currentResult: "NOT_STARTED", result: Result.SUCCESS]
+    private def getAction = { Class action -> null }
+    public Map currentBuild = [currentResult: "NOT_STARTED", result: Result.SUCCESS,
+                               rawBuild: { getAction: getAction }]
 
     public Map env = [BUILD_NUMBER: "1", JOB_NAME: "Zowe Cli Version Controller"]
 

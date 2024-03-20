@@ -12,5 +12,6 @@ org.zowe.pipelines.generic.exceptions.git
 org.zowe.pipelines.generic.models
 org.zowe.pipelines.nodejs
 org.zowe.pipelines.nodejs.arguments
+org.zowe.pipelines.nodejs.enums
 org.zowe.pipelines.nodejs.exceptions
 org.zowe.pipelines.nodejs.models
