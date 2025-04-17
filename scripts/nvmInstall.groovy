@@ -8,7 +8,6 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-
 /**
  * Updates Node.js and NPM in the Docker container to the requested versions
  * Input:
@@ -18,14 +17,14 @@
 def call(String nodeJsVersion = '--lts', String npmVersion = '') {
     echo "Updating Node to '${nodeJsVersion == "--lts" ? "lts" : nodeJsVersion}'"
     def NVM_DIR = "/home/jenkins/.nvm"
-    if (sh(returnStatus: true, script: ". ${NVM_DIR}/nvm.sh && nvm").toString().trim() == '') {
+    if (sh(returnStatus: true, script: "test -f ${NVM_DIR}/nvm.sh") == 0) {
         // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
         sh "source ${NVM_DIR}/nvm.sh && nvm alias default ${nvm_default()}"
         sh ". ${NVM_DIR}/nvm.sh && nvm install ${nodeJsVersion} && nvm use ${nodeJsVersion} && node -v > .nvmrc"
         nodeJsVersion = readFile(file: ".nvmrc").trim()
         env.NODE_PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/lib/node_modules"
         env.PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/bin:${env.PATH}"
-    } else if (sh(returnStatus: true, script: "which n").toString().trim() == '') {
+    } else if (sh(returnStatus: true, script: "which n") == 0) {
         sh "n install ${nodeJsVersion == "--lts" ? "lts" : nodeJsVersion}'"
     } else {
         error "Node.js version managers (NVM, N) are not available or not properly configured. Please ensure either NVM or N are configured in your Docker container."
