@@ -907,11 +907,15 @@ class NodeJSPipeline extends GenericPipeline {
         super.setupGeneric(arguments)
 
         createStage(name: 'Install Node Package Dependencies', stage: {
-            if (arguments.nodeJsVersion && arguments.nvmDir) {
+            if (steps.sh(returnStatus: true, script: "test -f ${arguments.nvmDir}/nvm.sh") == 0) {
                 // https://stackoverflow.com/questions/25899912/how-to-install-nvm-in-docker
                 steps.sh ". ${arguments.nvmDir}/nvm.sh && nvm install ${arguments.nodeJsVersion} && nvm use ${arguments.nodeJsVersion}"
                 steps.env.NODE_PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/lib/node_modules"
                 steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
+            } else if (steps.sh(returnStatus: true, script: "which n") == 0) {
+                steps.sh "sudo n install ${arguments.nodeJsVersion == "--lts" ? "lts" : arguments.nodeJsVersion}"
+            } else {
+                steps.error "Node.js version managers (NVM, N) are not available or not properly configured. Please ensure either NVM or N are configured in your Docker container."
             }
 
             if (arguments.npmVersion) {
