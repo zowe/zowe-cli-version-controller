@@ -913,7 +913,7 @@ class NodeJSPipeline extends GenericPipeline {
                 steps.env.NODE_PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/lib/node_modules"
                 steps.env.PATH = "${arguments.nvmDir}/versions/node/${arguments.nodeJsVersion}/bin:${steps.env.PATH}"
             } else if (steps.sh(returnStatus: true, script: "which n") == 0) {
-                steps.sh "sudo n install ${arguments.nodeJsVersion == "--lts" ? "lts" : arguments.nodeJsVersion}"
+                steps.sh "sudo n install ${arguments.nodeJsVersion == "--lts" || arguments.nodeJsVersion == null ? "lts" : arguments.nodeJsVersion}"
             } else {
                 steps.error "Node.js version managers (NVM, N) are not available or not properly configured. Please ensure either NVM or N are configured in your Docker container."
             }

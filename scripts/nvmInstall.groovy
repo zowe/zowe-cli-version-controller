@@ -25,7 +25,7 @@ def call(String nodeJsVersion = '--lts', String npmVersion = '') {
         env.NODE_PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/lib/node_modules"
         env.PATH = "${NVM_DIR}/versions/node/${nodeJsVersion}/bin:${env.PATH}"
     } else if (sh(returnStatus: true, script: "which n") == 0) {
-        sh "sudo n install ${nodeJsVersion == "--lts" ? "lts" : nodeJsVersion}'"
+        sh "sudo n install ${nodeJsVersion == "--lts" || arguments.nodeJsVersion == null ? "lts" : nodeJsVersion}'"
     } else {
         error "Node.js version managers (NVM, N) are not available or not properly configured. Please ensure either NVM or N are configured in your Docker container."
     }
